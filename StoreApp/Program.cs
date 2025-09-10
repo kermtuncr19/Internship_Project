@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StoreApp.Models;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 

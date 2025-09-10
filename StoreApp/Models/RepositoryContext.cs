@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Entities.Models;
+
 // burayı veritabanı gibi düşün
 namespace StoreApp.Models
 {
