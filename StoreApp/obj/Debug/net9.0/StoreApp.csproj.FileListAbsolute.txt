@@ -236,3 +236,5 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compress
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\omu34nzj59-5ipweew5fc.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Entities.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Entities.pdb
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Repositories.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Repositories.pdb

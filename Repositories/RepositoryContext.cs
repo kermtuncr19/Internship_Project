@@ -1,8 +1,7 @@
+﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
-using Entities.Models;
 
-// burayı veritabanı gibi düşün
-namespace StoreApp.Models
+namespace Repositories
 {
     public class RepositoryContext : DbContext
     {
@@ -17,11 +16,11 @@ namespace StoreApp.Models
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Product>()
             .HasData(
-                new Product(){Id = 1, ProductName = "Computer", Price = 19000},
-                new Product(){Id = 2, ProductName = "Keyboard", Price = 1000},
-                new Product(){Id = 3, ProductName = "Mouse", Price = 900},
-                new Product(){Id = 4, ProductName = "Monitor", Price = 10000},
-                new Product(){Id = 5, ProductName = "Deck", Price = 5000}
+                new Product() { Id = 1, ProductName = "Computer", Price = 19000 },
+                new Product() { Id = 2, ProductName = "Keyboard", Price = 1000 },
+                new Product() { Id = 3, ProductName = "Mouse", Price = 900 },
+                new Product() { Id = 4, ProductName = "Monitor", Price = 10000 },
+                new Product() { Id = 5, ProductName = "Deck", Price = 5000 }
             );
         }
     }
