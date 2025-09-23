@@ -238,3 +238,5 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Entities
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Entities.pdb
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Repositories.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Repositories.pdb
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services.pdb
