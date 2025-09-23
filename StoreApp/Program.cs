@@ -31,8 +31,17 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseHttpsRedirection();
 
+app.MapAreaControllerRoute(
+    name: "Admin",
+    areaName: "Admin",
+    pattern: "Admin/{controller=Dashboard}/{action=Index}/{id?}"
+);
+
+// Varsayılan route
 app.MapControllerRoute(
-    name:"default",
-    pattern:"{controller=Home}/{action=Index}/{id?}");
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
+
 
 app.Run();
