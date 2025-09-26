@@ -57,11 +57,17 @@ namespace StoreApp.Migrations
                     b.Property<int?>("CategoryId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Summary")
                         .HasColumnType("TEXT");
 
                     b.HasKey("ProductId");
@@ -75,43 +81,55 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 1,
                             CategoryId = 1,
+                            ImageUrl = "/images/forma3.jpg",
                             Price = 4249m,
-                            ProductName = "Fenerbahçe 2025/26 Lacivert Forma"
+                            ProductName = "Fenerbahçe 2025/26 Lacivert Forma",
+                            Summary = ""
                         },
                         new
                         {
                             ProductId = 2,
                             CategoryId = 1,
+                            ImageUrl = "/images/2.jpg",
                             Price = 4249m,
-                            ProductName = "Fenerbahçe 2025/26 Çubuklu Forma"
+                            ProductName = "Fenerbahçe 2025/26 Çubuklu Forma",
+                            Summary = ""
                         },
                         new
                         {
                             ProductId = 3,
                             CategoryId = 1,
+                            ImageUrl = "/images/3.jpg",
                             Price = 4249m,
-                            ProductName = "Fenerbahçe 2025/26 Sarı Forma"
+                            ProductName = "Fenerbahçe 2025/26 Sarı Forma",
+                            Summary = ""
                         },
                         new
                         {
                             ProductId = 4,
                             CategoryId = 2,
+                            ImageUrl = "/images/4.jpg",
                             Price = 3799m,
-                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma"
+                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma",
+                            Summary = ""
                         },
                         new
                         {
                             ProductId = 5,
                             CategoryId = 2,
+                            ImageUrl = "/images/5.jpg",
                             Price = 2499m,
-                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu"
+                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu",
+                            Summary = ""
                         },
                         new
                         {
                             ProductId = 6,
                             CategoryId = 3,
+                            ImageUrl = "/images/6.jpg",
                             Price = 1499m,
-                            ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma"
+                            ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma",
+                            Summary = ""
                         });
                 });
 
