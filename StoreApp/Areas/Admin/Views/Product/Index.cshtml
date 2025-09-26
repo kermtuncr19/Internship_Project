@@ -22,18 +22,18 @@
         @foreach (var prd in Model)
         {
             <tr>
-                <td>@prd.Id</td>
+                <td>@prd.ProductId</td>
                 <td>@prd.ProductName</td>
                 <td>@prd.Price.ToString("c")</td>
                 <td>
                     <div class="btn-group">
-                        <a class="btn btn-warning" asp-action="Update" asp-route-id="@prd.Id">
+                        <a class="btn btn-warning" asp-action="Update" asp-route-id="@prd.ProductId">
                             <i class="fa fa-edit"></i> Edit
                         </a>
 
                         <!-- ✅ POST ile silme formu -->
                         <form asp-action="Delete"
-                              asp-route-id="@prd.Id"
+                              asp-route-id="@prd.ProductId"
                               method="post"
                               class="d-inline delete-form">
                             @Html.AntiForgeryToken()
@@ -46,7 +46,7 @@
                            asp-area=""
                            asp-controller="Product"
                            asp-action="Get"
-                           asp-route-id="@prd.Id">
+                           asp-route-id="@prd.ProductId">
                             <i class="fa fa-search"></i> Details
                         </a>
                     </div>

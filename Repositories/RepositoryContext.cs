@@ -1,5 +1,7 @@
-﻿using Entities.Models;
+﻿using System.Reflection;
+using Entities.Models;
 using Microsoft.EntityFrameworkCore;
+using Repositories.Config;
 
 namespace Repositories
 {
@@ -15,20 +17,8 @@ namespace Repositories
         protected override void OnModelCreating(ModelBuilder modelBuilder) //eğer veri yoksa bunlar veritabanına eklenecek ama veri varsa dokunmayacak.
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Product>()
-            .HasData(
-                new Product() { Id = 1, ProductName = "Computer", Price = 19000 },
-                new Product() { Id = 2, ProductName = "Keyboard", Price = 1000 },
-                new Product() { Id = 3, ProductName = "Mouse", Price = 900 },
-                new Product() { Id = 4, ProductName = "Monitor", Price = 10000 },
-                new Product() { Id = 5, ProductName = "Deck", Price = 5000 }
-            );
-            modelBuilder.Entity<Category>()
-            .HasData(
-                new Category() { CategoryId = 1, CategoryName = "Football" },
-                new Category() { CategoryId = 2, CategoryName = "Basketball" },
-                 new Category() { CategoryId = 3, CategoryName = "Volleyball" }
-            );
+            modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
         }
     }
 }

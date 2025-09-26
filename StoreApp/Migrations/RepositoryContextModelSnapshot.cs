@@ -23,6 +23,7 @@ namespace StoreApp.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("CategoryName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("CategoryId");
@@ -33,67 +34,99 @@ namespace StoreApp.Migrations
                         new
                         {
                             CategoryId = 1,
-                            CategoryName = "Football"
+                            CategoryName = "Futbol"
                         },
                         new
                         {
                             CategoryId = 2,
-                            CategoryName = "Basketball"
+                            CategoryName = "Basketbol"
                         },
                         new
                         {
                             CategoryId = 3,
-                            CategoryName = "Volleyball"
+                            CategoryName = "Voleybol"
                         });
                 });
 
             modelBuilder.Entity("Entities.Models.Product", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("ProductId")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CategoryId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProductName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("ProductId");
+
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
 
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            Price = 19000m,
-                            ProductName = "Computer"
+                            ProductId = 1,
+                            CategoryId = 1,
+                            Price = 4249m,
+                            ProductName = "Fenerbahçe 2025/26 Lacivert Forma"
                         },
                         new
                         {
-                            Id = 2,
-                            Price = 1000m,
-                            ProductName = "Keyboard"
+                            ProductId = 2,
+                            CategoryId = 1,
+                            Price = 4249m,
+                            ProductName = "Fenerbahçe 2025/26 Çubuklu Forma"
                         },
                         new
                         {
-                            Id = 3,
-                            Price = 900m,
-                            ProductName = "Mouse"
+                            ProductId = 3,
+                            CategoryId = 1,
+                            Price = 4249m,
+                            ProductName = "Fenerbahçe 2025/26 Sarı Forma"
                         },
                         new
                         {
-                            Id = 4,
-                            Price = 10000m,
-                            ProductName = "Monitor"
+                            ProductId = 4,
+                            CategoryId = 2,
+                            Price = 3799m,
+                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma"
                         },
                         new
                         {
-                            Id = 5,
-                            Price = 5000m,
-                            ProductName = "Deck"
+                            ProductId = 5,
+                            CategoryId = 2,
+                            Price = 2499m,
+                            ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu"
+                        },
+                        new
+                        {
+                            ProductId = 6,
+                            CategoryId = 3,
+                            Price = 1499m,
+                            ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma"
                         });
+                });
+
+            modelBuilder.Entity("Entities.Models.Product", b =>
+                {
+                    b.HasOne("Entities.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Entities.Models.Category", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

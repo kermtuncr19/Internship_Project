@@ -19,7 +19,9 @@ namespace Repositories
         //Interface
         public Product? GetOneProduct(int id, bool trackChange)
         {
-            return FindByCondition(p => p.Id.Equals(id), trackChange);
+            return FindByCondition(p => p.ProductId.Equals(id), trackChange);
         }
+
+        public void UpdateOneProduct(Product entity) => Update(entity);
     }
 }

@@ -240,3 +240,5 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Reposito
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Repositories.pdb
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services.pdb
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
