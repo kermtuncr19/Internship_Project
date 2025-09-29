@@ -1,0 +1,131 @@
+@page
+@{
+    ViewData["Title"] = "Contact";
+}
+
+<div class="container my-5">
+    <h2 class="text-center mb-4">İletişim</h2>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-body p-4">
+                    <h4 class="card-title text-center mb-3">Fenerium</h4>
+
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2">
+                            <i class="fa fa-phone me-2 text-primary"></i>
+                            <strong>Telefon:</strong> 444 1907
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-envelope me-2 text-primary"></i>
+                            <strong>Email:</strong> info@fenerium.com
+                        </li>
+                        <li class="mb-2">
+                            <i class="fa fa-map-marker-alt me-2 text-primary"></i>
+                            <strong>Adres:</strong><br />
+                            Recep Peker Caddesi, Şükrü Saracoğlu Stadyumu,<br />
+                            Fenerium Tribünü Altı, Zühtüpaşa,<br />
+                            Recep Peker Cd. No: 3 D:E, 34724 Kadıköy/İstanbul
+                        </li>
+                    </ul>
+
+                    <div class="mb-4">
+                        <iframe
+                            src="https://www.google.com/maps?q=Recep%20Peker%20Caddesi%2C%20%C5%9E%C3%BCkr%C3%BC%20Saraco%C4%9Flu%20Stadyumu%2C%20Fenerium%20Trib%C3%BCn%C3%BC%20Alt%C4%B1%2C%20Z%C3%BCht%C3%BCpa%C5%9Fa%2C%20Recep%20Peker%20Cd.%20No%3A%203%20D%3AE%2C%2034724%20Kad%C4%B1k%C3%B6y%2F%C4%B0stanbul&output=embed"
+                            width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy">
+                        </iframe>
+                    </div>
+
+                    <!-- Backend YOK: Sadece önyüz -->
+                    <form id="contactForm" novalidate>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Adınız</label>
+                            <input id="name" name="name" class="form-control" placeholder="Adınızı giriniz"
+                                   required maxlength="80" />
+                            <div class="invalid-feedback">Lütfen adınızı giriniz.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input id="email" name="email" type="email" class="form-control"
+                                   placeholder="E-posta adresiniz" required maxlength="120" />
+                            <div class="invalid-feedback">Geçerli bir e-posta giriniz.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Mesajınız</label>
+                            <textarea id="message" name="message" rows="3" class="form-control"
+                                      placeholder="Mesajınızı yazınız" required maxlength="1000"></textarea>
+                            <div class="invalid-feedback">Lütfen bir mesaj yazınız.</div>
+                        </div>
+
+                        <button id="sendBtn" type="submit" class="btn btn-primary w-100">
+                            Gönder
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 (sayfada zaten ekliyse bu satırı TEKRAR eklemeyin) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    (function () {
+        const form = document.getElementById('contactForm');
+        const btn = document.getElementById('sendBtn');
+
+        // Basit HTML5 doğrulaması + custom UI
+        function validate() {
+            let ok = true;
+
+            for (const el of ['name', 'email', 'message']) {
+                const input = document.getElementById(el);
+                if (!input.checkValidity()) {
+                    input.classList.add('is-invalid');
+                    ok = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            }
+            return ok;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (!validate()) return;
+
+            // Backend yok: butonu kısa süreli kilitle
+            btn.disabled = true;
+
+            // "Sanki gönderildi" hissi için minik gecikme (opsiyonel)
+            await new Promise(r => setTimeout(r, 400));
+
+            // Başarılı popup
+            Swal.fire({
+                icon: 'success',
+                title: 'Mesajınız alındı!',
+                text: 'En kısa sürede sizinle iletişime geçeceğiz.',
+                confirmButtonText: 'Tamam'
+            }).then(() => {
+                form.reset();             // formu temizle
+                btn.disabled = false;     // butonu aç
+                // is-invalid sınıflarını da temizleyelim
+                for (const el of ['name', 'email', 'message']) {
+                    document.getElementById(el).classList.remove('is-invalid');
+                }
+            });
+        });
+
+        // Alanlara yazıldıkça hatayı kaldır
+        ['name', 'email', 'message'].forEach(id => {
+            document.getElementById(id).addEventListener('input', function () {
+                if (this.checkValidity()) this.classList.remove('is-invalid');
+            });
+        });
+    })();
+</script>

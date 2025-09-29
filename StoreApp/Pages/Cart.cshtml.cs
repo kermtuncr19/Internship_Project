@@ -1,0 +1,64 @@
+using Entities.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Services.Contracts;
+using System.Linq;
+
+namespace StoreApp.Pages
+{
+    public class CartModel : PageModel
+    {
+        private readonly IServiceManager _manager;
+
+        public Cart Cart { get; set; } //IoC
+
+        public CartModel(IServiceManager manager, Cart cart)
+        {
+            _manager = manager;
+            Cart = cart;
+        }
+
+        public string ReturnUrl { get; set; } = "/";
+
+        public void OnGet(string returnUrl)
+        {
+            ReturnUrl = returnUrl ?? "/";
+        }
+
+        public IActionResult OnPost(int productId, string returnUrl)
+        {
+            Product? product = _manager.PoductService.GetOneProduct(productId, false);
+
+            if (product is not null)
+            {
+                Cart.AddItem(product, 1);
+            }
+            return Page();
+        }
+
+        public IActionResult OnPostRemove(int id, string returnUrl)
+        {
+            Cart.RemoveLineById(id);
+            return Page();
+        }
+
+        public IActionResult OnPostIncrement(int id, string returnUrl)
+        {
+            var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
+            if (product is not null)
+                Cart.AddItem(product, 1);
+
+            return RedirectToPage(new { returnUrl });
+        }
+
+        public IActionResult OnPostDecrement(int id, string returnUrl)
+    {
+        var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
+        if (product is not null)
+            Cart.DecrementItem(product, 1);
+
+        return RedirectToPage(new { returnUrl });
+    }
+    }
+}

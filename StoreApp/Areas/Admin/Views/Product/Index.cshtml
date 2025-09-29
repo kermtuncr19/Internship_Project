@@ -5,7 +5,7 @@
 
     <div class="d-flex justify-content-end mb-3">
         <a class="btn btn-outline-success" asp-action="Create">
-            <i class="fa fa-plus"></i> Create
+            <i class="fa fa-plus"></i> Ekle
         </a>
     </div>
 
@@ -13,10 +13,10 @@
         <thead>
             <tr>
                 <th>Id</th>
-                <th>Image</th>
-                <th>Product Name</th>
-                <th>Price</th>
-                <th>Operations</th>
+                <th>Fotoğraf</th>
+                <th>Ürün Adı</th>
+                <th>Fiyat</th>
+                <th>İşlemler</th>
             </tr>
         </thead>
         <tbody>
@@ -32,7 +32,7 @@
                 <td>
                     <div class="btn-group">
                         <a class="btn btn-warning" asp-action="Update" asp-route-id="@prd.ProductId">
-                            <i class="fa fa-edit"></i> Edit
+                            <i class="fa fa-edit"></i> Düzenle
                         </a>
 
                         <!-- ✅ POST ile silme formu -->
@@ -42,7 +42,7 @@
                               class="d-inline delete-form">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-danger">
-                                <i class="fa fa-trash"></i> Delete
+                                <i class="fa fa-trash"></i> Sil
                             </button>
                         </form>
 
@@ -51,7 +51,7 @@
                            asp-controller="Product"
                            asp-action="Get"
                            asp-route-id="@prd.ProductId">
-                            <i class="fa fa-search"></i> Details
+                            <i class="fa fa-search"></i> Detaylar
                         </a>
                     </div>
                 </td>
