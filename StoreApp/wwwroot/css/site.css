@@ -1,0 +1,113 @@
+/* Lacivert tonu */
+:root { --navy: #0d1b4c; }
+
+/* SOL menü: Ürünler / Kategoriler / İletişim -> lacivert metin + ikon */
+.navbar .navbar-nav.flex-grow-1 .nav-link {
+  color: var(--navy) !important;
+  font-weight: 600;
+}
+.navbar .navbar-nav.flex-grow-1 .nav-link i {
+  color: inherit !important; /* ikonlar da lacivert */
+}
+/* active/hover renklerini de lacivertte tut */
+.navbar .navbar-nav.flex-grow-1 .nav-link.active,
+.navbar .navbar-nav.flex-grow-1 .nav-link:hover {
+  color: var(--navy) !important;
+  opacity: .85;
+}
+
+/* SAĞ menü: Sepet (CartSummary) ve Admin -> lacivert pill (beyaz yazı) */
+.admin-pill {
+  background-color: var(--navy);
+  color: #fff !important;
+  border-radius: 999px;
+  padding: .45rem .9rem;
+  border: 1px solid var(--navy);
+  line-height: 1;
+}
+.admin-pill i { color: inherit !important; }
+.admin-pill:hover { filter: brightness(1.1); color:#fff !important; }
+
+.cart-slot a,
+.cart-slot button {
+  background-color: var(--navy) !important;
+  color: #fff !important;
+  border: 1px solid var(--navy) !important;
+  border-radius: 999px !important;
+  padding: .45rem .8rem !important;
+  line-height: 1 !important;
+}
+.cart-slot i { color: inherit !important; }
+
+/* Global primary butonları lacivert yap */
+:root { --navy: #0d1b4c; }
+
+.btn-primary {
+  background-color: var(--navy) !important;
+  border-color: var(--navy) !important;
+  color: #fff !important;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #0a153b !important; /* bir ton koyu */
+  border-color: #0a153b !important;
+  color: #fff !important;
+}
+
+/* Outline primary’ler de marka rengine uysun */
+.btn-outline-primary {
+  color: var(--navy) !important;
+  border-color: var(--navy) !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: var(--navy) !important;
+  color: #fff !important;
+  border-color: var(--navy) !important;
+}
+
+ .tooltip-btn {
+        position: relative;
+    }
+
+    /* Tooltip kutusu */
+    .tooltip-btn::after {
+        content: "Sepete Ekle";
+        position: absolute;
+        bottom: 130%;
+        /* yukarıda gözüksün */
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.95);
+        /* beyazımsı arka plan */
+        color: #0d1b4c;
+        /* lacivert tonlu yazı */
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    /* Tooltip ok işareti */
+    .tooltip-btn::before {
+        content: "";
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: rgba(255, 255, 255, 0.95);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .tooltip-btn:hover::after,
+    .tooltip-btn:hover::before {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-4px);
+    }

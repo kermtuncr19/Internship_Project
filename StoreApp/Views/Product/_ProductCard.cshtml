@@ -1,4 +1,6 @@
 @model Product
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
 
 <div class="col-sm-12 col-md-4 my-3">
     <div class="card" style="width: 18rem;">
@@ -19,12 +21,12 @@
 
                 <form id="@Model.ProductId" asp-page="/cart" method="post">
                     <input type="hidden" asp-for="ProductId" />
-                    <input type="hidden" name="returnUrl" value="/Product/Get/@Model.ProductId" />
-                    <button type="submit" class="btn btn-primary">
+                    <input type="hidden" name="returnUrl" value="@ViewContext.HttpContext.Request.PathAndQuery()" />
+                    <button type="submit" class="btn btn-primary tooltip-btn" style="border:none;">
                         <i class="fa fa-cart-plus"></i>
-                        Sepete Ekle
                     </button>
                 </form>
+
             </div>
         </div>
     </div>

@@ -145,7 +145,6 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\StoreApp
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\StoreApp.staticwebassets.runtime.json
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\d6a611m2p8-xr48t8nauq.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\libman.json
-C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-5ipweew5fc.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\h67i4wc3ge-m63nr5e1wm.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\fnu0izcetf-gaqwphjnqn.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\x1kwvt406j-ru2cxr19xd.gz
@@ -242,3 +241,4 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services.pdb
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-ftpg6qawv2.gz

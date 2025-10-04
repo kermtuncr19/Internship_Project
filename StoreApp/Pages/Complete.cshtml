@@ -1,0 +1,16 @@
+@page
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<div class="text-center">
+<p>@OrderId Numaralı Siparişi Verdiğiniz İçin Teşekkür Ederiz.</p>
+<p>En Kısa Sürede Siparişiniz Kargolanacaktır.</p>
+<a class="btn btn-primary" asp-controller="Home" asp-action="Index">
+ <i class="fa-solid fa-house"></i>
+Fenerium</a>
+</div>
+
+@functions
+{
+    [BindProperty(SupportsGet =true)]
+    public String? OrderId { get; set;}
+}
