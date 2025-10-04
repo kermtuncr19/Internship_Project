@@ -6,6 +6,7 @@ using Repositories.Contracts;
 using Services.Contracts;
 using Services;
 using Entities.Models;
+using StoreApp.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,15 @@ builder.Services.AddDbContext<RepositoryContext>(options =>
     b => b.MigrationsAssembly("StoreApp"));
 });//veritabanı için servis kaydı.
 
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = "StoreApp.Session";
+    options.IdleTimeout = TimeSpan.FromMinutes(10);
+    //10 dk içinde bir istekte bulunulmazsa o oturum düşürülecek.
+});
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
 builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -27,13 +37,14 @@ builder.Services.AddScoped<IServiceManager, ServiceManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
 
-builder.Services.AddSingleton<Cart>();
+builder.Services.AddScoped<Cart>(c => SessionCart.GetCart(c));//singleton yerine scoped dediğimiz için kullanıcıların sepetleri artık ayrıldı ve sessiondan gelen cartı bize vermesini istiyoruz.
 
 builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 
 app.UseStaticFiles();
+app.UseSession();
 app.UseRouting();
 app.UseHttpsRedirection();
 

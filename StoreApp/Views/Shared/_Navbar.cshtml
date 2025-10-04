@@ -1,11 +1,8 @@
 <nav class="navbar navbar-expand-lg border-bottom" style="background-color: #e3f2fd;" data-bs-theme="light">
   <div class="container-fluid">
-     <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
-      <img src="~/images/fenerium-logo.png"
-           asp-append-version="true"
-           alt="Fenerium"
-           class="d-inline-block align-text-top"
-           style="height:28px;width:auto;object-fit:contain;" />
+    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+      <img src="~/images/fenerium-logo.png" asp-append-version="true" alt="Fenerium"
+        class="d-inline-block align-text-top" style="height:28px;width:auto;object-fit:contain;" />
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,16 +21,18 @@
             <i class="fa-solid fa-address-card"></i>
             İletişim</a></li>
       </ul>
-      <ul class="navbar-nav">
-
-        <li class="nav-item"><a class="nav-link active" aria-current="page" asp-area="" asp-page="/Cart">
-            <i class="fa-solid fa-cart-shopping"></i>
-            Sepet</a></li>
-        <li class="nav-item"><a class="nav-link active" aria-current="page" asp-area="Admin" asp-controller="Dashboard"
-            asp-action="Index">
+      <ul class="navbar-nav ms-auto align-items-center">
+    <li class="nav-item">
+        @await Component.InvokeAsync("CartSummary")
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" aria-current="page" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
             <i class="fa-solid fa-lock"></i>
-            Admin</a></li>
-      </ul>
+            Admin
+        </a>
+    </li>
+</ul>
+
 
     </div>
   </div>

@@ -8,7 +8,7 @@ namespace Entities.Models
             Lines = new List<CartLine>();
         }
 
-        public void AddItem(Product product, int quantity)
+        public virtual void AddItem(Product product, int quantity)
         {
             // eğer ürün varsa sayısını artır yoksa listeye ekle.
             CartLine? line = Lines.Where(l => l.Product.ProductId == product.ProductId).FirstOrDefault();
@@ -28,7 +28,7 @@ namespace Entities.Models
 
 
         }
-        public void DecrementItem(Product product, int quantity = 1)
+        public virtual void DecrementItem(Product product, int quantity = 1)
         {
             var line = Lines.FirstOrDefault(p => p.Product.ProductId == product.ProductId);
             if (line == null) return;
@@ -38,9 +38,9 @@ namespace Entities.Models
                 Lines.Remove(line);
         }
 
-        public void RemoveLine(Product product) => Lines.RemoveAll(l => l.Product.ProductId.Equals(product.ProductId));
+        public virtual void RemoveLine(Product product) => Lines.RemoveAll(l => l.Product.ProductId.Equals(product.ProductId));
         
-        public void RemoveLineById(int productId)
+        public virtual void RemoveLineById(int productId)
         {
             Lines.RemoveAll(l => l.Product.ProductId == productId);
         }
@@ -48,6 +48,6 @@ namespace Entities.Models
 
         public decimal ComputeTotalValue() => Lines.Sum(e => e.Product.Price * e.Quantity);
 
-        public void Clear() => Lines.Clear();
+        public virtual void Clear() => Lines.Clear();
     }
 }
