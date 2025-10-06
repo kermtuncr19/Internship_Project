@@ -1,14 +1,19 @@
 /* Lacivert tonu */
-:root { --navy: #0d1b4c; }
+:root {
+  --navy: #0d1b4c;
+}
 
 /* SOL menü: Ürünler / Kategoriler / İletişim -> lacivert metin + ikon */
 .navbar .navbar-nav.flex-grow-1 .nav-link {
   color: var(--navy) !important;
   font-weight: 600;
 }
+
 .navbar .navbar-nav.flex-grow-1 .nav-link i {
-  color: inherit !important; /* ikonlar da lacivert */
+  color: inherit !important;
+  /* ikonlar da lacivert */
 }
+
 /* active/hover renklerini de lacivertte tut */
 .navbar .navbar-nav.flex-grow-1 .nav-link.active,
 .navbar .navbar-nav.flex-grow-1 .nav-link:hover {
@@ -25,8 +30,15 @@
   border: 1px solid var(--navy);
   line-height: 1;
 }
-.admin-pill i { color: inherit !important; }
-.admin-pill:hover { filter: brightness(1.1); color:#fff !important; }
+
+.admin-pill i {
+  color: inherit !important;
+}
+
+.admin-pill:hover {
+  filter: brightness(1.1);
+  color: #fff !important;
+}
 
 .cart-slot a,
 .cart-slot button {
@@ -37,19 +49,26 @@
   padding: .45rem .8rem !important;
   line-height: 1 !important;
 }
-.cart-slot i { color: inherit !important; }
+
+.cart-slot i {
+  color: inherit !important;
+}
 
 /* Global primary butonları lacivert yap */
-:root { --navy: #0d1b4c; }
+:root {
+  --navy: #0d1b4c;
+}
 
 .btn-primary {
   background-color: var(--navy) !important;
   border-color: var(--navy) !important;
   color: #fff !important;
 }
+
 .btn-primary:hover,
 .btn-primary:focus {
-  background-color: #0a153b !important; /* bir ton koyu */
+  background-color: #0a153b !important;
+  /* bir ton koyu */
   border-color: #0a153b !important;
   color: #fff !important;
 }
@@ -59,6 +78,7 @@
   color: var(--navy) !important;
   border-color: var(--navy) !important;
 }
+
 .btn-outline-primary:hover,
 .btn-outline-primary:focus {
   background-color: var(--navy) !important;
@@ -66,48 +86,113 @@
   border-color: var(--navy) !important;
 }
 
- .tooltip-btn {
-        position: relative;
-    }
+.tooltip-btn {
+  position: relative;
+}
 
-    /* Tooltip kutusu */
-    .tooltip-btn::after {
-        content: "Sepete Ekle";
-        position: absolute;
-        bottom: 130%;
-        /* yukarıda gözüksün */
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(255, 255, 255, 0.95);
-        /* beyazımsı arka plan */
-        color: #0d1b4c;
-        /* lacivert tonlu yazı */
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        opacity: 0;
-        white-space: nowrap;
-        transition: all 0.3s ease;
-        pointer-events: none;
-    }
+/* Tooltip kutusu */
+.tooltip-btn::after {
+  content: "Sepete Ekle";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
 
-    /* Tooltip ok işareti */
-    .tooltip-btn::before {
-        content: "";
-        position: absolute;
-        bottom: 120%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 6px solid transparent;
-        border-top-color: rgba(255, 255, 255, 0.95);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
+/* Tooltip ok işareti */
+.tooltip-btn::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
 
-    .tooltip-btn:hover::after,
-    .tooltip-btn:hover::before {
-        opacity: 1;
-        transform: translateX(-50%) translateY(-4px);
-    }
+.tooltip-btn:hover::after,
+.tooltip-btn:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.btn-warning {
+  background-color: #ffea00 !important;
+  /* Fenerium sarısı */
+  border-color: #ffea00 !important;
+  color: #0d1b4c !important;
+  /* Lacivert yazı */
+  font-weight: 600;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+  background-color: #e6d300 !important;
+  /* Bir ton koyu sarı */
+  border-color: #e6d300 !important;
+  color: #0a153b !important;
+  /* Hover'da lacivert tonu biraz koyulaşsın */
+}
+
+/* Admin SOL menü: sadece Ürünler/Kategoriler beyaz */
+.admin-navbar .navbar-nav.flex-grow-1 .nav-link {
+  color: #fff !important;
+}
+.admin-navbar .navbar-nav.flex-grow-1 .nav-link i {
+  color: currentColor !important; /* ikon rengi de link rengiyle aynı (beyaz) */
+}
+.admin-navbar .navbar-nav.flex-grow-1 .nav-link:hover {
+  color: #fff !important;
+  opacity: .9;
+}
+.admin-navbar { background-color: var(--navy) !important; }
+
+.bg-warning {
+  background-color: #ffea00 !important;
+  /* Fenerium sarısı */
+  border-color: #ffea00 !important;
+  color: #0d1b4c !important;
+  /* Lacivert yazı */
+  font-weight: 600;
+}
+
+.bg-warning:hover,
+.bg-warning:focus {
+  background-color: #e6d300 !important;
+  /* Bir ton koyu sarı */
+  border-color: #e6d300 !important;
+  color: #0a153b !important;
+  /* Hover'da lacivert tonu biraz koyulaşsın */
+}
+.bg-primary {
+  background-color: var(--navy) !important;
+  border-color: var(--navy) !important;
+  color: #fff !important;
+}
+
+.bg-primary:hover,
+.bg-primary:focus {
+  background-color: #0a153b !important;
+  /* bir ton koyu */
+  border-color: #0a153b !important;
+  color: #fff !important;
+}
+
+
+

@@ -23,6 +23,15 @@ namespace Services
             _manager.Save();
         }
 
+        public void Delete(int id)
+        {
+            var order = _manager.Order.GetOneOrder(id);
+            if (order is null) return;
+
+            _manager.Order.Delete(order);
+            _manager.Save();
+        }
+
         public Order? GetOneOrder(int id)
         {
             return _manager.Order.GetOneOrder(id);

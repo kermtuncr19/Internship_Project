@@ -8,6 +8,7 @@ namespace Repositories.Contracts
         Order? GetOneOrder(int id);
         void Complete(int id);
         void SaveOrder(Order order);
+        void Delete(Order order);
         int NumberOfInProcess { get; }
 
     }

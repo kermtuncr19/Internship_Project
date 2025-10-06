@@ -24,12 +24,23 @@ namespace Repositories
             if (order is null)
                 throw new Exception("Sipariş Bulunamadı!");
             order.Shipped = true;
-            
+
+        }
+
+        public void Delete(Order order)
+        {
+            if (order != null)
+            {
+                _context.Orders.Remove(order);
+            }
         }
 
         public Order? GetOneOrder(int id)
         {
-            return FindByCondition(o => o.OrderedAt.Equals(id), false);
+            return _context.Orders
+         .Include(o => o.Lines)
+             .ThenInclude(cl => cl.Product)
+         .FirstOrDefault(o => o.OrderId == id);
         }
 
         public void SaveOrder(Order order)

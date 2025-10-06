@@ -10,10 +10,13 @@ namespace Entities.Models
         [Required(ErrorMessage = "İsim Gerekli!")]
         public String? Name { get; set; }
 
-        [Required(ErrorMessage = "Line1 Gerekli!")]
+        [Required(ErrorMessage = "Mahalle Bilgisi Gerekli!")]
         public String? Line1 { get; set; }
+        [Required(ErrorMessage = "Cadde Bilgisi Gerekli!")]
         public String? Line2 { get; set; }
+        [Required(ErrorMessage = "Sokak Bilgisi Gerekli!")]
         public String? Line3 { get; set; }
+        [Required(ErrorMessage = "Şehir Bilgisi Gerekli!")]
         public String? City { get; set; }
         public bool GiftWrap { get; set; }
         public bool Shipped { get; set; }

@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg border-bottom" style="background-color: #2409ec;" data-bs-theme="dark">
+<nav class="navbar navbar-expand-lg border-bottom admin-navbar" style="background-color: var(--navy);" data-bs-theme="dark">
   <div class="container-fluid">
     <a class="navbar-brand text-white" asp-controller="Dashboard" asp-action="Index">
       <i class="fa-solid fa-house"></i>
@@ -12,13 +12,18 @@
       <ul class="navbar-nav flex-grow-1">
         <li class="nav-item">
           <a class="nav-link text-white" aria-current="page" asp-controller="Product" asp-action="Index">
-            <i class="fa-solid fa-list"></i>
+           
             Ürünler</a>
         </li>
         <li class="nav-item">
           <a class="nav-link text-white" aria-current="page" asp-controller="Category" asp-action="Index">
-            <i class="fa-solid fa-list"></i>
+           
             Kategoriler
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-white" aria-current="page" asp-controller="Order" asp-action="Index">
+            Siparişler
           </a>
         </li>
       </ul>
