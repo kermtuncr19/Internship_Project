@@ -34,11 +34,12 @@ namespace StoreApp.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Line1 = table.Column<string>(type: "TEXT", nullable: false),
-                    Line2 = table.Column<string>(type: "TEXT", nullable: true),
-                    Line3 = table.Column<string>(type: "TEXT", nullable: true),
-                    City = table.Column<string>(type: "TEXT", nullable: true),
+                    Line2 = table.Column<string>(type: "TEXT", nullable: false),
+                    Line3 = table.Column<string>(type: "TEXT", nullable: false),
+                    City = table.Column<string>(type: "TEXT", nullable: false),
                     GiftWrap = table.Column<bool>(type: "INTEGER", nullable: false),
                     Shipped = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Cancelled = table.Column<bool>(type: "INTEGER", nullable: false),
                     OrderedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>

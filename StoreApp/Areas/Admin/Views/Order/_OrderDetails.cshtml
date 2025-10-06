@@ -18,39 +18,87 @@
         <p>@Model?.City</p>
         <p class="rounded-2 p-3">
             <span class="bg-warning p-2">Sipariş</span>
-            <span class="bg-primary p-2">@(Model.Shipped ? "Onaylandı" : "Onay Aşamasında")</span>
+            <span class="bg-primary p-2">
+                @(Model.Cancelled ? "İptal Edildi"
+                                : (Model.Shipped ? "Onaylandı" : "Onay Aşamasında"))
+            </span>
         </p>
     </div>
+
     <div class="col-md-9">
-        <h6 class="display-6 mt-3 text-center">
-            Cart
-        </h6>
-        <ul class="list-group">
-            @foreach (var cartItem in Model?.Lines)
-            {
-                <li class="list-group-item d-flex justify-content-between brand">
-                    @cartItem.Product.ProductName
-                    <b>@cartItem.Quantity * @cartItem.Product.Price.ToString("C2")
-                        = @((cartItem.Quantity * cartItem.Product.Price).ToString("C2"))
-                    </b>
-                </li>
-            }
-            <li class="list-group-item d-flex justify-content-between text-danger">
-                Total
-                <b>@total.ToString("C2")</b>
-            </li>
-        </ul>
-        <div class="text-center mt-2 p-2">
-            <form method="post" asp-action="Complete">
+        <h6 class="display-6 mt-3 text-center mb-3">Sepet</h6>
+
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Sipariş Özeti</span>
+                <span class="badge text-bg-light">Fiyat</span>
+            </div>
+
+            <div class="list-group list-group-flush">
+                @foreach (var item in Model.Lines)
+                {
+                    var lineTotal = item.Quantity * item.Product.Price;
+                    <div class="list-group-item py-3 d-flex align-items-center justify-content-between">
+                        <!-- 🖼️ sol tarafta minik ürün görseli -->
+                        <div class="d-flex align-items-center">
+                            <img src="@item.Product.ImageUrl" width="50" 
+                                class="rounded me-3 order-thumb" />
+                            <div>
+                                <div class="fw-semibold">@item.Product.ProductName</div>
+                                <div class="text-muted small">@item.Quantity × @item.Product.Price.ToString("C2")</div>
+                            </div>
+                        </div>
+                        <div class="price-col fw-semibold">@lineTotal.ToString("C2")</div>
+                    </div>
+                }
+
+                <!-- Ara Toplam -->
+                <div class="list-group-item py-3 d-flex justify-content-between">
+                    <div class="text-muted">Ara Toplam</div>
+                    <div class="price-col">@total.ToString("C2")</div>
+                </div>
+
+
+                <div class="list-group-item py-3 d-flex justify-content-between">
+                    <div class="text-muted">Kargo</div>
+                    <div class="price-col">₺0,00</div>
+                </div>
+
+
+                <!-- Toplam (vurgulu) -->
+                <div class="list-group-item py-3 d-flex justify-content-between align-items-center total-row">
+                    <div class="fw-semibold">Toplam</div>
+                    <div class="price-col fw-bold display-7">@total.ToString("C2")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 p-2">
+            <!-- Onayla -->
+            <form method="post" asp-action="Complete" class="d-inline">
                 <input type="hidden" name="id" value="@Model.OrderId" />
-                <button type="submit" class="btn btn-primary" disabled="@Model?.Shipped">
+                <button type="submit" class="btn btn-primary"
+                    disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
                     Siparişi Onayla
                 </button>
             </form>
-            <form method="post" asp-action="Delete"
-                onsubmit="return confirm('Bu siparişi silmek istediğinize emin misiniz?');">
+
+            <!-- İptal Et -->
+            <form method="post" asp-action="Cancel" class="d-inline"
+                onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
                 <input type="hidden" name="id" value="@Model.OrderId" />
-                <button type="submit" class="btn btn-danger mt-2">
+                <button type="submit" class="btn btn-warning ms-2"
+                    disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
+                    <i class="fa fa-ban"></i> Siparişi İptal Et
+                </button>
+            </form>
+
+            <!-- Sil -->
+            <form method="post" asp-action="Delete" class="d-inline"
+                onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
+                <input type="hidden" name="id" value="@Model.OrderId" />
+                <button type="submit" class="btn btn-danger ms-2">
                     <i class="fa fa-trash"></i> Siparişi Sil
                 </button>
             </form>
@@ -58,7 +106,7 @@
     </div>
 </div>
 
-<!-- Sayfanın altına -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     function confirmDelete(form) {
@@ -77,4 +125,3 @@
         });
     }
 </script>
-

@@ -154,14 +154,20 @@
 .admin-navbar .navbar-nav.flex-grow-1 .nav-link {
   color: #fff !important;
 }
+
 .admin-navbar .navbar-nav.flex-grow-1 .nav-link i {
-  color: currentColor !important; /* ikon rengi de link rengiyle aynı (beyaz) */
+  color: currentColor !important;
+  /* ikon rengi de link rengiyle aynı (beyaz) */
 }
+
 .admin-navbar .navbar-nav.flex-grow-1 .nav-link:hover {
   color: #fff !important;
   opacity: .9;
 }
-.admin-navbar { background-color: var(--navy) !important; }
+
+.admin-navbar {
+  background-color: var(--navy) !important;
+}
 
 .bg-warning {
   background-color: #ffea00 !important;
@@ -180,6 +186,7 @@
   color: #0a153b !important;
   /* Hover'da lacivert tonu biraz koyulaşsın */
 }
+
 .bg-primary {
   background-color: var(--navy) !important;
   border-color: var(--navy) !important;
@@ -194,5 +201,31 @@
   color: #fff !important;
 }
 
+/* rakamlar hizalı ve okunaklı olsun */
+.price-col {
+  font-variant-numeric: tabular-nums;
+  min-width: 140px;
+  /* sağ sütun sabit genişlik */
+  text-align: right;
+}
 
+.total-row {
+  border-top: 2px solid rgba(0, 0, 0, .06);
+  background: #fafafa;
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+}
 
+.list-group-item {
+  border-color: rgba(0, 0, 0, .06);
+}
+
+.card-header {
+  border-bottom-color: rgba(0, 0, 0, .06);
+}
+
+.display-7 {
+  font-size: 1.25rem;
+}
+
+/* Bootstrap'ta yoksa küçük bir başlık tonu */

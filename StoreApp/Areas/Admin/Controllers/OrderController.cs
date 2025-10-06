@@ -24,6 +24,18 @@ namespace StoreApp.Areas.Admin.Controllers
             _manager.OrderService.Complete(id);
             return RedirectToAction("Index");
         }
+        [HttpPost]
+        public IActionResult Cancel([FromForm] int id)
+        {
+            var order = _manager.OrderService.GetOneOrder(id);
+            if (order != null)
+            {
+                order.Cancelled = true;
+                _manager.OrderService.SaveOrder(order);
+            }
+            return RedirectToAction("Index");
+        }
+
 
         [HttpPost]
         public IActionResult Delete([FromForm] int id)

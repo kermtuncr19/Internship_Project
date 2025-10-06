@@ -20,6 +20,8 @@ namespace Entities.Models
         public String? City { get; set; }
         public bool GiftWrap { get; set; }
         public bool Shipped { get; set; }
+        public bool Cancelled { get; set; } = false;
+
         public DateTime OrderedAt { get; set; } = DateTime.Now;
 
     }

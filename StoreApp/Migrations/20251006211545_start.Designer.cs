@@ -11,7 +11,7 @@ using Repositories;
 namespace StoreApp.Migrations
 {
     [DbContext(typeof(RepositoryContext))]
-    [Migration("20251004214022_start")]
+    [Migration("20251006211545_start")]
     partial class start
     {
         /// <inheritdoc />
@@ -82,7 +82,11 @@ namespace StoreApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("City")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("GiftWrap")
@@ -93,9 +97,11 @@ namespace StoreApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Line2")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Line3")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
