@@ -297,4 +297,32 @@
 }
 .btn-outline-navy:hover{ background:#0d1b4c; color:#fff; }
 
+/* Lacivert buton */
+.btn-navy{ background:#0d1b4c; color:#fff; border:1px solid #0d1b4c; }
+.btn-navy:hover{ background:#14276b; border-color:#14276b; color:#fff; }
 
+/* Fenerium tarzı uzun, oval arama */
+.nav-search{
+  max-width: 420px; /* geniş ama esnek */
+  width: 100%;
+}
+.nav-search .input-group-text{
+  background:#fff;
+  border-right:0;
+}
+.nav-search .form-control{
+  background:#fff;
+  box-shadow:none !important;
+}
+.nav-search .form-control:focus{
+  border-color:#0d1b4c;
+  box-shadow:0 0 0 .2rem rgba(13,27,76,.12) !important;
+}
+.nav-search .input-group-text,
+.nav-search .form-control{ border-radius:999px 0 0 999px; }  /* sol hap */
+.nav-search .btn{ border-radius:0 999px 999px 0; }          /* sağ hap */
+
+/* Mobilde butonsuz sade arama */
+@media (max-width: 576px){
+  .nav-search .btn{ display:none; }
+}
