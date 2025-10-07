@@ -1,1 +1,143 @@
-@await Component.InvokeAsync("Showcase")
+@using Entities.Models
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+@{
+    Layout = "_Layout";
+    var activeId = ViewBag.ActiveCategoryId as int?;
+    var cats = ViewBag.Categories as IEnumerable<Category>;
+
+    // QueryString’ten mevcut değerleri al (ara/senaryo koruması)
+    var qMin = Context.Request.Query["MinPrice"].ToString();
+    var qMax = Context.Request.Query["MaxPrice"].ToString();
+    var qSearch = Context.Request.Query["SearchTerm"].ToString();
+}
+
+@if (TempData["PriceError"] is string pe && !string.IsNullOrWhiteSpace(pe))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @pe
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+<!-- ✅ KATEGORİ PILLS + FİLTRE BUTONU (Product/Index’e gider) -->
+<div class="category-pills d-flex flex-wrap align-items-center gap-2 mb-4 mt-4">
+    <a asp-controller="Product" asp-action="Index"
+       class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-outline-navy" : "btn-outline-navy")">
+        Tüm Ürünler
+    </a>
+
+    @if (cats != null)
+    {
+        foreach (var c in cats)
+        {
+            <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
+               class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
+                @c.CategoryName
+            </a>
+        }
+    }
+
+    <!-- 🔻 Filtre ikonu (collapse aç/kapat) -->
+    <button class="btn btn-sm btn-outline-navy rounded-pill px-3 ms-auto"
+            type="button" data-bs-toggle="collapse" data-bs-target="#priceFilter"
+            aria-expanded="false" aria-controls="priceFilter">
+        <i class="fa fa-filter me-1"></i> Fiyat
+    </button>
+</div>
+
+<!-- 🔽 AÇILIR FİYAT FİLTRESİ: Product/Index’e GET gönderir -->
+<div class="collapse" id="priceFilter">
+  <div class="card card-body shadow-sm border-0 mb-3">
+    <form id="priceForm" method="get" asp-controller="Product" asp-action="Index"
+          class="row g-2 align-items-end needs-validation" novalidate>
+
+      @* aktif kategori + arama terimi korunur *@
+      @if (activeId.HasValue)
+      {
+          <input type="hidden" name="CategoryId" value="@activeId.Value" />
+      }
+      @if (!string.IsNullOrWhiteSpace(qSearch))
+      {
+          <input type="hidden" name="SearchTerm" value="@qSearch" />
+      }
+
+      <div class="col-6 col-sm-3">
+        <label class="form-label small text-muted mb-1">Min</label>
+        <div class="input-group">
+          <span class="input-group-text">₺</span>
+          <input type="number" min="0" step="1" class="form-control" name="MinPrice"
+                 value="@(string.IsNullOrWhiteSpace(qMin) ? "" : qMin)" placeholder="0" />
+        </div>
+        <div class="invalid-feedback">Lütfen geçerli bir minimum fiyat girin.</div>
+      </div>
+
+      <div class="col-6 col-sm-3">
+        <label class="form-label small text-muted mb-1">Max</label>
+        <div class="input-group">
+          <span class="input-group-text">₺</span>
+          <input type="number" min="0" step="1" class="form-control" name="MaxPrice"
+                 value="@(string.IsNullOrWhiteSpace(qMax) ? "" : qMax)" placeholder="99999" />
+        </div>
+        <div class="invalid-feedback">Maksimum fiyat, minimumdan küçük olamaz.</div>
+      </div>
+
+      <div class="col-12 col-sm-auto">
+        <button type="submit" class="btn btn-navy w-100">Uygula</button>
+      </div>
+
+      <div class="col-12 col-sm-auto">
+        <a class="btn btn-outline-secondary w-100"
+           asp-controller="Product" asp-action="Index"
+           asp-route-CategoryId="@(activeId)"
+           asp-route-SearchTerm="@(qSearch)">
+          Temizle
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 🎯 Ana sayfa vitrin ürünleri -->
+<div class="my-4">
+    @await Component.InvokeAsync("Showcase")
+</div>
+
+
+
+<script>
+// Min ≤ Max doğrulaması (JS tarafı)
+(function () {
+  const form = document.getElementById('priceForm');
+  if (!form) return;
+  const minEl = form.querySelector('input[name="MinPrice"]');
+  const maxEl = form.querySelector('input[name="MaxPrice"]');
+
+  function validate() {
+    const min = parseFloat(minEl.value);
+    const max = parseFloat(maxEl.value);
+    const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
+
+    if (bothNumbers && min > max) {
+      maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
+      maxEl.classList.add('is-invalid');
+      return false;
+    } else {
+      maxEl.setCustomValidity('');
+      maxEl.classList.remove('is-invalid');
+      return true;
+    }
+  }
+
+  minEl.addEventListener('input', validate);
+  maxEl.addEventListener('input', validate);
+
+  form.addEventListener('submit', function (e) {
+    if (!validate()) {
+      e.preventDefault();
+      e.stopPropagation();
+      form.classList.add('was-validated');
+      maxEl.focus();
+    }
+  }, false);
+})();
+</script>

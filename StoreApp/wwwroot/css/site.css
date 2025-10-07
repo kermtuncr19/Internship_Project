@@ -326,3 +326,34 @@
 @media (max-width: 576px){
   .nav-search .btn{ display:none; }
 }
+
+/* Fiyat filtresi kartı */
+#priceFilter .card-body{
+  border-radius:.75rem;
+}
+
+.site-footer {
+  background: #0d1b4c;      /* Koyu lacivert */
+  color: #fff;              /* Yazılar beyaz */
+}
+
+.site-footer a,
+.site-footer .footer-link {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.site-footer a:hover,
+.site-footer .footer-link:hover {
+  color: #ffea00;           /* Hover’da sarı */
+  text-decoration: underline;
+}
+
+.site-footer .text-muted {
+  color: #fff !important;   /* Bootstrap'in muted rengini bastır */
+}
+
+.site-footer i {
+  color: #ffea00;           /* ikonlar için hoş bir kontrast */
+}
