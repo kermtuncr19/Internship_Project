@@ -38,7 +38,7 @@ namespace Services
             }
         }
 
-        public IEnumerable<Product> GetAllProducts(bool trackChanges)
+        public IQueryable<Product> GetAllProducts(bool trackChanges)
         {
             return _manager.Product.GetAllProducts(trackChanges);
         }

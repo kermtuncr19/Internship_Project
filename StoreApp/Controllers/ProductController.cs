@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Repositories.Contracts;
 using Services.Contracts;
+using StoreApp.Models;
+using Repositories.Extensions;
 
 
 namespace StoreApp.Controllers
@@ -23,19 +25,37 @@ namespace StoreApp.Controllers
             if (!p.IsValidPrice)
             {
                 TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
-                // İki seçenekten birini yap:
-                // 1) Fiyat filtresini yok say (en güvenlisi):
                 p.MinPrice = 0;
                 p.MaxPrice = int.MaxValue;
-
-                // 2) Veya otomatik düzelt (swap)
-                // (var tmp = p.MinPrice; p.MinPrice = p.MaxPrice; p.MaxPrice = tmp;)
             }
 
-            ViewBag.Categories = _manager.CategoryService.GetAllCategories(false); // IEnumerable<Category> dönen bir metod
+            ViewBag.Categories = _manager.CategoryService.GetAllCategories(false);
             ViewBag.ActiveCategoryId = p.CategoryId;
-            var model = _manager.PoductService.GetAllProductsWithDetails(p);
-            return View(model);
+
+            // 1) Filtrelenmiş temel sorgu (henüz pagination yok)
+            var filtered = _manager.PoductService.GetAllProducts(false)
+                .FilteredByCategoryId(p.CategoryId)
+                .FilteredBySearchTerm(p.SearchTerm)
+                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice);
+
+            // 2) Sayfalık veri
+            var products = filtered.ToPaginate(p.PageNumber, p.PageSize);
+
+            // 3) Toplam eleman sayısı (aynen aynı filtrelerle)
+            var total = filtered.Count();
+
+            var pagination = new Pagination
+            {
+                CurrentPage = p.PageNumber < 1 ? 1 : p.PageNumber,
+                ItemsPerPage = p.PageSize < 1 ? 6 : p.PageSize,
+                TotalItems = total
+            };
+
+            return View(new ProductListViewModel
+            {
+                Products = products,
+                Pagination = pagination
+            });
         }
 
         public IActionResult Get([FromRoute(Name = "id")] int id)

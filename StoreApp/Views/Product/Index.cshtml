@@ -1,53 +1,55 @@
-@model IQueryable<Product>
+@model ProductListViewModel
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 @{
-    var activeId = ViewBag.ActiveCategoryId as int?;
-    var cats = ViewBag.Categories as IEnumerable<Category>;
+  var activeId = ViewBag.ActiveCategoryId as int?;
+  var cats = ViewBag.Categories as IEnumerable<Category>;
 
-    // Mevcut değerleri QueryString'den okuyup input'lara set edelim
-    var qMin = Context.Request.Query["MinPrice"].ToString();
-    var qMax = Context.Request.Query["MaxPrice"].ToString();
-    var qSearch = Context.Request.Query["SearchTerm"].ToString();
+  // Mevcut değerleri QueryString'den okuyup input'lara set edelim
+  var qMin = Context.Request.Query["MinPrice"].ToString();
+  var qMax = Context.Request.Query["MaxPrice"].ToString();
+  var qSearch = Context.Request.Query["SearchTerm"].ToString();
 }
 
 @if (TempData["PriceError"] is string pe && !string.IsNullOrWhiteSpace(pe))
 {
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        @pe
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    @pe
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
 }
 
 
 <!-- ✅ KATEGORİ PILLS + FİLTRE BUTONU -->
 <div class="category-pills d-flex flex-wrap align-items-center gap-2 mb-4 mt-4">
-    <a asp-controller="Product" asp-action="Index"
-       class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
-        Tüm Ürünler
+  <a asp-controller="Product" asp-action="Index" asp-route-PageNumber="1"
+    asp-route-PageSize="@Model.Pagination.ItemsPerPage"
+    class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
+    Tüm Ürünler
+  </a>
+
+  @foreach (var c in cats)
+  {
+    <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId" asp-route-PageNumber="1"
+      asp-route-PageSize="@Model.Pagination.ItemsPerPage"
+      class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
+      @c.CategoryName
     </a>
+  }
 
-    @foreach (var c in cats)
-    {
-        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
-           class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
-            @c.CategoryName
-        </a>
-    }
 
-    <!-- 🔻 Filtre ikonu (collapse aç/kapat) -->
-    <button class="btn btn-sm btn-outline-navy rounded-pill px-3 ms-auto"
-            type="button" data-bs-toggle="collapse" data-bs-target="#priceFilter"
-            aria-expanded="false" aria-controls="priceFilter">
-        <i class="fa fa-filter me-1"></i> Fiyat
-    </button>
+  <!-- 🔻 Filtre ikonu (collapse aç/kapat) -->
+  <button class="btn btn-sm btn-outline-navy rounded-pill px-3 ms-auto" type="button" data-bs-toggle="collapse"
+    data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
+    <i class="fa fa-filter me-1"></i> Fiyat
+  </button>
 </div>
 
 <!-- 🔽 AÇILIR FİYAT FİLTRESİ (collapse) -->
 <div class="collapse" id="priceFilter">
   <div class="card card-body shadow-sm border-0 mb-3">
     <form id="priceForm" method="get" asp-controller="Product" asp-action="Index"
-          class="row g-2 align-items-end needs-validation" novalidate>
+      class="row g-2 align-items-end needs-validation" novalidate>
       @* ... gizli alanlar (CategoryId, SearchTerm) ... *@
 
       <div class="col-6 col-sm-3">
@@ -55,7 +57,7 @@
         <div class="input-group">
           <span class="input-group-text">₺</span>
           <input type="number" min="0" step="1" class="form-control" name="MinPrice"
-                 value="@(string.IsNullOrWhiteSpace(qMin) ? "" : qMin)" placeholder="0" />
+            value="@(string.IsNullOrWhiteSpace(qMin) ? "" : qMin)" placeholder="0" />
         </div>
         <div class="invalid-feedback">Lütfen geçerli bir minimum fiyat girin.</div>
       </div>
@@ -65,7 +67,7 @@
         <div class="input-group">
           <span class="input-group-text">₺</span>
           <input type="number" min="0" step="1" class="form-control" name="MaxPrice"
-                 value="@(string.IsNullOrWhiteSpace(qMax) ? "" : qMax)" placeholder="99999" />
+            value="@(string.IsNullOrWhiteSpace(qMax) ? "" : qMax)" placeholder="99999" />
         </div>
         <div class="invalid-feedback">Maksimum fiyat, minimumdan küçük olamaz.</div>
       </div>
@@ -75,60 +77,67 @@
       </div>
 
       <div class="col-12 col-sm-auto">
-        <a class="btn btn-outline-secondary w-100"
-           asp-controller="Product" asp-action="Index"
-           asp-route-CategoryId="@(activeId)"
-           asp-route-SearchTerm="@(qSearch)">
+        <a class="btn btn-outline-secondary w-100" asp-controller="Product" asp-action="Index"
+          asp-route-CategoryId="@(activeId)" asp-route-SearchTerm="@(qSearch)">
           Temizle
         </a>
       </div>
+      <input type="hidden" name="PageNumber" value="1" />
+      <input type="hidden" name="PageSize" value="@Model.Pagination.ItemsPerPage" />
     </form>
   </div>
 </div>
 <!-- ✅ ÜRÜN KARTLARI -->
-<div class="row my-3">
-    @foreach (var prd in Model)
+<div>
+  <div class="row my-3">
+    @foreach (var prd in Model.Products)
     {
-        <partial name="_ProductCard" model="prd" />
+      <partial name="_ProductCard" model="prd" />
     }
+  </div>
+  <div class="text-center">
+    <div page-model="@Model?.Pagination" page-action="Index" page-classes-enabled="true" page-class="btn"
+      page-class-normal="btn-outline-primary" page-class-selected="btn-warning" class="btn-group">
+    </div>
+  </div>
 </div>
 
 
 
 <script>
-(function () {
-  const form = document.getElementById('priceForm');
-  if (!form) return;
-  const minEl = form.querySelector('input[name="MinPrice"]');
-  const maxEl = form.querySelector('input[name="MaxPrice"]');
+  (function () {
+    const form = document.getElementById('priceForm');
+    if (!form) return;
+    const minEl = form.querySelector('input[name="MinPrice"]');
+    const maxEl = form.querySelector('input[name="MaxPrice"]');
 
-  function validate() {
-    const min = parseFloat(minEl.value);
-    const max = parseFloat(maxEl.value);
-    const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
+    function validate() {
+      const min = parseFloat(minEl.value);
+      const max = parseFloat(maxEl.value);
+      const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
 
-    if (bothNumbers && min > max) {
-      // Bootstrap için custom validity + sınıf
-      maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
-      maxEl.classList.add('is-invalid');
-      return false;
-    } else {
-      maxEl.setCustomValidity('');
-      maxEl.classList.remove('is-invalid');
-      return true;
+      if (bothNumbers && min > max) {
+        // Bootstrap için custom validity + sınıf
+        maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
+        maxEl.classList.add('is-invalid');
+        return false;
+      } else {
+        maxEl.setCustomValidity('');
+        maxEl.classList.remove('is-invalid');
+        return true;
+      }
     }
-  }
 
-  minEl.addEventListener('input', validate);
-  maxEl.addEventListener('input', validate);
+    minEl.addEventListener('input', validate);
+    maxEl.addEventListener('input', validate);
 
-  form.addEventListener('submit', function (e) {
-    if (!validate()) {
-      e.preventDefault();
-      e.stopPropagation();
-      form.classList.add('was-validated');
-      maxEl.focus();
-    }
-  }, false);
-})();
+    form.addEventListener('submit', function (e) {
+      if (!validate()) {
+        e.preventDefault();
+        e.stopPropagation();
+        form.classList.add('was-validated');
+        maxEl.focus();
+      }
+    }, false);
+  })();
 </script>
