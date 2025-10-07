@@ -135,6 +135,9 @@ namespace StoreApp.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ShowCase")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Summary")
                         .HasColumnType("TEXT");
 
@@ -152,6 +155,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/forma3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Lacivert Forma",
+                            ShowCase = true,
                             Summary = ""
                         },
                         new
@@ -161,6 +165,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/2.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Çubuklu Forma",
+                            ShowCase = true,
                             Summary = ""
                         },
                         new
@@ -170,6 +175,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Sarı Forma",
+                            ShowCase = true,
                             Summary = ""
                         },
                         new
@@ -179,6 +185,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/4.jpg",
                             Price = 3799m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma",
+                            ShowCase = false,
                             Summary = ""
                         },
                         new
@@ -188,6 +195,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/5.jpg",
                             Price = 2499m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu",
+                            ShowCase = false,
                             Summary = ""
                         },
                         new
@@ -197,6 +205,37 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/6.jpg",
                             Price = 1499m,
                             ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma",
+                            ShowCase = false,
+                            Summary = ""
+                        },
+                        new
+                        {
+                            ProductId = 7,
+                            CategoryId = 2,
+                            ImageUrl = "/images/9.jpg",
+                            Price = 899m,
+                            ProductName = "Fenerbahçe Basketbol Üç Kupa Tek Şampiyon Sarı Tshirt",
+                            ShowCase = false,
+                            Summary = ""
+                        },
+                        new
+                        {
+                            ProductId = 8,
+                            CategoryId = 1,
+                            ImageUrl = "/images/8.jpg",
+                            Price = 5399m,
+                            ProductName = "Fenerbahçe 2025/26 Antrasit Kaleci Forma",
+                            ShowCase = false,
+                            Summary = ""
+                        },
+                        new
+                        {
+                            ProductId = 9,
+                            CategoryId = 2,
+                            ImageUrl = "/images/10.jpg",
+                            Price = 279m,
+                            ProductName = "Fenerbahçe 24/25 EuroLeague Basketbol Şampiyonluk Kupa Anahtarlık",
+                            ShowCase = false,
                             Summary = ""
                         });
                 });

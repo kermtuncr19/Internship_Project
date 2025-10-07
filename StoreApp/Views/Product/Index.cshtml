@@ -1,23 +1,35 @@
 @model IQueryable<Product>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-<div class="row">
-    <div class="col-md-3">
-    @await Component.InvokeAsync("CategoriesMenu")
-    </div>
-    <div class="col-md-9">
-        <div class="row my-3">
-            @foreach (Product prd in Model)
-            {
+@{
+    var activeId = ViewBag.ActiveCategoryId as int?;
+    var cats = ViewBag.Categories as IEnumerable<Category>;
+}
 
-                <partial name="_ProductCard" model="@prd" />
+<!-- ✅ KATEGORİ PILLS -->
+<div class="category-pills d-flex flex-wrap gap-2 mb-4 mt-4">
+    <a asp-controller="Product" asp-action="Index"
+       class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
+        Tümü
+    </a>
 
-            }
-        </div>
-    </div>
+    @foreach (var c in cats)
+    {
+        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
+           class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
+            @c.CategoryName
+        </a>
+    }
+</div>
+
+<!-- ✅ ÜRÜN KARTLARI -->
+<div class="row my-3">
+    @foreach (var prd in Model)
+    {
+        <partial name="_ProductCard" model="prd" />
+    }
 </div>
 
 @section Footer {
-    <div>
-        Only for Index footer
-    </div>
+    <div>Only for Index footer</div>
 }

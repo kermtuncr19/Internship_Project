@@ -1,4 +1,5 @@
 using Entities.Models;
+using Entities.RequestParameters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
@@ -17,15 +18,11 @@ namespace StoreApp.Controllers
             _manager = manager;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(ProductRequestParameters p)
         {
-
-            // var context = new RepositoryContext(
-            //     new DbContextOptionsBuilder<RepositoryContext>()
-            //     .UseSqlite("Data Source = C:\\Users\\kermtuncr\\Desktop\\Internship_Project\\ProductDb.db")
-            //     .Options);  DI sayesinde buraya gerek kalmadı
-
-            var model = _manager.PoductService.GetAllProducts(false);
+             ViewBag.Categories = _manager.CategoryService.GetAllCategories(false); // IEnumerable<Category> dönen bir metod
+            ViewBag.ActiveCategoryId = p.CategoryId;
+            var model = _manager.PoductService.GetAllProductsWithDetails(p);
             return View(model);
         }
 

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace StoreApp.Migrations
 {
     /// <inheritdoc />
-    public partial class start : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -57,7 +57,8 @@ namespace StoreApp.Migrations
                     Price = table.Column<decimal>(type: "TEXT", nullable: false),
                     Summary = table.Column<string>(type: "TEXT", nullable: true),
                     ImageUrl = table.Column<string>(type: "TEXT", nullable: true),
-                    CategoryId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CategoryId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ShowCase = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -107,15 +108,18 @@ namespace StoreApp.Migrations
 
             migrationBuilder.InsertData(
                 table: "Products",
-                columns: new[] { "ProductId", "CategoryId", "ImageUrl", "Price", "ProductName", "Summary" },
+                columns: new[] { "ProductId", "CategoryId", "ImageUrl", "Price", "ProductName", "ShowCase", "Summary" },
                 values: new object[,]
                 {
-                    { 1, 1, "/images/forma3.jpg", 4249m, "Fenerbahçe 2025/26 Lacivert Forma", "" },
-                    { 2, 1, "/images/2.jpg", 4249m, "Fenerbahçe 2025/26 Çubuklu Forma", "" },
-                    { 3, 1, "/images/3.jpg", 4249m, "Fenerbahçe 2025/26 Sarı Forma", "" },
-                    { 4, 2, "/images/4.jpg", 3799m, "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma", "" },
-                    { 5, 2, "/images/5.jpg", 2499m, "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu", "" },
-                    { 6, 3, "/images/6.jpg", 1499m, "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma", "" }
+                    { 1, 1, "/images/forma3.jpg", 4249m, "Fenerbahçe 2025/26 Lacivert Forma", true, "" },
+                    { 2, 1, "/images/2.jpg", 4249m, "Fenerbahçe 2025/26 Çubuklu Forma", true, "" },
+                    { 3, 1, "/images/3.jpg", 4249m, "Fenerbahçe 2025/26 Sarı Forma", true, "" },
+                    { 4, 2, "/images/4.jpg", 3799m, "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma", false, "" },
+                    { 5, 2, "/images/5.jpg", 2499m, "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu", false, "" },
+                    { 6, 3, "/images/6.jpg", 1499m, "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma", false, "" },
+                    { 7, 2, "/images/9.jpg", 899m, "Fenerbahçe Basketbol Üç Kupa Tek Şampiyon Sarı Tshirt", false, "" },
+                    { 8, 1, "/images/8.jpg", 5399m, "Fenerbahçe 2025/26 Antrasit Kaleci Forma", false, "" },
+                    { 9, 2, "/images/10.jpg", 279m, "Fenerbahçe 24/25 EuroLeague Basketbol Şampiyonluk Kupa Anahtarlık", false, "" }
                 });
 
             migrationBuilder.CreateIndex(

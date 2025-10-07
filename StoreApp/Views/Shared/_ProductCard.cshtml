@@ -6,16 +6,21 @@
     <div class="card" style="width: 18rem;">
         <img src="@Model?.ImageUrl" class="card-img-top" alt="...">
         <div class="card-body">
+            <div class="card-text">
+                <div class="text-navy text-center lead p- rounded-2">
+                    @Model.Price.ToString("c")
+                </div>
+            </div>
             <h5 class="card-title">@Model.ProductName</h5>
             <p class="card-text">
-                Some quick example text to build on the card title and make up the bulk of the card’s content.
+               @Model?.Summary
             </p>
 
             <div class="d-flex">
-                <a asp-action="Get" asp-route-id="@Model.ProductId" class="btn me-2"
+                <a asp-controller="Product" asp-action="Get" asp-route-id="@Model.ProductId" class="btn me-2 tooltip1-btn"
                     style="background-color:#ffea00; color:black; border:none;">
                     <i class="fa-solid fa-arrow-right"></i>
-                    Detaylar
+                    
                 </a>
 
 

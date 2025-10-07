@@ -8,8 +8,9 @@ public class Product
     public String? ProductName { get; set; } = String.Empty;
     public decimal Price { get; set; }
     public String? Summary { get; set; } = String.Empty;
-    public String? ImageUrl { get; set; } 
+    public String? ImageUrl { get; set; }
     public int? CategoryId { get; set; }//foreign key
     public Category? Category { get; set; }//navigation property
+    public bool ShowCase { get; set; }
 
 }
