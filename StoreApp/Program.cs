@@ -10,6 +10,7 @@ builder.Services.ConfigureSession();
 builder.Services.ConfigureRepositoryRegistration();
 builder.Services.ConfigureServiceRegistration();
 builder.Services.ConfigureRouting();
+builder.Services.ConfigureIdentity();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -17,8 +18,10 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 app.UseSession();
-app.UseRouting();
 app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapAreaControllerRoute(
     name: "Admin",
@@ -34,6 +37,10 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
+
+
 app.ConfigureAndCheckMigration();
+app.ConfigureLocalization();
+app.ConfigureDefaultAdminUser();
 
 app.Run();

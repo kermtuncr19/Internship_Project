@@ -10,3 +10,4 @@ C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net9.0\Entities
 C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net9.0\refint\Entities.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net9.0\Entities.pdb
 C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net9.0\ref\Entities.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net9.0\Entities.csproj.AssemblyReference.cache
