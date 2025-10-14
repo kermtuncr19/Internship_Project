@@ -1,0 +1,76 @@
+@model UserDtoForUpdate
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+
+<div class="text-center my-5">
+  <div class="display-6 border-bottom pb-2">Kullanıcı Güncelle (@Model.UserName)</div>
+</div>
+
+<form method="post" asp-action="Update" class="container">
+  <div class="row g-4">
+
+    <!-- Sol: temel bilgiler -->
+    <div class="col-lg-7">
+      <div class="card form-card shadow-soft">
+        <div class="card-body p-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label asp-for="UserName" class="form-label">Kullanıcı Adı</label>
+              <input asp-for="UserName" class="form-control form-control-soft" autocomplete="username" />
+              <span asp-validation-for="UserName" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+              <label asp-for="Email" class="form-label">E-posta</label>
+              <input asp-for="Email" class="form-control form-control-soft" autocomplete="email" />
+              <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+              <label asp-for="PhoneNumber" class="form-label">Telefon</label>
+              <input asp-for="PhoneNumber" class="form-control form-control-soft" autocomplete="tel" />
+              <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <a asp-action="Index" class="btn btn-outline-navy btn-pill">
+              <i class="fa fa-solid fa-arrow-left"></i> Geri
+            </a>
+            <button type="submit" class="btn btn-navy btn-pill">
+              <i class="fa fa-solid fa-check"></i> Kaydet
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sağ: roller -->
+    <div class="col-lg-5">
+      <div class="card form-card shadow-soft">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="h5 m-0">Roller</div>
+          </div>
+
+          <div class="roles-wrap">
+            @foreach (var item in Model.Roles)
+            {
+              var isChecked = Model.UserRoles != null && Model.UserRoles.Contains(item);
+              <label class="role-chip @(isChecked ? "is-checked" : "")">
+                <input type="checkbox" name="UserRoles" value="@item" @(isChecked ? "checked" : "") />
+                <span>@item</span>
+              </label>
+            }
+          </div>
+
+          <div class="text-muted small mt-3">
+            Kullanıcı için uygun rolleri seçin.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</form>

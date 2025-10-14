@@ -1,0 +1,76 @@
+@model RegisterDto
+
+<div class="text-center my-5">
+
+    <h6 class="display-6">
+        <i class="fa-solid fa-user-plus text-white bg-secondary p-3 rounded-5 bg-primary"></i>
+        <br />
+        Kayıt Ol
+    </h6>
+</div>
+
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div>
+            <div class="text-danger" asp-validation-summary="All"></div>
+        </div>
+        <form method="post" asp-action="Register">
+
+            <div class="form-group my-3">
+                <label asp-for="UserName">Kullanıcı Adı</label>
+                <input asp-for="UserName" class="form-control" />
+            </div>
+
+            <div class="form-group my-3">
+                <label asp-for="Email">E-Posta</label>
+                <input asp-for="Email" class="form-control" />
+            </div>
+
+            <div class="form-group my-3">
+                <label asp-for="Password" class="form-label">Şifre</label>
+
+                <div class="pwd-wrap">
+                    <input type="password" asp-for="Password" class="form-control pwd-input" />
+                    <span id="togglePwdRegister" class="pwd-toggle-link" role="button" tabindex="0"
+                        aria-pressed="false">
+                        Göster
+                    </span>
+                </div>
+
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+
+            <div class="form-group my-3 d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Kayıt Ol
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const link = document.getElementById('togglePwdRegister');
+            const input = document.getElementById('@Html.IdFor(m => m.Password)');
+            if (!link || !input) return;
+
+            function toggle() {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                link.textContent = isHidden ? 'Gizle' : 'Göster';
+                link.setAttribute('aria-pressed', String(isHidden));
+            }
+
+            link.addEventListener('click', toggle);
+            link.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            });
+        });
+    </script>
+}

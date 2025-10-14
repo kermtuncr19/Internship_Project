@@ -1,0 +1,68 @@
+@model IEnumerable<IdentityUser>
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="text-center my-5">
+    <div class="display-6 border-bottom pb-2">Kullanıcılar</div>
+</div>
+
+<div class="d-flex justify-content-end page-actions">
+    <a asp-action="Create" class="btn btn-navy btn-pill">
+        <i class="fa fa-solid fa-plus"></i>
+        Kullanıcı Ekle
+    </a>
+</div>
+
+<div class="admin-table-wrap">
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-borderless align-middle table-admin">
+            <thead>
+                <tr>
+                    <th class="table-col-id">Id</th>
+                    <th>Kullanıcı Adı</th>
+                    <th>Rol</th>
+                    <th class="table-col-ops text-end">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (IdentityUser user in Model)
+                {
+                    <tr>
+                        <td class="table-col-id">
+                            <span class="truncate">@user.Id</span>
+                        </td>
+                        <td>@user.UserName</td>
+
+                        <!-- Roller (senin mevcut component/JS ile dolduruluyor gibi; attribute'ları korudum) -->
+                        <td user-name="@user.UserName" user-role=""></td>
+
+                        <td class="text-end table-col-ops">
+                            <div class="actions d-inline-flex flex-nowrap gap-2">
+                                <a class="btn btn-outline-navy btn-pill btn-sm" asp-action="Update"
+                                    asp-route-id="@user.UserName">
+                                    <i class="fa fa-solid fa-pen"></i>
+                                    Düzenle
+                                </a>
+
+                                <a class="btn btn-outline-navy btn-pill btn-sm" asp-action="ResetPassword"
+                                    asp-route-id="@user.UserName">
+                                    <i class="fa fa-solid fa-key"></i>
+                                    Şifreyi Sıfırla
+                                </a>
+
+                                <form method="post" asp-action="DeleteOneUser" class="m-0">
+                                    <input type="hidden" name="UserName" value="@user.UserName" />
+                                    <button type="submit" class="btn btn-danger btn-pill btn-sm">
+                                        <i class="fa fa-solid fa-trash"></i>
+                                        Sil
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

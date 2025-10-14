@@ -1,0 +1,107 @@
+@model UserDtoForCreation
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="text-center my-5">
+    <div class="display-6 border-bottom pb-2">Kullanıcı Oluştur</div>
+</div>
+
+<form method="post" asp-action="Create" class="container">
+    <div class="row g-4">
+        <!-- Sol kolon: temel bilgiler -->
+        <div class="col-lg-7">
+            <div class="card form-card shadow-soft">
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="UserName" class="form-label">Kullanıcı Adı</label>
+                            <input asp-for="UserName" class="form-control form-control-soft" autocomplete="username" />
+                            <span asp-validation-for="UserName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">E-posta</label>
+                            <input asp-for="Email" class="form-control form-control-soft" autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label">Şifre</label>
+
+                            <div class="pwd-wrap">
+                                <input asp-for="Password" class="form-control pwd-input" autocomplete="new-password"
+                                    type="password" />
+
+                                <!-- buton değil; sade metin kontrol -->
+                                <span id="togglePwd" class="pwd-toggle-link" role="button" tabindex="0"
+                                    aria-pressed="false">Göster</span>
+                            </div>
+
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label">Telefon</label>
+                            <input asp-for="PhoneNumber" class="form-control form-control-soft" autocomplete="tel" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a asp-action="Index" class="btn btn-outline-navy btn-pill">
+                            <i class="fa fa-solid fa-arrow-left"></i> Geri
+                        </a>
+                        <button type="submit" class="btn btn-navy btn-pill">
+                            <i class="fa fa-solid fa-check"></i> Kaydet
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ kolon: roller -->
+        <div class="col-lg-5">
+            <div class="card form-card shadow-soft">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="h5 m-0">Roller</div>
+                    </div>
+
+                    <div class="roles-wrap">
+                        @foreach (var item in Model.Roles)
+                        {
+                            <label class="role-chip">
+                                <input type="checkbox" name="Roles" value="@item" />
+                                <span>@item</span>
+                            </label>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const link = document.getElementById('togglePwd');                 // <span id="togglePwd">
+            const input = document.getElementById('@Html.IdFor(m => m.Password)'); // generated input id
+
+            if (!link || !input) { return; }
+
+            function toggle() {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                link.textContent = isHidden ? 'Gizle' : 'Göster';
+                link.setAttribute('aria-pressed', String(isHidden));
+            }
+
+            link.addEventListener('click', toggle);
+            link.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            });
+        });
+    </script>
+}
