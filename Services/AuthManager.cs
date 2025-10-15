@@ -40,6 +40,14 @@ namespace Services
             return result;
         }
 
+        public async Task<IdentityResult> DeleteOneUser(string userName)
+        {
+            var user = await GetOneUser(userName);
+            var result = await _userManager.DeleteAsync(user);
+            return result;
+
+        }
+
         public IEnumerable<IdentityUser> GetAllUsers()
         {
             return _userManager.Users.ToList();
@@ -47,42 +55,37 @@ namespace Services
 
         public async Task<IdentityUser> GetOneUser(string userName)
         {
-            return await _userManager.FindByNameAsync(userName);
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user is not null)
+                return user;
+            throw new Exception("Kullanıcı Bulunamadı!");
         }
 
         public async Task<UserDtoForUpdate> GetOneUserForUpdate(string userName)
         {
             var user = await GetOneUser(userName);
-            if (user is not null)
-            {
-                var userDto = _mapper.Map<UserDtoForUpdate>(user);
-                userDto.Roles = new HashSet<string>(Roles.Select(r => r.Name!).ToList());
-                userDto.UserRoles = new HashSet<string>(await _userManager.GetRolesAsync(user));
-                return userDto;
-            }
-            throw new Exception("Bir Hata Oluştu!");
+
+            var userDto = _mapper.Map<UserDtoForUpdate>(user);
+            userDto.Roles = new HashSet<string>(Roles.Select(r => r.Name!).ToList());
+            userDto.UserRoles = new HashSet<string>(await _userManager.GetRolesAsync(user));
+            return userDto;
+
+
         }
 
         public async Task<IdentityResult> ResetPassword(ResetPasswordDto model)
         {
             var user = await GetOneUser(model.UserName);
-            if (user is not null)
-            {
-                await _userManager.RemovePasswordAsync(user);
-                var result = await _userManager.AddPasswordAsync(user, model.Password);
-                return result;
-            }
-            throw new Exception("Kullanıcı Bulunamadı!");
+
+            await _userManager.RemovePasswordAsync(user);
+            var result = await _userManager.AddPasswordAsync(user, model.Password);
+            return result;
+
         }
 
         public async Task Update(UserDtoForUpdate userDto)
         {
             var user = await GetOneUser(userDto.UserName!);
-
-            if (user is null)
-            {
-                throw new Exception("Kullanıcı bulunamadı!");
-            }
 
             user.PhoneNumber = userDto.PhoneNumber;
             user.Email = userDto.Email;

@@ -11,6 +11,7 @@ builder.Services.ConfigureRepositoryRegistration();
 builder.Services.ConfigureServiceRegistration();
 builder.Services.ConfigureRouting();
 builder.Services.ConfigureIdentity();
+builder.Services.ConfigureApplicationCookie();
 
 builder.Services.AddAutoMapper(typeof(Program));
 

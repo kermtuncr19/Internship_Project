@@ -242,4 +242,4 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Services
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net9.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
-C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-r30p1mhckv.gz
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-2q6o55d1e0.gz

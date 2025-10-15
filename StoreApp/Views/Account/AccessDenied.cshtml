@@ -1,0 +1,41 @@
+@* Access Denied (403) *@
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<div class="container" style="max-width: 820px;">
+  <div class="text-center my-5">
+    <div class="status-hero">
+      <div class="status-icon">
+        <i class="fa-solid fa-ban"></i>
+      </div>
+      <h1 class="status-title">Erişim Engellendi</h1>
+      <p class="status-subtitle">
+        Bu sayfaya erişim yetkiniz bulunmuyor. Lütfen sistem yöneticisiyle iletişime geçin.
+      </p>
+    </div>
+  </div>
+
+  <div class="card form-card shadow-soft">
+    <div class="card-body p-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md">
+          <div class="text-muted">
+            Eğer bunun bir hata olduğunu düşünüyorsanız, hesabınız için ilgili rol/izinlerin tanımlı olduğundan emin olun.
+          </div>
+        </div>
+        <div class="col-12 col-md-auto">
+          <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a class="btn btn-outline-navy btn-pill" asp-controller="Home" asp-action="Index">
+              <i class="fa-solid fa-house"></i> Anasayfa
+            </a>
+            <a class="btn btn-outline-navy btn-pill" asp-controller="Product" asp-action="Index">
+              <i class="fa-solid fa-list"></i> Ürünler
+            </a>
+            <a class="btn btn-outline-navy btn-pill" asp-page="/Contact">
+              <i class="fa-solid fa-address-card"></i> İletişim
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
