@@ -1,4 +1,6 @@
 @model ProductListViewModel
+@using Entities.Models
+
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 @{
@@ -19,30 +21,38 @@
   </div>
 }
 
+<!-- ✅ KATEGORİ ŞERİDİ + FİLTRE (responsive) -->
+<div class="category-bar row g-2 align-items-center mb-3 mt-4">
+  <!-- Kategori pill’leri: yatay kaydırmalı şerit -->
+  <div class="col-12 col-md">
+    <div class="chips d-flex flex-nowrap overflow-auto gap-2 pe-2">
+      <a asp-controller="Product" asp-action="Index" asp-route-PageNumber="1"
+        asp-route-PageSize="@Model.Pagination.ItemsPerPage"
+        class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
+        Tüm Ürünler
+      </a>
 
-<!-- ✅ KATEGORİ PILLS + FİLTRE BUTONU -->
-<div class="category-pills d-flex flex-wrap align-items-center gap-2 mb-4 mt-4">
-  <a asp-controller="Product" asp-action="Index" asp-route-PageNumber="1"
-    asp-route-PageSize="@Model.Pagination.ItemsPerPage"
-    class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
-    Tüm Ürünler
-  </a>
+      @if (cats is not null)
+      {
+        foreach (var c in cats)
+        {
+          <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId" asp-route-PageNumber="1"
+            asp-route-PageSize="@Model.Pagination.ItemsPerPage"
+            class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
+            @c.CategoryName
+          </a>
+        }
+      }
+    </div>
+  </div>
 
-  @foreach (var c in cats)
-  {
-    <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId" asp-route-PageNumber="1"
-      asp-route-PageSize="@Model.Pagination.ItemsPerPage"
-      class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
-      @c.CategoryName
-    </a>
-  }
-
-
-  <!-- 🔻 Filtre ikonu (collapse aç/kapat) -->
-  <button class="btn btn-sm btn-outline-navy rounded-pill px-3 ms-auto" type="button" data-bs-toggle="collapse"
-    data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
-    <i class="fa fa-filter me-1"></i> Fiyat
-  </button>
+  <!-- Fiyat düğmesi: xs’de altta full-width, md+’da sağda -->
+  <div class="col-12 col-md-auto text-md-end">
+    <button class="btn btn-sm btn-outline-navy rounded-pill px-3 w-100 w-md-auto" type="button"
+      data-bs-toggle="collapse" data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
+      <i class="fa fa-filter me-1"></i> Fiyat
+    </button>
+  </div>
 </div>
 
 <!-- 🔽 AÇILIR FİYAT FİLTRESİ (collapse) -->
@@ -50,7 +60,18 @@
   <div class="card card-body shadow-sm border-0 mb-3">
     <form id="priceForm" method="get" asp-controller="Product" asp-action="Index"
       class="row g-2 align-items-end needs-validation" novalidate>
-      @* ... gizli alanlar (CategoryId, SearchTerm) ... *@
+
+      @* aktif kategori + arama terimi + sayfalama korunur *@
+      @if (activeId.HasValue)
+      {
+        <input type="hidden" name="CategoryId" value="@activeId.Value" />
+      }
+      @if (!string.IsNullOrWhiteSpace(qSearch))
+      {
+        <input type="hidden" name="SearchTerm" value="@qSearch" />
+      }
+      <input type="hidden" name="PageNumber" value="1" />
+      <input type="hidden" name="PageSize" value="@Model.Pagination.ItemsPerPage" />
 
       <div class="col-6 col-sm-3">
         <label class="form-label small text-muted mb-1">Min</label>
@@ -82,11 +103,10 @@
           Temizle
         </a>
       </div>
-      <input type="hidden" name="PageNumber" value="1" />
-      <input type="hidden" name="PageSize" value="@Model.Pagination.ItemsPerPage" />
     </form>
   </div>
 </div>
+
 <!-- ✅ ÜRÜN KARTLARI -->
 <div>
   <div class="row my-3">
@@ -95,49 +115,71 @@
       <partial name="_ProductCard" model="prd" />
     }
   </div>
+
   <div class="text-center">
     <div page-model="@Model?.Pagination" page-action="Index" page-classes-enabled="true" page-class="btn"
-      page-class-normal="btn-outline-primary" page-class-selected="btn-warning" class="btn-group">
+      page-class-normal="btn-outline-primary" page-class-selected="btn-warning" class="btn-group"
+      page-url-CategoryId="@(ViewBag.ActiveCategoryId)" page-url-SearchTerm="@(Context.Request.Query["SearchTerm"])"
+      page-url-MinPrice="@(Context.Request.Query["MinPrice"])" page-url-MaxPrice="@(Context.Request.Query["MaxPrice"])"
+      page-url-PageSize="@Model.Pagination.ItemsPerPage">>
     </div>
   </div>
 </div>
 
+@section Scripts {
+  <script>
+    // Min ≤ Max doğrulaması (JS tarafı)
+    (function () {
+      const form = document.getElementById('priceForm');
+      if (!form) return;
+      const minEl = form.querySelector('input[name="MinPrice"]');
+      const maxEl = form.querySelector('input[name="MaxPrice"]');
 
-
-<script>
-  (function () {
-    const form = document.getElementById('priceForm');
-    if (!form) return;
-    const minEl = form.querySelector('input[name="MinPrice"]');
-    const maxEl = form.querySelector('input[name="MaxPrice"]');
-
-    function validate() {
-      const min = parseFloat(minEl.value);
-      const max = parseFloat(maxEl.value);
-      const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
-
-      if (bothNumbers && min > max) {
-        // Bootstrap için custom validity + sınıf
-        maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
-        maxEl.classList.add('is-invalid');
-        return false;
-      } else {
-        maxEl.setCustomValidity('');
-        maxEl.classList.remove('is-invalid');
-        return true;
+      function validate() {
+        const min = parseFloat(minEl.value);
+        const max = parseFloat(maxEl.value);
+        const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
+        if (bothNumbers && min > max) {
+          maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
+          maxEl.classList.add('is-invalid');
+          return false;
+        } else {
+          maxEl.setCustomValidity('');
+          maxEl.classList.remove('is-invalid');
+          return true;
+        }
       }
-    }
 
-    minEl.addEventListener('input', validate);
-    maxEl.addEventListener('input', validate);
+      minEl.addEventListener('input', validate);
+      maxEl.addEventListener('input', validate);
 
-    form.addEventListener('submit', function (e) {
-      if (!validate()) {
-        e.preventDefault();
-        e.stopPropagation();
-        form.classList.add('was-validated');
-        maxEl.focus();
-      }
-    }, false);
-  })();
-</script>
+      form.addEventListener('submit', function (e) {
+        if (!validate()) {
+          e.preventDefault();
+          e.stopPropagation();
+          form.classList.add('was-validated');
+          maxEl.focus();
+        }
+      }, false);
+    })();
+  </script>
+}
+
+<style>
+  /* --- Bu küçük stil, yatay kaydırmalı kategori şeridi için. İstersen site.css'e taşı. --- */
+  .chips {
+    scrollbar-width: none;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chips .btn {
+    white-space: nowrap;
+  }
+
+  .category-bar {
+    row-gap: .5rem;
+  }
+</style>

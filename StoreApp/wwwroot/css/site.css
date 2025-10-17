@@ -746,3 +746,221 @@
   color: #525a6a;
   max-width: 640px;
 }
+:root { --navy:#0d1b4c; }
+
+/* Marka butonları (zaten varsa tekrar sorun değil) */
+.btn-navy{ background:var(--navy)!important; border-color:var(--navy)!important; color:#fff!important; }
+.btn-navy:hover{ filter: brightness(1.08); }
+
+/* Arama alanı flex içinde küçülebilsin, taşma yapmasın */
+.navbar-search{ min-width:0; }                 /* kritik */
+.navbar-search .nav-search{ max-width:720px; } /* lg ve üstünde genişlik kontrolü */
+.navbar-search .form-control{ min-width:0; }   /* input shrink edebilsin */
+
+/* Sağdaki aksiyonlar tek satır kalsın (ikon/metin davranışı) */
+.actions .btn, .actions .nav-link { white-space: nowrap; }
+
+/* Çok dar ekranlarda metinleri gizlemek istersen:
+.actions .btn .text, .actions .nav-link .text { display:none; }
+@media (min-width: 576px){ .actions .btn .text, .actions .nav-link .text { display:inline; } }
+*/
+.tooltip1-btn-admin-edit {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-admin-edit::after {
+  content: "Düzenle";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-admin-edit::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-admin-edit:hover::after,
+.tooltip1-btn-admin-edit:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.tooltip1-btn-admin-detail {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-admin-detail::after {
+  content: "Detaylar";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-admin-detail::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-admin-detail:hover::after,
+.tooltip1-btn-admin-detail:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.tooltip1-btn-admin-delete {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-admin-delete::after {
+  content: "Sil";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-admin-delete::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-admin-delete:hover::after,
+.tooltip1-btn-admin-delete:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+.tooltip1-btn-admin-add {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-admin-add::after {
+  content: "Ürün Ekle";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-admin-add::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-admin-add:hover::after,
+.tooltip1-btn-admin-add:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* Kategori şeridi mobilde kaydırılabilir; taşma yok */
+  .chips{ scrollbar-width:none; }
+  .chips::-webkit-scrollbar{ display:none; }
+  .chips .btn{ white-space:nowrap; }
+  .category-bar{ row-gap:.5rem; }
+
+  /* Arama kutusu */
+  .page-search{ max-width:100%; }
+
+  /* View içinde @media kullanacaksan @@media yaz (Razor kaçışı) */
+  @media (min-width: 992px){
+    .page-search{ max-width:520px; margin-left:auto; margin-right:auto; }
+  }
+
+  /* İşlem butonlarının tek satır kalması */
+  .actions .btn{ white-space:nowrap; }

@@ -9,6 +9,7 @@ namespace StoreApp.Areas.Admin.Controllers
     {
         public IActionResult Index()
         {
+            TempData["info"] = $"Tekrardan Hoşgeldiniz, {DateTime.Now.ToShortTimeString()}";
             return View();
         }
     }

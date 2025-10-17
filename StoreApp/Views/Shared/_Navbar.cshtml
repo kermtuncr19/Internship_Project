@@ -1,38 +1,47 @@
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
 <nav class="navbar navbar-expand-lg border-bottom" style="background-color:#ffea00; border:none;" data-bs-theme="light">
-  <div class="container-fluid d-flex align-items-center justify-content-between">
+  <div class="container-fluid">
+
     <!-- LOGO -->
-    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+    <a class="navbar-brand d-flex align-items-center me-2" asp-controller="Home" asp-action="Index">
       <img src="~/images/fenerium-logo.png" asp-append-version="true" alt="Fenerium"
-           class="d-inline-block align-text-top" style="height:28px;width:auto;object-fit:contain;" />
+        class="d-inline-block align-text-top" style="height:28px;width:auto;object-fit:contain;" />
     </a>
 
-    <!-- 🔎 ORTADA SEARCH BAR -->
-    <form class="d-flex flex-grow-1 justify-content-center mx-3" method="get"
-          asp-controller="Product" asp-action="Index" role="search" style="max-width:480px;">
-      <div class="input-group nav-search w-100">
-        <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
-        <input type="search"
-               class="form-control border-start-0"
-               name="SearchTerm"
-               value="@(Context.Request.Query["SearchTerm"])"
-               placeholder="Fenerium’da Ara"
-               aria-label="Ara" />
-        <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
+    <!-- Toggler -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+      aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
-        {
+    <!-- İçerik -->
+    <div class="collapse navbar-collapse" id="mainNav">
+      <!-- ORTA: SEARCH -->
+      <form class="navbar-search order-2 order-lg-1 my-2 my-lg-0 mx-lg-3 flex-grow-1" method="get"
+        asp-controller="Product" asp-action="Index" role="search">
+        <div class="input-group nav-search w-100">
+          <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
+          <input type="search" class="form-control border-start-0" name="SearchTerm"
+            value="@(Context.Request.Query["SearchTerm"])" placeholder="Fenerium’da Ara" aria-label="Ara" />
+          <!-- xs-sm: gizli, md+: görünür -->
+          <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
+
+          @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
+          {
             <input type="hidden" name="CategoryId" value="@cid" />
-        }
-      </div>
-    </form>
+          }
+        </div>
+      </form>
 
-    <!-- SAĞ MENÜ -->
-    <ul class="navbar-nav ms-auto align-items-center gap-2">
-      <li class="nav-item cart-slot">
-        @await Component.InvokeAsync("CartSummary")
-      </li>
-     
-      <partial name="_LoginMenu"/>
-    </ul>
+      <!-- SAĞ: SEPET + GİRİŞ -->
+      <ul class="navbar-nav ms-lg-auto align-items-center gap-2 order-1 order-lg-3 actions">
+        <li class="nav-item cart-slot">
+          @await Component.InvokeAsync("CartSummary")
+        </li>
+        <partial name="_LoginMenu" />
+      </ul>
+    </div>
+
   </div>
 </nav>

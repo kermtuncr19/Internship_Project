@@ -8,6 +8,7 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        ViewData["Title"] = "Hoşgeldiniz";
         ViewBag.Categories = _manager.CategoryService.GetAllCategories(false); // IEnumerable<Category>
         ViewBag.ActiveCategoryId = null; // ana sayfada “Tümü” aktif
         return View();

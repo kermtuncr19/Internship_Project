@@ -3,10 +3,10 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="text-center">
-    <div class="display-6">Ekle</div>
+    <div class="display-6">Ürün Ekle</div>
 </div>
 
-<form method="post" asp-action="Create" enctype="multipart/form-data"> 
+<form asp-area="Admin" method="post" asp-action="Create" enctype="multipart/form-data"> 
 
     <div class="text-danger" asp-validation-summary="All"></div>
 
@@ -43,4 +43,5 @@
             <a asp-action="Index" class="btn btn-warning">Ürünler</a>
         </div>
     </div>
+     <div asp-validation-summary="All"></div>
 </form>

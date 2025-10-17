@@ -22,6 +22,7 @@ namespace StoreApp.Controllers
 
         public IActionResult Index(ProductRequestParameters p)
         {
+            ViewData["Title"] = "Ürünler";
             if (!p.IsValidPrice)
             {
                 TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
@@ -34,9 +35,10 @@ namespace StoreApp.Controllers
 
             // 1) Filtrelenmiş temel sorgu (henüz pagination yok)
             var filtered = _manager.PoductService.GetAllProducts(false)
-                .FilteredByCategoryId(p.CategoryId)
-                .FilteredBySearchTerm(p.SearchTerm)
-                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice);
+            .FilteredByCategoryId(p.CategoryId)
+            .FilteredBySearchTerm(p.SearchTerm)
+            .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+             .OrderBy(pr => pr.ProductId);
 
             // 2) Sayfalık veri
             var products = filtered.ToPaginate(p.PageNumber, p.PageSize);
@@ -62,6 +64,7 @@ namespace StoreApp.Controllers
         {
             //  Product product = _context.Products.First(p => p.Id.Equals(id));
             var model = _manager.PoductService.GetOneProduct(id, false);
+            ViewData["Title"] = model?.ProductName;
             return View(model);
         }
     }
