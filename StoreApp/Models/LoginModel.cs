@@ -5,8 +5,8 @@ namespace StoreApp.Models
     public class LoginModel
     {
         private string? _returnUrl;
-        [Required(ErrorMessage = "E-Posta Gerekli!")]
-        public string? Email { get; set; }
+        [Required(ErrorMessage = "E-posta veya Kullanıcı Adı Gerekli!")]
+        public string Identifier { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Şifre Gerekli!")]
         public string? Password { get; set; }

@@ -16,7 +16,16 @@ namespace StoreApp.Controllers
             _cart = cart;
         }
         [Authorize]
-        public ViewResult CheckOut() => View(new Order());
+        [HttpGet]
+        public IActionResult Checkout()
+        {
+            if (!_cart.Lines.Any())
+            {
+                TempData["CartEmpty"] = "Sepetiniz boş. Ödeme işlemine devam edemezsiniz.";
+                return RedirectToPage("/cart");
+            }
+            return View(new Order());
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Checkout([FromForm] Order order)

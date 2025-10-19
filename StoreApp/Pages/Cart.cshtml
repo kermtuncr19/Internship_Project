@@ -5,6 +5,7 @@
 @{
     // Sepette beden bilgisi olan en az bir satır var mı?
     var anySized = Model.Cart?.Lines?.Any(l => !string.IsNullOrEmpty(l.Size)) == true;
+    var hasItems = Model.Cart?.Lines?.Any() == true;
 }
 
 <div>
@@ -109,9 +110,25 @@
 
     <div class="text-center my-3">
         <div class="d-flex justify-content-center">
-            <a class="btn btn-primary me-2" asp-controller="Product" asp-action="Index">Alışverişe Devam Et</a>
-            <a class="btn" style="background-color:#ffea00; color:black; border:none;" asp-action="Checkout"
-                asp-controller="Order">Ödeme Yap</a>
+            <a class="btn btn-primary me-2" asp-controller="Product" asp-action="Index">
+                Alışverişe Devam Et
+            </a>
+
+            @if (hasItems)
+            {
+                <a class="btn" style="background-color:#ffea00; color:black; border:none;" asp-action="Checkout"
+                    asp-controller="Order">
+                    Ödeme Yap
+                </a>
+            }
+            else
+            {
+                <button type="button" class="btn" style="background-color:#ffea00; color:black; border:none;" disabled
+                    title="Sepetiniz boş">
+                    Ödeme Yap
+                </button>
+            }
         </div>
     </div>
+
 </div>
