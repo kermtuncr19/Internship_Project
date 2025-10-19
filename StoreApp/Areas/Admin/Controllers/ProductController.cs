@@ -137,23 +137,34 @@ namespace StoreApp.Areas.Admin.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update([FromForm] ProductDtoForUpdate productDto, IFormFile file)
+        public async Task<IActionResult> Update([FromForm] ProductDtoForUpdate productDto, IFormFile? file)
         {
+            // GEÇİCİ LOG (form binding kontrolü)
+            System.Diagnostics.Debug.WriteLine($"DTO.RequiresSize={productDto.RequiresSize}, DTO.SizeOptionsCsv='{productDto.SizeOptionsCsv}'");
+
             if (ModelState.IsValid)
             {
-                //file operation
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", file.FileName);
-
-                using (var stream = new FileStream(path, FileMode.Create))
+                // ✅ Sadece yeni dosya yüklenmişse fotoğrafı güncelle
+                if (file != null && file.Length > 0)
                 {
-                    await file.CopyToAsync(stream);
+                    string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", file.FileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    productDto.ImageUrl = String.Concat("/images/", file.FileName);
                 }
-                productDto.ImageUrl = String.Concat("/images/", file.FileName);
+                // ✅ Eğer file null ise, hidden input'tan gelen ImageUrl zaten productDto içinde
 
                 _manager.PoductService.UpdateOneProduct(productDto);
+                TempData["success"] = "Ürün başarıyla güncellendi.";
                 return RedirectToAction("Index");
             }
-            return View();
+
+            // ✅ Hata varsa kategorileri tekrar yükle
+            ViewBag.Categories = GetCategoriesSelectList();
+            return View(productDto);
         }
 
 

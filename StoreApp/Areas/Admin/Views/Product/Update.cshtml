@@ -12,6 +12,9 @@
 
     <input type="hidden" asp-for="ProductId" />
 
+    <!-- ✅ Mevcut ImageUrl'i sakla -->
+    <input type="hidden" asp-for="ImageUrl" />
+
     <div class="form-group my-3">
         <label asp-for="CategoryId">Kategori Adı</label>
         <select class="form-control" asp-items="@ViewBag.Categories" asp-for="CategoryId">
@@ -33,18 +36,40 @@
         <input asp-for="Price" class="form-control" />
     </div>
 
-    <div class="form-check form-switch">
+    <div class="form-check my-3">
+        <input class="form-check-input" type="checkbox" asp-for="RequiresSize" id="RequiresSize">
+        <label class="form-check-label" for="RequiresSize">Beden seçimi zorunlu</label>
+    </div>
+
+    <div class="form-group my-3">
+        <label asp-for="SizeOptionsCsv" class="form-label">
+            Bedenler (CSV) <span class="text-muted small">(örn: XS,S,M,L,XL)</span>
+        </label>
+        <input asp-for="SizeOptionsCsv" class="form-control" />
+        <span class="form-text text-muted">Boş bırakırsanız varsayılan liste: XS,S,M,L,XL</span>
+    </div>
+
+    <div class="form-check form-switch my-3">
         <input asp-for="ShowCase" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
         <label class="form-check-label" for="switchCheckDefault">Vitrin Ürün</label>
     </div>
 
+    <!-- ✅ Mevcut fotoğrafı göster -->
     <div class="form-group my-3">
-        <img class="rounded shadow" width="150" src="@Model?.ImageUrl" />
+        <label class="form-label">Mevcut Fotoğraf</label>
+        <div>
+            <img class="rounded shadow" width="150" src="@Model?.ImageUrl" alt="Ürün fotoğrafı" />
+        </div>
+        <small class="text-muted d-block mt-1">@Model?.ImageUrl</small>
     </div>
 
+    <!-- ✅ Yeni fotoğraf yükleme alanı -->
     <div class="form-group my-3">
-        <label asp-for="ImageUrl">Fotoğraf Url</label>
-        <input name="file" type="file" class="form-control" />
+        <label class="form-label">Yeni Fotoğraf Yükle (İsteğe Bağlı)</label>
+        <input name="file" type="file" class="form-control" accept="image/*" />
+        <span class="form-text text-muted">
+            <i class="bi bi-info-circle"></i> Boş bırakırsanız mevcut fotoğraf korunur
+        </span>
     </div>
 
     <div class="form-group my-3">

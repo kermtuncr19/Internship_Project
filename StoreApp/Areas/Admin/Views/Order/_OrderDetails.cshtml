@@ -2,7 +2,8 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 @{
-    var total = @Model.Lines.Sum(c => c.Product.Price * c.Quantity);
+    // Toplam
+    var total = Model.Lines.Sum(c => c.Product.Price * c.Quantity);
 }
 
 <div class="row shadow my-3">
@@ -12,10 +13,10 @@
             <br />
             @Model?.Name
         </h5>
-        <p>@Model?.Line1</p>
-        <p>@Model?.Line2</p>
-        <p>@Model?.Line3</p>
         <p>@Model?.City</p>
+        <p>@Model?.District</p>
+        <p>@Model?.Neighborhood</p>
+        <p>@Model?.Address</p>
         <p class="rounded-2 p-3">
             <span class="bg-warning p-2">Sipariş</span>
             <span class="bg-primary p-2">
@@ -27,7 +28,6 @@
 
     <div class="col-md-9">
         <h6 class="display-6 mt-3 text-center mb-3">Sepet</h6>
-
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -42,11 +42,19 @@
                     <div class="list-group-item py-3 d-flex align-items-center justify-content-between">
                         <!-- 🖼️ sol tarafta minik ürün görseli -->
                         <div class="d-flex align-items-center">
-                            <img src="@item.Product.ImageUrl" width="50" 
-                                class="rounded me-3 order-thumb" />
+                            <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
                             <div>
-                                <div class="fw-semibold">@item.Product.ProductName</div>
-                                <div class="text-muted small">@item.Quantity × @item.Product.Price.ToString("C2")</div>
+                                <div class="fw-semibold">
+                                    @item.Product.ProductName
+                                    @* ⬇️ Beden varsa parantez içinde göster *@
+                                    @if (!string.IsNullOrWhiteSpace(item.Size))
+                                    {
+                                        <span class="text-muted">(@item.Size Beden)</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">
+                                    @item.Quantity × @item.Product.Price.ToString("C2")
+                                </div>
                             </div>
                         </div>
                         <div class="price-col fw-semibold">@lineTotal.ToString("C2")</div>
@@ -59,12 +67,10 @@
                     <div class="price-col">@total.ToString("C2")</div>
                 </div>
 
-
                 <div class="list-group-item py-3 d-flex justify-content-between">
                     <div class="text-muted">Kargo</div>
                     <div class="price-col">₺0,00</div>
                 </div>
-
 
                 <!-- Toplam (vurgulu) -->
                 <div class="list-group-item py-3 d-flex justify-content-between align-items-center total-row">
@@ -105,7 +111,6 @@
         </div>
     </div>
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

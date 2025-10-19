@@ -964,3 +964,83 @@
 
   /* İşlem butonlarının tek satır kalması */
   .actions .btn{ white-space:nowrap; }
+
+  /* Lacivert tonu değişkeniniz zaten var ise onu kullanır */
+:root { --navy:#0d1b4c; }
+
+/* Size chips default: beyaz/outlined; seçilince lacivert dolu */
+.size-list .btn {
+  border-radius: 999px;
+  border: 1px solid var(--navy);
+  color: var(--navy);
+  background: #fff;
+  line-height: 1;
+}
+.size-list input[type="radio"]:checked + label {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+.size-list input[type="radio"]:focus + label {
+  outline: 2px solid rgba(13,27,76,.25);
+  outline-offset: 2px;
+}
+.size-list .size-chip > label.btn {
+  border-radius: 999px;
+  border: 1px solid var(--navy);
+  color: var(--navy);
+  background: #fff;
+  line-height: 1;
+  padding: .5rem 1rem;
+}
+
+/* SEÇİLİNCE kesinlikle lacivert olsun (Bootstrap'i override etmek için !important) */
+.size-list .size-chip input[type="radio"]:checked + label.btn {
+  background: var(--navy) !important;
+  color: #fff !important;
+  border-color: var(--navy) !important;
+}
+
+/* Klavye odağı */
+.size-list .size-chip input[type="radio"]:focus + label.btn {
+  box-shadow: 0 0 0 .2rem rgba(13,27,76,.15) !important;
+  outline: none !important;
+}
+  /* ========== BEDEN CHIP STİLİ (istersen site.css'e taşı) ========== */
+  :root { --navy:#0d1b4c; }
+
+  /* Chip buton görünümü */
+  .size-btn{
+    display:inline-block;
+    border-radius:999px;
+    border:1px solid var(--navy);
+    color:var(--navy);
+    background:#fff;
+    line-height:1;
+    padding:.6rem 1.1rem;
+    cursor:pointer;
+    user-select:none;
+    transition:all .15s ease;
+  }
+  .size-btn:hover{
+    background:#f6f8ff;
+  }
+
+  /* Seçiliyse lacivert dolu */
+  .size-chip input[type="radio"]:checked + .size-btn{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+
+  /* Klavye odağı */
+  .size-chip input[type="radio"]:focus + .size-btn{
+    box-shadow:0 0 0 .2rem rgba(13,27,76,.15);
+    outline:0;
+  }
+
+  /* Görsel + sağ blok hizası için min yükseklik küçük ekranlarda da hoş dursun */
+  @media (max-width: 991.98px){
+    .size-btn{ padding:.55rem 1rem; }
+  }
+

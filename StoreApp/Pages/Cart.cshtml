@@ -1,5 +1,11 @@
 @page "/cart"
 @model CartModel
+@using Entities.Models
+
+@{
+    // Sepette beden bilgisi olan en az bir satır var mı?
+    var anySized = Model.Cart?.Lines?.Any(l => !string.IsNullOrEmpty(l.Size)) == true;
+}
 
 <div>
     <div class="display-6 text-center">Sepet</div>
@@ -9,6 +15,11 @@
             <tr>
                 <th></th> <!-- foto -->
                 <th>Ürün</th>
+                @* Beden sütunu, sadece en az bir satırda beden varsa görünür *@
+                @if (anySized)
+                {
+                    <th class="text-center">Beden</th>
+                }
                 <th class="text-center">Adet</th>
                 <th>Fiyat</th>
                 <th>Toplam</th>
@@ -16,82 +27,91 @@
             </tr>
         </thead>
         <tbody>
-        @foreach (var line in Model.Cart?.Lines ?? Enumerable.Empty<CartLine>())
-        {
-            <tr>
-                <td class="py-2">
-                    @{
-                        // Resim yolu: ImageUrl boşsa placeholder göster
-                        var imgSrc = string.IsNullOrWhiteSpace(line.Product.ImageUrl)
+            @foreach (var line in Model.Cart?.Lines ?? Enumerable.Empty<CartLine>())
+            {
+                <tr>
+                    <td class="py-2">
+                        @{
+                            // Resim yolu: ImageUrl boşsa placeholder göster
+                            var imgSrc = string.IsNullOrWhiteSpace(line.Product.ImageUrl)
                             ? Url.Content("~/images/placeholder.png")
                             : (
-                                // Eğer ImageUrl sadece dosya adı ise /images/ altından ver
-                                line.Product.ImageUrl.StartsWith("~/") || line.Product.ImageUrl.StartsWith("/")
-                                    ? Url.Content(line.Product.ImageUrl)
-                                    : Url.Content($"~/images/{line.Product.ImageUrl}")
-                              );
+                            // Eğer ImageUrl sadece dosya adı ise /images/ altından ver
+                            line.Product.ImageUrl.StartsWith("~/") || line.Product.ImageUrl.StartsWith("/")
+                            ? Url.Content(line.Product.ImageUrl)
+                            : Url.Content($"~/images/{line.Product.ImageUrl}")
+                            );
+                        }
+                        <img src="@imgSrc" asp-append-version="true" alt="@line.Product.ProductName" class="rounded"
+                            width="50" />
+                    </td>
+
+                    <td>@line.Product.ProductName</td>
+
+                    @* Beden hücresi (varsa) *@
+                    @if (anySized)
+                    {
+                        <td class="text-center fw-semibold">
+                            @(!string.IsNullOrEmpty(line.Size) ? line.Size : "-")
+                        </td>
                     }
-                    <img src="@imgSrc" asp-append-version="true"
-                         alt="@line.Product.ProductName"
-                         class="rounded"
-                         width="50"" />
-                </td>
 
-                <td>@line.Product.ProductName</td>
+                    <td class="text-center">
+                        <div class="d-inline-flex align-items-center gap-2">
+                            <!-- - (1 azalt) -->
+                            <form method="post" asp-page-handler="Decrement" class="d-inline">
+                                <input type="hidden" name="id" value="@line.Product.ProductId" />
+                                <input type="hidden" name="size" value="@line.Size" /> @* BEDEN *@
+                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">−</button>
+                            </form>
 
-                <td class="text-center">
-                    <div class="d-inline-flex align-items-center gap-2">
-                        <!-- - (1 azalt) -->
-                        <form method="post" asp-page-handler="Decrement" class="d-inline">
+                            <span class="fw-semibold">@line.Quantity</span>
+
+                            <!-- + (1 artır) -->
+                            <form method="post" asp-page-handler="Increment" class="d-inline">
+                                <input type="hidden" name="id" value="@line.Product.ProductId" />
+                                <input type="hidden" name="size" value="@line.Size" /> @* BEDEN *@
+                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">+</button>
+                            </form>
+                        </div>
+                    </td>
+
+                    <td>@line.Product.Price.ToString("c")</td>
+                    <td>@((line.Product.Price * line.Quantity).ToString("c2"))</td>
+
+                    <td class="text-end">
+                        <!-- Tamamen sil -->
+                        <form method="post" asp-page-handler="Remove" class="d-inline">
                             <input type="hidden" name="id" value="@line.Product.ProductId" />
+                            <input type="hidden" name="size" value="@line.Size" /> @* BEDEN *@
                             <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">−</button>
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa fa-trash"></i> Sil
+                            </button>
                         </form>
-
-                        <span class="fw-semibold">@line.Quantity</span>
-
-                        <!-- + (1 artır) -->
-                        <form method="post" asp-page-handler="Increment" class="d-inline">
-                            <input type="hidden" name="id" value="@line.Product.ProductId" />
-                            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">+</button>
-                        </form>
-                    </div>
-                </td>
-
-                <td>@line.Product.Price.ToString("c")</td>
-                <td>@((line.Product.Price * line.Quantity).ToString("c2"))</td>
-
-                <td class="text-end">
-                    <!-- Tamamen sil -->
-                    <form method="post" asp-page-handler="Remove" class="d-inline">
-                        <input type="hidden" name="id" value="@line.Product.ProductId" />
-                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="fa fa-trash"></i> Sil
-                        </button>
-                    </form>
-                </td>
-            </tr>
-        }
+                    </td>
+                </tr>
+            }
         </tbody>
 
         <tfoot>
             <tr>
-                <td colspan="4" class="text-end fw-semibold">Genel Toplam:</td>
+                <td colspan="@(anySized ? 5 : 4)" class="text-end fw-semibold">Genel Toplam:</td>
                 <td class="text-primary fw-bold">
                     @Model.Cart?.ComputeTotalValue().ToString("c2")
                 </td>
                 <td></td>
             </tr>
         </tfoot>
-
-       
     </table>
-        <div class="text-center my-3">
+
+    <div class="text-center my-3">
         <div class="d-flex justify-content-center">
-        <a class="btn btn-primary me-2" asp-controller="Product" asp-action="Index">Alışverişe Devam Et</a>
-        <a class="btn" style="background-color:#ffea00; color:black; border:none;" asp-action="Checkout" asp-controller="Order">Ödeme Yap</a>
+            <a class="btn btn-primary me-2" asp-controller="Product" asp-action="Index">Alışverişe Devam Et</a>
+            <a class="btn" style="background-color:#ffea00; color:black; border:none;" asp-action="Checkout"
+                asp-controller="Order">Ödeme Yap</a>
         </div>
-         </div>
+    </div>
 </div>

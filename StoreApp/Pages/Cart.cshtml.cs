@@ -25,46 +25,55 @@ namespace StoreApp.Pages
         public void OnGet(string returnUrl)
         {
             ReturnUrl = returnUrl ?? "/";
-           
+
         }
 
-        public IActionResult OnPost(int productId, string returnUrl)
+        public IActionResult OnPost(int productId, string returnUrl, string? size)
         {
             Product? product = _manager.PoductService.GetOneProduct(productId, false);
 
-            if (product is not null)
+            if (product is null) return RedirectToPage(new { returnUrl });
+
+            // Sunucu tarafı koruması: beden zorunluysa boş gelmesin
+            if (product.RequiresSize && string.IsNullOrWhiteSpace(size))
             {
-               
-                Cart.AddItem(product, 1);
-               
+                TempData["CartError"] = "Lütfen beden seçin.";
+                return RedirectToAction("Get", "Product", new { id = productId });
             }
-            return RedirectToPage(new{returnUrl = returnUrl});
+
+            Cart.AddItem(product, 1, size);
+            return RedirectToPage(new { returnUrl });
         }
 
-        public IActionResult OnPostRemove(int id, string returnUrl)
-        {
-          
-            Cart.RemoveLineById(id);
-            return Page();
-        }
-
-        public IActionResult OnPostIncrement(int id, string returnUrl)
+        public IActionResult OnPostRemove(int id, string returnUrl, string? size)
         {
             var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
             if (product is not null)
-              
-            Cart.AddItem(product, 1);
-            
+            {
+                // 🔹 sadece bu beden satırını sil
+                Cart.RemoveLine(product, size);
+            }
+            return RedirectToPage(new { returnUrl });
+        }
+
+
+        public IActionResult OnPostIncrement(int id, string returnUrl, string? size)
+        {
+            var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
+            if (product is not null)
+
+                Cart.AddItem(product, 1, size);
+
 
             return RedirectToPage(new { returnUrl });
         }
 
-        public IActionResult OnPostDecrement(int id, string returnUrl)
+        public IActionResult OnPostDecrement(int id, string returnUrl, string? size)
         {
             var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
             if (product is not null)
-               
-            Cart.DecrementItem(product, 1);
+
+                Cart.DecrementItem(product, size, 1);
 
             return RedirectToPage(new { returnUrl });
         }

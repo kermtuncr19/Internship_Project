@@ -8,22 +8,33 @@ namespace Entities.Models
         public ICollection<CartLine> Lines { get; set; } = new List<CartLine>();
 
         [Required(ErrorMessage = "İsim Gerekli!")]
-        public String? Name { get; set; }
+        public string? Name { get; set; }
+
+        // ŞEHİR / İLÇE / MAHALLE / AÇIK ADRES
+        [Required(ErrorMessage = "Şehir Bilgisi Gerekli!")]
+        public string? City { get; set; }
+
+        [Required(ErrorMessage = "İlçe Bilgisi Gerekli!")]
+        public string? District { get; set; }   // yeni
 
         [Required(ErrorMessage = "Mahalle Bilgisi Gerekli!")]
-        public String? Line1 { get; set; }
-        [Required(ErrorMessage = "Cadde Bilgisi Gerekli!")]
-        public String? Line2 { get; set; }
-        [Required(ErrorMessage = "Sokak Bilgisi Gerekli!")]
-        public String? Line3 { get; set; }
-        [Required(ErrorMessage = "Şehir Bilgisi Gerekli!")]
-        public String? City { get; set; }
+        public string? Neighborhood { get; set; } // Line1'den rename
+
+        [Required(ErrorMessage = "Açık Adres Gerekli!")]
+        [Display(Name = "Açık Adres")]
+        public string? Address { get; set; }    // yeni (cadde/sokak yerine tek alan)
+        [Required(ErrorMessage = "Telefon numarası gerekli!")]
+        [Phone(ErrorMessage = "Geçerli bir telefon numarası girin.")]
+        [MaxLength(20)]
+        [Display(Name = "Telefon")]
+        [RegularExpression(@"^(\+90\s?)?0?(5\d{2})\s?\d{3}\s?\d{2}\s?\d{2}$",
+ ErrorMessage = "Telefon 05xx xxx xx xx formatında olmalı.")]
+        public string? PhoneNumber { get; set; }
+
         public bool GiftWrap { get; set; }
         public bool Shipped { get; set; }
         public bool Cancelled { get; set; } = false;
 
-        public DateTime OrderedAt { get; set; } = DateTime.Now;
-
+        public DateTime OrderedAt { get; set; } = DateTime.UtcNow;
     }
-    
 }

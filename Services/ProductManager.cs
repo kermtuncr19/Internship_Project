@@ -71,14 +71,20 @@ namespace Services
 
         public void UpdateOneProduct(ProductDtoForUpdate productDto)
         {
-            // var entity = _manager.Product.GetOneProduct(productDto.ProductId, true);
-            // entity.ProductName = productDto.ProductName;
-            //entity.Price = productDto.Price;
-            //entity.CategoryId = productDto.CategoryId;
+            // 1) Mevcut ürünü tracked olarak çek
+            var entity = _manager.Product.GetOneProduct(productDto.ProductId, true);
+            if (entity is null) throw new Exception("Product not found.");
 
-            var entity = _mapper.Map<Product>(productDto);
-            _manager.Product.UpdateOneProduct(entity);
+            // 2) Eğer dosya yüklenmemişse, mevcut ImageUrl'i koru (controller tarafında da yapabilirsiniz)
+            if (string.IsNullOrWhiteSpace(productDto.ImageUrl))
+                productDto.ImageUrl = entity.ImageUrl;
+
+            // 3) DTO -> entity (mevcut nesnenin üzerine)
+            _mapper.Map(productDto, entity);
+
+            // 4) Sadece Save
             _manager.Save();
         }
+
     }
 }

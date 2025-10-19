@@ -12,6 +12,9 @@ namespace Entities.Dto
         public String? Summary { get; init; } = String.Empty;
         public String? ImageUrl { get; set; }
         public int? CategoryId { get; init; }
+        
+        public bool RequiresSize { get; init; }
+        public string? SizeOptionsCsv { get; init; }
 
     }
 }

@@ -12,5 +12,7 @@ public class Product
     public int? CategoryId { get; set; }//foreign key
     public Category? Category { get; set; }//navigation property
     public bool ShowCase { get; set; }
+    public bool RequiresSize { get; set; } = false;
+    public string? SizeOptionsCsv { get; set; }
 
 }

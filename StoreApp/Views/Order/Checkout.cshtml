@@ -3,34 +3,168 @@
 
 <div class="text-danger" asp-validation-summary="All"></div>
 
-<form method="post" asp-action="Checkout">
-    <div class="form-group my-3">
-        <label asp-for="Name">İsim</label>
-        <input class="form-control" asp-for="Name">
-    </div>
-    <div class="form-group my-3">
-        <label asp-for="Line1">Mahalle</label>
-        <input class="form-control" asp-for="Line1">
-    </div>
-    <div class="form-group my-3">
-        <label asp-for="Line2">Cadde</label>
-        <input class="form-control" asp-for="Line2">
-    </div>
-    <div class="form-group my-3">
-        <label asp-for="Line3">Sokak</label>
-        <input class="form-control" asp-for="Line3">
-    </div>
-    <div class="form-group my-3">
-        <label asp-for="City">Şehir</label>
-        <input class="form-control" asp-for="City">
-    </div>
-    <div class="form-group my-3">
-        <input asp-for="GiftWrap">
-        <label>Bu Ürünleri Hediye Paketi Yap.</label>
-    </div>
-    <div class="text-center">
-        <button type="submit" class="btn btn-primary">
-        Siparişi Tamamla
-        </button>    
+<form method="post" asp-action="Checkout" id="checkoutForm" class="container">
+    <div class="row g-3">
+
+        <div class="col-md-6">
+            <label asp-for="Name" class="form-label">Ad Soyad</label>
+            <input asp-for="Name" class="form-control" autocomplete="name" />
+            <span class="text-danger small" asp-validation-for="Name"></span>
+        </div>
+        <!-- ✅ Yeni Telefon -->
+        <div class="col-md-6">
+            <label asp-for="PhoneNumber" class="form-label">Telefon</label>
+            <input asp-for="PhoneNumber" class="form-control" inputmode="tel" placeholder="05xx xxx xx xx" />
+            <span class="text-danger small" asp-validation-for="PhoneNumber"></span>
+        </div>
+
+        <!-- Şehir -->
+        <div class="col-md-6">
+            <label asp-for="City" class="form-label">Şehir</label>
+            <select asp-for="City" id="city" class="form-select">
+                <option value="">Seçiniz…</option>
+            </select>
+            <span class="text-danger small" asp-validation-for="City"></span>
+        </div>
+
+        <!-- İlçe -->
+        <div class="col-md-6">
+            <label asp-for="District" class="form-label">İlçe</label>
+            <select asp-for="District" id="district" class="form-select" disabled>
+                <option value="">Önce şehir seçiniz…</option>
+            </select>
+            <span class="text-danger small" asp-validation-for="District"></span>
+        </div>
+
+        <!-- Mahalle -->
+        <div class="col-md-6">
+            <label asp-for="Neighborhood" class="form-label">Mahalle</label>
+            <select asp-for="Neighborhood" id="neighborhood" class="form-select" disabled>
+                <option value="">Önce ilçe seçiniz…</option>
+            </select>
+            <span class="text-danger small" asp-validation-for="Neighborhood"></span>
+        </div>
+
+        <!-- Açık Adres -->
+        <div class="col-12">
+            <label asp-for="Address" class="form-label">Açık Adres</label>
+            <textarea asp-for="Address" rows="3" class="form-control"
+                placeholder="Cadde/Sokak, Kapı No, Daire, Bina adı…"></textarea>
+            <span class="text-danger small" asp-validation-for="Address"></span>
+        </div>
+
+        <div class="col-12">
+            <div class="form-check">
+                <input asp-for="GiftWrap" class="form-check-input" id="gift" />
+                <label for="gift" class="form-check-label">Bu ürünleri hediye paketi yap</label>
+            </div>
+        </div>
+
+        <div class="col-12 text-center mt-2">
+            <button type="submit" class="btn btn-primary btn-pill">Siparişi Tamamla</button>
+        </div>
+
     </div>
 </form>
+
+@section Scripts {
+    <script>
+        (function () {
+            const $city = document.getElementById('city');
+            const $district = document.getElementById('district');
+            const $neigh = document.getElementById('neighborhood');
+
+            // Yardımcı: select'i temizle + ilk option
+            function resetSelect(sel, placeholder, disabled) {
+                sel.length = 0;
+                sel.add(new Option(placeholder, ''));
+                sel.disabled = !!disabled;
+            }
+
+            // Şehirleri getir
+            fetch('/api/locations/cities')
+                .then(r => r.json())
+                .then(cities => {
+                    // option value = isim (model string olduğundan)
+                    for (const c of cities) {
+                        const name = c.name ?? c.Name ?? c.sehir_adi;
+                        const id = c.id ?? c.Id ?? c.sehir_id; // ilçe/mahalle sorgusu için lazım
+                        if (!name) continue;
+                        // value = name; data-id = gerçek id
+                        const opt = new Option(name, name);
+                        if (id) opt.dataset.id = id;
+                        $city.add(opt);
+                    }
+
+                    // Sayfa önceki posttan dönmüşse seçimi koru ve alt seviyeleri aç
+                    const currentCityName = '@(Model.City ?? "")'.trim();
+                    if (currentCityName) {
+                        $city.value = currentCityName;
+                        // tetikle ki ilçeler dolsun
+                        $city.dispatchEvent(new Event('change'));
+                    }
+                });
+
+            $city.addEventListener('change', () => {
+                resetSelect($district, $city.value ? 'İlçe seçiniz…' : 'Önce şehir seçiniz…', !$city.value);
+                resetSelect($neigh, 'Önce ilçe seçiniz…', true);
+                if (!$city.value) return;
+
+                // seçilen option'ın data-id'si (API ilçe için id istiyor)
+                const selectedOpt = $city.options[$city.selectedIndex];
+                const cityId = selectedOpt?.dataset?.id;
+                if (!cityId) return;
+
+                fetch('/api/locations/districts?cityId=' + encodeURIComponent(cityId))
+                    .then(r => r.json())
+                    .then(list => {
+                        for (const it of list) {
+                            const name = it.name ?? it.Name ?? it.ilce_adi;
+                            const id = it.id ?? it.Id ?? it.ilce_id;
+                            if (!name) continue;
+                            const opt = new Option(name, name);
+                            if (id) opt.dataset.id = id;
+                            $district.add(opt);
+                        }
+
+                        // Önceki değer varsa geri koy
+                        const currentDistrictName = '@(Model.District ?? "")'.trim();
+                        if (currentDistrictName) {
+                            $district.value = currentDistrictName;
+                            $district.dispatchEvent(new Event('change'));
+                        }
+                    });
+            });
+
+            $district.addEventListener('change', () => {
+                resetSelect($neigh, $district.value ? 'Mahalle seçiniz…' : 'Önce ilçe seçiniz…', !$district.value);
+                if (!($city.value && $district.value)) return;
+
+                const selectedCityOpt = $city.options[$city.selectedIndex];
+                const selectedDistOpt = $district.options[$district.selectedIndex];
+                const cityId = selectedCityOpt?.dataset?.id;
+                const districtId = selectedDistOpt?.dataset?.id;
+                if (!(cityId && districtId)) return;
+
+                const url = '/api/locations/neighborhoods?cityId=' + encodeURIComponent(cityId)
+                    + '&districtId=' + encodeURIComponent(districtId);
+
+                fetch(url)
+                    .then(r => r.json())
+                    .then(list => {
+                        for (const it of list) {
+                            const name = it.name ?? it.Name ?? it.mahalle_adi;
+                            if (!name) continue;
+                            $neigh.add(new Option(name, name)); // value = isim
+                        }
+
+                        const currentNeighName = '@(Model.Neighborhood ?? "")'.trim();
+                        if (currentNeighName) {
+                            $neigh.value = currentNeighName;
+                        }
+                        $neigh.disabled = false;
+                    });
+            });
+        })();
+    </script>
+}

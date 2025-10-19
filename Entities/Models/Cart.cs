@@ -8,17 +8,18 @@ namespace Entities.Models
             Lines = new List<CartLine>();
         }
 
-        public virtual void AddItem(Product product, int quantity)
+        public virtual void AddItem(Product product, int quantity, string? size)
         {
             // eğer ürün varsa sayısını artır yoksa listeye ekle.
-            CartLine? line = Lines.Where(l => l.Product.ProductId == product.ProductId).FirstOrDefault();
+            CartLine? line = Lines.Where(l => l.Product.ProductId == product.ProductId && l.Size == size).FirstOrDefault();
 
             if (line is null)
             {
                 Lines.Add(new CartLine()
                 {
                     Product = product,
-                    Quantity = quantity
+                    Quantity = quantity,
+                    Size = size
                 });
             }
             else
@@ -28,9 +29,9 @@ namespace Entities.Models
 
 
         }
-        public virtual void DecrementItem(Product product, int quantity = 1)
+        public virtual void DecrementItem(Product product, string? size, int quantity = 1)
         {
-            var line = Lines.FirstOrDefault(p => p.Product.ProductId == product.ProductId);
+            var line = Lines.FirstOrDefault(p => p.Product.ProductId == product.ProductId && p.Size == size);
             if (line == null) return;
 
             line.Quantity -= quantity;
@@ -38,8 +39,16 @@ namespace Entities.Models
                 Lines.Remove(line);
         }
 
-        public virtual void RemoveLine(Product product) => Lines.RemoveAll(l => l.Product.ProductId.Equals(product.ProductId));
-        
+        public virtual void RemoveLine(Product product, string? size)
+        {
+            var line = Lines.FirstOrDefault(l =>
+                l.Product.ProductId == product.ProductId &&
+                l.Size == size
+            );
+            if (line is not null)
+                Lines.Remove(line);
+        }
+
         public virtual void RemoveLineById(int productId)
         {
             Lines.RemoveAll(l => l.Product.ProductId == productId);

@@ -6,7 +6,7 @@
     <div class="display-6">Ürün Ekle</div>
 </div>
 
-<form asp-area="Admin" method="post" asp-action="Create" enctype="multipart/form-data"> 
+<form asp-area="Admin" method="post" asp-action="Create" enctype="multipart/form-data">
 
     <div class="text-danger" asp-validation-summary="All"></div>
 
@@ -31,6 +31,20 @@
         <input asp-for="Price" class="form-control" />
     </div>
 
+    <div class="form-check my-3">
+        <input class="form-check-input" type="checkbox" asp-for="RequiresSize" id="RequiresSize">
+        <label class="form-check-label" for="RequiresSize">Beden seçimi zorunlu</label>
+    </div>
+
+    <div class="form-group my-3">
+        <label asp-for="SizeOptionsCsv" class="form-label">
+            Bedenler (CSV) <span class="text-muted small">(örn: XS,S,M,L,XL)</span>
+        </label>
+        <input asp-for="SizeOptionsCsv" class="form-control" />
+        <span class="form-text text-muted">Boş bırakırsanız varsayılan liste: XS,S,M,L,XL</span>
+    </div>
+
+
     <div class="form-group my-3">
         <label asp-for="ImageUrl">Fotoğraf URL</label>
         <input name="file" type="file" class="form-control" />
@@ -43,5 +57,5 @@
             <a asp-action="Index" class="btn btn-warning">Ürünler</a>
         </div>
     </div>
-     <div asp-validation-summary="All"></div>
+    <div asp-validation-summary="All"></div>
 </form>

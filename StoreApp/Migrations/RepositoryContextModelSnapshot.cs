@@ -39,6 +39,9 @@ namespace StoreApp.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Size")
+                        .HasColumnType("text");
+
                     b.HasKey("CartLineId");
 
                     b.HasIndex("OrderId");
@@ -90,6 +93,10 @@ namespace StoreApp.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("OrderId"));
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("Cancelled")
                         .HasColumnType("boolean");
 
@@ -97,27 +104,28 @@ namespace StoreApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("District")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("GiftWrap")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Line1")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Line2")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Line3")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Neighborhood")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("OrderedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("Shipped")
                         .HasColumnType("boolean");
@@ -148,8 +156,14 @@ namespace StoreApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("RequiresSize")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("ShowCase")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("SizeOptionsCsv")
+                        .HasColumnType("text");
 
                     b.Property<string>("Summary")
                         .HasColumnType("text");
@@ -168,6 +182,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/forma3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Lacivert Forma",
+                            RequiresSize = false,
                             ShowCase = true,
                             Summary = ""
                         },
@@ -178,6 +193,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/2.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Çubuklu Forma",
+                            RequiresSize = false,
                             ShowCase = true,
                             Summary = ""
                         },
@@ -188,6 +204,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Sarı Forma",
+                            RequiresSize = false,
                             ShowCase = true,
                             Summary = ""
                         },
@@ -198,6 +215,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/4.jpg",
                             Price = 3799m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         },
@@ -208,6 +226,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/5.jpg",
                             Price = 2499m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         },
@@ -218,6 +237,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/6.jpg",
                             Price = 1499m,
                             ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         },
@@ -228,6 +248,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/9.jpg",
                             Price = 899m,
                             ProductName = "Fenerbahçe Basketbol Üç Kupa Tek Şampiyon Sarı Tshirt",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         },
@@ -238,6 +259,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/8.jpg",
                             Price = 5399m,
                             ProductName = "Fenerbahçe 2025/26 Antrasit Kaleci Forma",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         },
@@ -248,6 +270,7 @@ namespace StoreApp.Migrations
                             ImageUrl = "/images/10.jpg",
                             Price = 279m,
                             ProductName = "Fenerbahçe 24/25 EuroLeague Basketbol Şampiyonluk Kupa Anahtarlık",
+                            RequiresSize = false,
                             ShowCase = false,
                             Summary = ""
                         });
