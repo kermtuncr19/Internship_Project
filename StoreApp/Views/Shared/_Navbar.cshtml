@@ -39,6 +39,14 @@
         <li class="nav-item cart-slot">
           @await Component.InvokeAsync("CartSummary")
         </li>
+        @if (User.Identity?.IsAuthenticated ?? false)
+        {
+          <li class="nav-item cart-slot">
+            <a class="nav-link" asp-controller="Profile" asp-action="Index">
+              <i class="fa fa-user"></i> 
+            </a>
+          </li>
+        }
         <partial name="_LoginMenu" />
       </ul>
     </div>

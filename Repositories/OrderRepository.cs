@@ -1,54 +1,83 @@
 using Entities.Models;
 using Microsoft.EntityFrameworkCore;
 using Repositories.Contracts;
+using System.Linq;
 
 namespace Repositories
 {
     public class OrderRepository : RepositoryBase<Order>, IOrderRepository
     {
-        public OrderRepository(RepositoryContext context) : base(context)
-        {
-        }
+        public OrderRepository(RepositoryContext context) : base(context) { }
 
+        // Listeleme: satır ve ürünlerle birlikte
         public IQueryable<Order> Orders => _context.Orders
             .Include(o => o.Lines)
-            .ThenInclude(cl => cl.Product)
+                .ThenInclude(cl => cl.Product)
             .OrderBy(o => o.Shipped)
             .ThenByDescending(o => o.OrderId);
 
-        public int NumberOfInProcess => _context.Orders.Count(o => o.Shipped.Equals(false));
+        public int NumberOfInProcess => _context.Orders.Count(o => !o.Shipped);
 
         public void Complete(int id)
         {
-            var order = FindByCondition(o => o.OrderId.Equals(id), true);
+            var order = _context.Orders.FirstOrDefault(o => o.OrderId == id);
             if (order is null)
-                throw new Exception("Sipariş Bulunamadı!");
-            order.Shipped = true;
+                throw new Exception("Sipariş bulunamadı!");
 
+            order.Shipped = true;
+            _context.SaveChanges();
         }
 
         public void Delete(Order order)
         {
-            if (order != null)
-            {
-                _context.Orders.Remove(order);
-            }
+            if (order is null) return;
+            _context.Orders.Remove(order);
+            _context.SaveChanges();
         }
 
         public Order? GetOneOrder(int id)
         {
             return _context.Orders
-         .Include(o => o.Lines)
-             .ThenInclude(cl => cl.Product)
-         .FirstOrDefault(o => o.OrderId == id);
+                .Include(o => o.Lines)
+                    .ThenInclude(cl => cl.Product)
+                .FirstOrDefault(o => o.OrderId == id);
         }
 
+        // Repositories/OrderRepository.cs
         public void SaveOrder(Order order)
         {
-            _context.AttachRange(order.Lines.Select(l => l.Product));
-            if (order.OrderId == 0)
-                _context.Orders.Add(order);
+            // Aynı ürün/beden satırlarını birleştir
+            var merged = order.Lines
+                .GroupBy(l => new { l.ProductId, l.Size })
+                .Select(g => new CartLine
+                {
+                    ProductId = g.Key.ProductId,
+                    Size = g.Key.Size,
+                    Quantity = g.Sum(x => x.Quantity)
+                    // OrderId EF tarafından set edilecek (order'a eklendiği için)
+                })
+                .ToList();
+
+            order.Lines = merged;
+            order.OrderedAt = DateTime.UtcNow;
+
+            _context.Orders.Add(order);     // Order + Lines birlikte eklenir, FK'lar dolar
             _context.SaveChanges();
         }
+
+
+
+        // Profil ekranları için:
+        public Task<List<Order>> GetByUserAsync(string userId) =>
+            _context.Orders.AsNoTracking()
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderedAt)
+                .ToListAsync();
+
+        public Task<Order?> GetOneAsync(int id, string userId) =>
+            _context.Orders.AsNoTracking()
+                .Include(o => o.Lines)
+                    .ThenInclude(l => l.Product)
+                .FirstOrDefaultAsync(o => o.OrderId == id && o.UserId == userId);
     }
 }

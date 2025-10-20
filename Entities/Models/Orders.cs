@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace Entities.Models
 {
@@ -36,5 +37,8 @@ namespace Entities.Models
         public bool Cancelled { get; set; } = false;
 
         public DateTime OrderedAt { get; set; } = DateTime.UtcNow;
+
+        public string? UserId { get; set; }
+        public IdentityUser? User { get; set; }
     }
 }

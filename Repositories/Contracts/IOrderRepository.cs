@@ -11,5 +11,8 @@ namespace Repositories.Contracts
         void Delete(Order order);
         int NumberOfInProcess { get; }
 
+        Task<List<Order>> GetByUserAsync(string userId);
+        Task<Order?> GetOneAsync(int id, string userId);
+
     }
 }

@@ -41,5 +41,11 @@ namespace Services
         {
             _manager.Order.SaveOrder(order);
         }
+
+        public Task<List<Order>> GetMyOrdersAsync(string userId)
+      => _manager.Order.GetByUserAsync(userId);
+
+        public Task<Order?> GetMyOrderAsync(string userId, int id)
+            => _manager.Order.GetOneAsync(id, userId);
     }
 }

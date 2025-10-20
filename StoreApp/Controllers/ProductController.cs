@@ -1,5 +1,6 @@
 using Entities.Models;
 using Entities.RequestParameters;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
@@ -13,14 +14,18 @@ namespace StoreApp.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly IServiceManager _manager;//dependency injection
+        private readonly IServiceManager _manager;
+        private readonly RepositoryContext _db;
+        private readonly UserManager<IdentityUser> _um;
 
-        public ProductController(IServiceManager manager)
+        public ProductController(IServiceManager manager, RepositoryContext db, UserManager<IdentityUser> um)
         {
             _manager = manager;
+            _db = db;
+            _um = um;
         }
 
-        public IActionResult Index(ProductRequestParameters p)
+        public async Task<IActionResult> Index(ProductRequestParameters p)
         {
             ViewData["Title"] = "Ürünler";
             if (!p.IsValidPrice)
@@ -32,6 +37,22 @@ namespace StoreApp.Controllers
 
             ViewBag.Categories = _manager.CategoryService.GetAllCategories(false);
             ViewBag.ActiveCategoryId = p.CategoryId;
+
+            // Kullanıcı giriş yaptıysa favori ürünlerini al
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = _um.GetUserId(User)!;
+                var favoriteIds = await _db.UserFavoriteProducts
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId)
+                    .ToListAsync();
+
+                ViewBag.FavoriteIds = favoriteIds;
+            }
+            else
+            {
+                ViewBag.FavoriteIds = new List<int>();
+            }
 
             // 1) Filtrelenmiş temel sorgu (henüz pagination yok)
             var filtered = _manager.PoductService.GetAllProducts(false)
@@ -49,7 +70,7 @@ namespace StoreApp.Controllers
             var pagination = new Pagination
             {
                 CurrentPage = p.PageNumber < 1 ? 1 : p.PageNumber,
-                ItemsPerPage = p.PageSize < 1 ? 6 : p.PageSize,
+                ItemsPerPage = p.PageSize < 1 ? 10 : p.PageSize,
                 TotalItems = total
             };
 
@@ -60,13 +81,28 @@ namespace StoreApp.Controllers
             });
         }
 
-        public IActionResult Get([FromRoute(Name = "id")] int id)
+        public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
         {
-            //  Product product = _context.Products.First(p => p.Id.Equals(id));
             var model = _manager.PoductService.GetOneProduct(id, false);
+
+            if (model == null)
+                return NotFound();
+
             ViewData["Title"] = model?.ProductName;
+
+            // Kullanıcı giriş yaptıysa bu ürünün favori durumunu kontrol et
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = _um.GetUserId(User)!;
+                ViewBag.IsFavorite = await _db.UserFavoriteProducts
+                    .AnyAsync(f => f.UserId == userId && f.ProductId == id);
+            }
+            else
+            {
+                ViewBag.IsFavorite = false;
+            }
+
             return View(model);
         }
     }
-
 }

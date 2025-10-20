@@ -11,5 +11,8 @@ namespace Services.Contracts
         void SaveOrder(Order order);
 
         int NumberOfInProcess { get; }
+
+        Task<List<Order>> GetMyOrdersAsync(string userId);
+        Task<Order?> GetMyOrderAsync(string userId, int id);
     }
 }

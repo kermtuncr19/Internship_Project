@@ -1,0 +1,73 @@
+@model StoreApp.Models.ProfileDashboardViewModel
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card form-card shadow-soft">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <img src="@(Model.Profile?.AvatarUrl ?? "/images/avatar-placeholder.png")" class="rounded-circle"
+                        style="width:64px;height:64px;object-fit:cover;" />
+                    <div>
+                        <div class="h5 m-0">@Model.Profile?.FullName</div>
+                        <div class="text-muted small">@User.Identity?.Name</div>
+                    </div>
+                    <a asp-action="Edit" class="btn btn-outline-navy ms-auto btn-pill">Profili Düzenle</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-soft">
+                <div class="card-body text-center">
+                    <div class="h1 m-0">@Model.LastOrders.Count</div>
+                    <div class="text-muted">Son Siparişler</div>
+                    <a asp-controller="MyOrders" asp-action="Index" class="btn btn-navy btn-pill mt-2">Tümü</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-soft">
+                <div class="card-body text-center">
+                    <div class="h1 m-0">@Model.AddressCount</div>
+                    <div class="text-muted">Adreslerim</div>
+                    <a asp-controller="Addresses" asp-action="Index" class="btn btn-navy btn-pill mt-2">Yönet</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-soft">
+                <div class="card-body text-center">
+                    <div class="h1 m-0">@Model.FavoriteCount</div>
+                    <div class="text-muted">Favorilerim</div>
+                    <a asp-controller="Favorites" asp-action="Index" class="btn btn-navy btn-pill mt-2">Görüntüle</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-soft">
+                <div class="card-header bg-white">Son Siparişler</div>
+                <ul class="list-group list-group-flush">
+                    @if (Model.LastOrders.Any())
+                    {
+                        @foreach (var o in Model.LastOrders)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>#@o.OrderId • @o.OrderedAt.ToLocalTime().ToString("g")</span>
+                                <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId"
+                                    class="btn btn-outline-secondary btn-sm">Detay</a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-muted">Henüz siparişiniz yok.</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+@model Entities.Models.UserProfile
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+    <div class="card form-card shadow-soft">
+        <div class="card-body">
+            <form method="post" asp-action="Edit" enctype="multipart/form-data">
+                <div class="row g-3">
+
+                    <div class="col-12 d-flex align-items-center gap-3">
+                        <div>
+                            <img src="@(string.IsNullOrWhiteSpace(Model?.AvatarUrl) ? "/images/placeholder.png" : Model.AvatarUrl)"
+                                alt="Avatar" width="80" height="80" class="rounded-circle object-fit-cover" />
+                        </div>
+                        <div class="flex-grow-1">
+                            <label class="form-label">Profil Fotoğrafı</label>
+                            <input type="file" name="avatar" accept="image/*" class="form-control" />
+                            <div class="form-text">JPG/PNG önerilir. Maks. birkaç MB.</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Ad Soyad</label>
+                        <input class="form-control form-control-soft" asp-for="FullName" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Telefon</label>
+                        <input class="form-control form-control-soft" asp-for="PhoneNumber" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Doğum Tarihi</label>
+                        <input type="date" class="form-control form-control-soft" asp-for="BirthDate" />
+                    </div>
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a asp-action="Index" class="btn btn-outline-navy btn-pill">Geri</a>
+                    <button class="btn btn-navy btn-pill" type="submit">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .object-fit-cover {
+        object-fit: cover;
+    }
+</style>

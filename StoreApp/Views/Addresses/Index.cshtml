@@ -1,0 +1,99 @@
+@model List<Entities.Models.UserAddress>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+  @* Başarı mesajı - en üstte göster *@
+  @if (TempData["Success"] != null)
+  {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      @TempData["Success"]
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  }
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="h5 m-0">Adreslerim</div>
+    <a asp-action="Create" class="btn btn-navy btn-pill">
+      <i class="fa fa-plus-circle me-1"></i> Yeni Adres
+    </a>
+  </div>
+
+  @if (!Model.Any())
+  {
+    <div class="alert alert-light text-center py-4">
+      <i class="fa fa-geo-alt fs-1 text-muted"></i>
+      <p class="mb-2">Kayıtlı adres yok.</p>
+      <a asp-action="Create" class="btn btn-navy btn-pill btn-sm">İlk Adresini Ekle</a>
+    </div>
+  }
+  else
+  {
+    <div class="row g-3">
+      @foreach (var a in Model)
+      {
+        <div class="col-md-6 col-lg-4">
+          <div class="card shadow-soft h-100 @(a.IsDefault ? "border-primary" : "")">
+            <div class="card-body d-flex flex-column">
+
+              @* Başlık ve Badge *@
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="fw-semibold fs-5">
+                  @a.Label
+                </div>
+                @if (a.IsDefault)
+                {
+                  <span class="badge bg-primary">
+                    <i class="fa-solid fa-star me-1"></i>Varsayılan
+                  </span>
+                }
+              </div>
+
+              @* Adres Detayları *@
+              <div class="mb-3 flex-grow-1">
+                <div class="text-muted small mb-1">
+                  <i class="fa fa-home me-1"></i>
+                  @a.City / @a.District / @a.Neighborhood
+                </div>
+                <div class="mb-1">@a.AddressLine</div>
+                @if (!string.IsNullOrWhiteSpace(a.PhoneNumber))
+                {
+                  <div class="text-muted small">
+                    <i class="fa fa-phone me-1"></i>@a.PhoneNumber
+                  </div>
+                }
+              </div>
+
+              @* Butonlar *@
+              <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-outline-secondary btn-sm flex-fill">
+                  <i class="fa fa-pencil"></i> Düzenle
+                </a>
+
+                @if (!a.IsDefault)
+                {
+                  <form method="post" asp-action="MakeDefault" class="flex-fill">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@a.Id" />
+                    <button class="btn btn-primary btn-sm w-100" type="submit">
+                      <i class="fa-solid fa-star"></i> Varsayılan
+                    </button>
+                  </form>
+                }
+
+                <form method="post" asp-action="Delete"
+                  onsubmit="return confirm('Bu adresi silmek istediğinizden emin misiniz?');">
+                  @Html.AntiForgeryToken()
+                  <input type="hidden" name="id" value="@a.Id" />
+                  <button class="btn btn-outline-danger btn-sm" type="submit">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

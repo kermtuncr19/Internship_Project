@@ -3,26 +3,46 @@
 
 <div class="container py-4">
 
-    <!-- Başlık -->
     <h1 class="display-6 text-center mb-4">@Model.ProductName</h1>
 
-    <!-- (Opsiyonel) uyarı -->
     @if (TempData["CartError"] is string err && !string.IsNullOrWhiteSpace(err))
     {
         <div class="alert alert-warning text-center" role="alert">@err</div>
     }
 
     <div class="row g-4 align-items-start">
-        <!-- SOL: ürün görseli -->
         <div class="col-lg-6 text-center">
-            <img class="img-fluid rounded shadow-sm" src="@Model?.ImageUrl" alt="@Model?.ProductName"
-                style="max-height:560px; object-fit:contain;" />
+            <img class="img-fluid rounded shadow-sm"
+                 src="@Model?.ImageUrl"
+                 alt="@Model?.ProductName"
+                 style="max-height:560px; object-fit:contain;" />
         </div>
 
-        <!-- SAĞ: fiyat + beden seçimi + sepete ekle -->
         <div class="col-lg-6">
-            <div class="mb-3 fs-4 text-primary fw-semibold">
-                @Model.Price.ToString("c")
+
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="fs-4 text-primary fw-semibold m-0">
+                    @Model.Price.ToString("c")
+                </div>
+
+               @if (User.Identity?.IsAuthenticated == true)
+{
+    var isFavorite = ViewBag.IsFavorite ?? false;
+    <form method="post"
+          asp-controller="Favorites"
+          asp-action="Toggle"
+          class="m-0 p-0 d-inline">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="productId" value="@Model.ProductId" />
+        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+        <button type="submit"
+                class="btn p-0 border-0 bg-transparent tooltip1-btn-favorite"
+                style="line-height: 1;">
+            <i class="@(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-2x" 
+               style="@(isFavorite ? "color: #dc3545;" : "color: #0d1b4c;") cursor: pointer; transition: color 0.2s;"></i>
+        </button>
+    </form>
+}
             </div>
 
             <form id="addToCartForm" class="mt-2" method="post" asp-page="/cart">
@@ -31,25 +51,22 @@
                 <input type="hidden" asp-for="ProductId" />
                 <input type="hidden" name="returnUrl" value="@ViewContext.HttpContext.Request.PathAndQuery()" />
 
-                @* BEDEN SEÇİMİ (sadece varsa göster) *@
                 @{
-                    // Eğer RequiresSize true ama liste boşsa varsayılan ver
                     var sizeCsv = string.IsNullOrWhiteSpace(Model.SizeOptionsCsv)
-                    ? "XS,S,M,L,XL"
-                    : Model.SizeOptionsCsv;
+                                  ? "XS,S,M,L,XL"
+                                  : Model.SizeOptionsCsv;
 
                     var sizeList = sizeCsv
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .ToList();
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .ToList();
 
-                    var showSizes = sizeList.Any(); // en az bir beden varsa göster
+                    var showSizes = sizeList.Any();
                 }
 
                 @if (showSizes)
                 {
                     <div class="mb-3">
                         <div class="small text-muted mb-2">Beden Seçin</div>
-
                         <fieldset class="size-list d-flex flex-wrap gap-2" role="radiogroup" aria-label="Beden Seçimi">
                             @foreach (var s in sizeList)
                             {
@@ -64,30 +81,31 @@
                 }
 
                 <div class="d-flex align-items-center gap-2">
-                    <button id="addToCartBtn" type="submit" class="btn btn-navy btn-pill px-4" @(Model.RequiresSize &&
-                                                                                                                       showSizes ? "disabled" : null)>
+                    <button id="addToCartBtn"
+                            type="submit"
+                            class="btn btn-navy btn-pill px-4"
+                            @(Model.RequiresSize && showSizes ? "disabled" : null)>
                         <i class="fa fa-cart-plus me-1"></i> Sepete Ekle
                     </button>
-
-                    <!-- İstersen favori vb. aksiyonlar burada olabilir -->
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+@await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
+
+
 @section Scripts {
     <script>
-        // Beden zorunlu ise, seçim yapılana kadar "Sepete Ekle" disabled kalsın
         document.addEventListener('DOMContentLoaded', function () {
-            const requires = @(Model.RequiresSize.ToString().ToLowerInvariant()); // true/false
+            const requires = @(Model.RequiresSize.ToString().ToLowerInvariant());
             const form = document.getElementById('addToCartForm');
             if (!form) return;
 
             const radios = form.querySelectorAll('input[name="size"]');
             const button = document.getElementById('addToCartBtn');
 
-            // Eğer beden zorunlu DEĞİLSE veya hiç beden yoksa çık
             if (!requires || radios.length === 0) return;
 
             function syncState() {

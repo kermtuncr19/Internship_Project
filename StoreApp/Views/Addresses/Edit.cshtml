@@ -1,0 +1,12 @@
+@model Entities.Models.UserAddress
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<div class="container my-4">
+    <div class="card form-card shadow-soft">
+        <div class="card-body">
+            <form method="post" asp-action="Edit">
+                <input type="hidden" asp-for="Id" />
+                <partial name="_AddressForm" model="Model" />
+            </form>
+        </div>
+    </div>
+</div>

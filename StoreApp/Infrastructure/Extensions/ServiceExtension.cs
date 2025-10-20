@@ -41,10 +41,10 @@ namespace StoreApp.Infrastructure.Extensions
             })
             .AddPasswordValidator<UnicodePasswordValidator<IdentityUser>>()
             .AddEntityFrameworkStores<RepositoryContext>();
-            
+
 
         }
-       
+
         public static void ConfigureSession(this IServiceCollection services)
         {
             services.AddDistributedMemoryCache();
@@ -63,6 +63,9 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+            services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+            services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         }
         public static void ConfigureServiceRegistration(this IServiceCollection services)
         {
@@ -72,6 +75,9 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IOrderService,
             OrderManager>();
             services.AddScoped<IAuthService, AuthManager>();
+            services.AddScoped<IProfileService, ProfileManager>();
+            services.AddScoped<IAddressService, AddressManager>();
+            services.AddScoped<IFavoriteService, FavoriteManager>();
         }
 
         public static void ConfigureApplicationCookie(this IServiceCollection services)

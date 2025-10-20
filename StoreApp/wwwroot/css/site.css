@@ -1044,3 +1044,121 @@
     .size-btn{ padding:.55rem 1rem; }
   }
 
+  .tooltip1-btn-favorite {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-favorite::after {
+  content: "Favoriye Ekle/Çıkar";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-favorite::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-favorite:hover::after,
+.tooltip1-btn-favorite:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+/* XL ekranlarda 5 sütun için */
+@media (min-width: 1400px) {
+    .col-xl-2-4 {
+        flex: 0 0 auto;
+        width: 20%;
+    }
+}
+
+.related-products-wrapper {
+            position: relative;
+            padding: 0 50px;
+        }
+
+        .related-products-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            gap: 1rem;
+            padding: 1rem 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .related-products-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .related-product-card {
+            flex: 0 0 250px;
+            min-width: 250px;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(13, 27, 76, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-btn:hover {
+            background-color: rgba(13, 27, 76, 1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-btn-prev {
+            left: 0;
+        }
+
+        .carousel-btn-next {
+            right: 0;
+        }
+
+        @media (max-width: 768px) {
+            .related-products-wrapper {
+                padding: 0 35px;
+            }
+            
+            .related-product-card {
+                flex: 0 0 200px;
+                min-width: 200px;
+            }
+        }
