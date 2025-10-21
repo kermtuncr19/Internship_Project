@@ -1,0 +1,236 @@
+@model PaymentViewModel
+@{
+    ViewData["Title"] = "Ödeme";
+}
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+    <div class="row">
+        <!-- Sol Taraf: Ödeme Formu -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fa fa-credit-card me-2"></i>Ödeme Bilgileri
+                    </h4>
+                </div>
+                <div class="card-body">
+
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <form method="post" asp-action="ProcessPayment" id="paymentForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="PaymentInfo.CardHolderName" class="form-label">
+                                <i class="fa fa-user me-1"></i>Kart Üzerindeki İsim
+                            </label>
+                            <input asp-for="PaymentInfo.CardHolderName" class="form-control"
+                                placeholder="Örn: AHMET YILMAZ" style="text-transform: uppercase;" />
+                            <span asp-validation-for="PaymentInfo.CardHolderName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PaymentInfo.CardNumber" class="form-label">
+                                <i class="fa fa-credit-card me-1"></i>Kart Numarası
+                            </label>
+                            <input asp-for="PaymentInfo.CardNumber" class="form-control"
+                                placeholder="1234 5678 9012 3456" maxlength="16" id="cardNumber" />
+                            <span asp-validation-for="PaymentInfo.CardNumber" class="text-danger small"></span>
+                            <small class="text-muted">
+                                <i class="fa fa-info-circle"></i> Test için 4 ile başlayan 16 haneli numara girin
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PaymentInfo.ExpiryDate" class="form-label">
+                                    <i class="fa fa-calendar me-1"></i>Son Kullanma Tarihi
+                                </label>
+                                <input asp-for="PaymentInfo.ExpiryDate" class="form-control" placeholder="AA/YY"
+                                    maxlength="5" id="expiryDate" />
+                                <span asp-validation-for="PaymentInfo.ExpiryDate" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PaymentInfo.CVV" class="form-label">
+                                    <i class="fa fa-lock me-1"></i>CVV
+                                </label>
+                                <input asp-for="PaymentInfo.CVV" class="form-control" placeholder="123" maxlength="4"
+                                    type="password" id="cvv" />
+                                <span asp-validation-for="PaymentInfo.CVV" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fa fa-shield-alt me-2"></i>
+                            <strong>Güvenli Ödeme:</strong> Ödeme bilgileriniz SSL ile korunmaktadır.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg" id="payButton">
+                                <i class="fa fa-lock me-2"></i>
+                                <span id="payButtonText">@Model.TotalAmount.ToString("C2") Öde</span>
+                                <span id="payButtonLoading" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...
+                                </span>
+                            </button>
+                            <a asp-action="Checkout" class="btn btn-outline-secondary">
+                                <i class="fa fa-arrow-left me-2"></i>Geri Dön
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Güvenlik Rozetleri -->
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fa fa-shield-alt text-success me-1"></i>256-bit SSL Şifreleme
+                    <span class="mx-2">|</span>
+                    <i class="fa fa-lock text-success me-1"></i>PCI DSS Uyumlu
+                </small>
+            </div>
+        </div>
+
+        <!-- Sağ Taraf: Sipariş Özeti -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fa fa-shopping-bag me-2"></i>Sipariş Özeti
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Ürünler -->
+                    <div class="mb-3">
+                        @foreach (var item in Model.CartItems)
+                        {
+                            <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom">
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@item.Product.ProductName</div>
+                                    <small class="text-muted">
+                                        Beden: @item.Size | Adet: @item.Quantity
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-semibold">@((item.UnitPrice * item.Quantity).ToString("C2"))</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Toplam -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Ara Toplam:</span>
+                            <span>@Model.TotalAmount.ToString("C2")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Kargo:</span>
+                            <span class="text-success">Ücretsiz</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <strong class="fs-5">Toplam:</strong>
+                            <strong class="fs-5 text-primary">@((Model.TotalAmount).ToString("C2"))</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teslimat Adresi -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fa fa-map-marker-alt me-2"></i>Teslimat Adresi
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>@Model.Order.Name</strong></p>
+                    <p class="mb-1 small text-muted">@Model.Order.PhoneNumber</p>
+                    <p class="mb-1 small">
+                        @Model.Order.Neighborhood, @Model.Order.District / @Model.Order.City
+                    </p>
+                    <p class="mb-0 small">@Model.Order.Address</p>
+                    @if (Model.Order.GiftWrap)
+                    {
+                        <div class="mt-2">
+                            <span class="badge bg-info">
+                                <i class="fa fa-gift me-1"></i>Hediye Paketi
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Kart numarası formatla
+        const cardInput = document.getElementById('cardNumber');
+        cardInput?.addEventListener('input', function (e) {
+            // Sadece rakam kabul et
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // Son kullanma tarihi formatla (AA/YY)
+        const expiryInput = document.getElementById('expiryDate');
+        expiryInput?.addEventListener('input', function (e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            this.value = value;
+        });
+
+        // CVV sadece rakam
+        const cvvInput = document.getElementById('cvv');
+        cvvInput?.addEventListener('input', function (e) {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
+        // Form submit
+        const paymentForm = document.getElementById('paymentForm');
+        const payButton = document.getElementById('payButton');
+        const payButtonText = document.getElementById('payButtonText');
+        const payButtonLoading = document.getElementById('payButtonLoading');
+
+        paymentForm?.addEventListener('submit', function (e) {
+            // Loading state
+            payButton.disabled = true;
+            payButtonText.style.display = 'none';
+            payButtonLoading.style.display = 'inline';
+        });
+    </script>
+
+    <style>
+        .card {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .card-header {
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .btn-lg {
+            padding: 12px;
+            font-size: 1.1rem;
+        }
+
+        input.form-control {
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .shadow-sm {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+    </style>
+}

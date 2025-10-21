@@ -100,6 +100,8 @@ namespace StoreApp.Controllers
                     a.IsDefault = false;
             }
 
+            addr.FirstName = dto.FirstName;
+            addr.LastName = dto.LastName;
             addr.Label = dto.Label;
             addr.City = dto.City;
             addr.District = dto.District;

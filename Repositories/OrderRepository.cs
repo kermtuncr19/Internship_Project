@@ -61,7 +61,18 @@ namespace Repositories
             order.Lines = merged;
             order.OrderedAt = DateTime.UtcNow;
 
-            _context.Orders.Add(order);     // Order + Lines birlikte eklenir, FK'lar dolar
+            // 🔽 Burada değişiklik yaptık:
+            if (order.OrderId == 0)
+            {
+                // Yeni sipariş oluşturuluyor
+                _context.Orders.Add(order);
+            }
+            else
+            {
+                // Mevcut sipariş (ör. İptal Et veya Güncelle)
+                _context.Orders.Update(order);
+            }
+
             _context.SaveChanges();
         }
 

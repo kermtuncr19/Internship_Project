@@ -19,16 +19,44 @@
                 @foreach (var line in Model.Lines)
                 {
                     var unit = line.Product?.Price ?? line.UnitPrice;
-                   var lineTotal = unit * line.Quantity;
-                    <li class="list-group-item d-flex justify-content-between">
-                        <div>
-                            <div class="fw-semibold">@line.Product.ProductName @((!string.IsNullOrEmpty(line.Size) ?
-                                                            $"({line.Size})" : ""))</div>
-                            <div class="text-muted small">@line.Quantity × @unit.ToString("C2")</div>
+                    var lineTotal = unit * line.Quantity;
+
+                    // Görsel yolu: boşsa placeholder'a düş, doluysa normalize et
+                    string imgSrc;
+                    if (string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+                    {
+                        imgSrc = Url.Content("~/images/placeholders/product-thumb.png");
+                    }
+                    else if (line.Product!.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                    || line.Product.ImageUrl.StartsWith("/"))
+                    {
+                        // Tam URL veya kökten göreli yol
+                        imgSrc = line.Product.ImageUrl;
+                    }
+                    else
+                    {
+                        // Sadece dosya adı tutuluyorsa: wwwroot/images altına tamamla
+                        imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+                    }
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3"
+                                loading="lazy" width="48" height="48" />
+                            <div>
+                                <div class="fw-semibold">
+                                    @line.Product?.ProductName
+                                    @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
+                                </div>
+                                <div class="text-muted small">
+                                    @line.Quantity × @unit.ToString("C2")
+                                </div>
+                            </div>
                         </div>
                         <div class="fw-semibold">@lineTotal.ToString("C2")</div>
                     </li>
                 }
+
                 <li class="list-group-item d-flex justify-content-between">
                     <span>Ara Toplam</span><span>@total.ToString("C2")</span>
                 </li>

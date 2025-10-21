@@ -746,19 +746,44 @@
   color: #525a6a;
   max-width: 640px;
 }
-:root { --navy:#0d1b4c; }
+
+:root {
+  --navy: #0d1b4c;
+}
 
 /* Marka butonları (zaten varsa tekrar sorun değil) */
-.btn-navy{ background:var(--navy)!important; border-color:var(--navy)!important; color:#fff!important; }
-.btn-navy:hover{ filter: brightness(1.08); }
+.btn-navy {
+  background: var(--navy) !important;
+  border-color: var(--navy) !important;
+  color: #fff !important;
+}
+
+.btn-navy:hover {
+  filter: brightness(1.08);
+}
 
 /* Arama alanı flex içinde küçülebilsin, taşma yapmasın */
-.navbar-search{ min-width:0; }                 /* kritik */
-.navbar-search .nav-search{ max-width:720px; } /* lg ve üstünde genişlik kontrolü */
-.navbar-search .form-control{ min-width:0; }   /* input shrink edebilsin */
+.navbar-search {
+  min-width: 0;
+}
+
+/* kritik */
+.navbar-search .nav-search {
+  max-width: 720px;
+}
+
+/* lg ve üstünde genişlik kontrolü */
+.navbar-search .form-control {
+  min-width: 0;
+}
+
+/* input shrink edebilsin */
 
 /* Sağdaki aksiyonlar tek satır kalsın (ikon/metin davranışı) */
-.actions .btn, .actions .nav-link { white-space: nowrap; }
+.actions .btn,
+.actions .nav-link {
+  white-space: nowrap;
+}
 
 /* Çok dar ekranlarda metinleri gizlemek istersen:
 .actions .btn .text, .actions .nav-link .text { display:none; }
@@ -949,24 +974,45 @@
 }
 
 /* Kategori şeridi mobilde kaydırılabilir; taşma yok */
-  .chips{ scrollbar-width:none; }
-  .chips::-webkit-scrollbar{ display:none; }
-  .chips .btn{ white-space:nowrap; }
-  .category-bar{ row-gap:.5rem; }
+.chips {
+  scrollbar-width: none;
+}
 
-  /* Arama kutusu */
-  .page-search{ max-width:100%; }
+.chips::-webkit-scrollbar {
+  display: none;
+}
 
-  /* View içinde @media kullanacaksan @@media yaz (Razor kaçışı) */
-  @media (min-width: 992px){
-    .page-search{ max-width:520px; margin-left:auto; margin-right:auto; }
+.chips .btn {
+  white-space: nowrap;
+}
+
+.category-bar {
+  row-gap: .5rem;
+}
+
+/* Arama kutusu */
+.page-search {
+  max-width: 100%;
+}
+
+/* View içinde @media kullanacaksan @@media yaz (Razor kaçışı) */
+@media (min-width: 992px) {
+  .page-search {
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
   }
+}
 
-  /* İşlem butonlarının tek satır kalması */
-  .actions .btn{ white-space:nowrap; }
+/* İşlem butonlarının tek satır kalması */
+.actions .btn {
+  white-space: nowrap;
+}
 
-  /* Lacivert tonu değişkeniniz zaten var ise onu kullanır */
-:root { --navy:#0d1b4c; }
+/* Lacivert tonu değişkeniniz zaten var ise onu kullanır */
+:root {
+  --navy: #0d1b4c;
+}
 
 /* Size chips default: beyaz/outlined; seçilince lacivert dolu */
 .size-list .btn {
@@ -976,16 +1022,19 @@
   background: #fff;
   line-height: 1;
 }
-.size-list input[type="radio"]:checked + label {
+
+.size-list input[type="radio"]:checked+label {
   background: var(--navy);
   color: #fff;
   border-color: var(--navy);
 }
-.size-list input[type="radio"]:focus + label {
-  outline: 2px solid rgba(13,27,76,.25);
+
+.size-list input[type="radio"]:focus+label {
+  outline: 2px solid rgba(13, 27, 76, .25);
   outline-offset: 2px;
 }
-.size-list .size-chip > label.btn {
+
+.size-list .size-chip>label.btn {
   border-radius: 999px;
   border: 1px solid var(--navy);
   color: var(--navy);
@@ -995,56 +1044,62 @@
 }
 
 /* SEÇİLİNCE kesinlikle lacivert olsun (Bootstrap'i override etmek için !important) */
-.size-list .size-chip input[type="radio"]:checked + label.btn {
+.size-list .size-chip input[type="radio"]:checked+label.btn {
   background: var(--navy) !important;
   color: #fff !important;
   border-color: var(--navy) !important;
 }
 
 /* Klavye odağı */
-.size-list .size-chip input[type="radio"]:focus + label.btn {
-  box-shadow: 0 0 0 .2rem rgba(13,27,76,.15) !important;
+.size-list .size-chip input[type="radio"]:focus+label.btn {
+  box-shadow: 0 0 0 .2rem rgba(13, 27, 76, .15) !important;
   outline: none !important;
 }
-  /* ========== BEDEN CHIP STİLİ (istersen site.css'e taşı) ========== */
-  :root { --navy:#0d1b4c; }
 
-  /* Chip buton görünümü */
-  .size-btn{
-    display:inline-block;
-    border-radius:999px;
-    border:1px solid var(--navy);
-    color:var(--navy);
-    background:#fff;
-    line-height:1;
-    padding:.6rem 1.1rem;
-    cursor:pointer;
-    user-select:none;
-    transition:all .15s ease;
-  }
-  .size-btn:hover{
-    background:#f6f8ff;
-  }
+/* ========== BEDEN CHIP STİLİ (istersen site.css'e taşı) ========== */
+:root {
+  --navy: #0d1b4c;
+}
 
-  /* Seçiliyse lacivert dolu */
-  .size-chip input[type="radio"]:checked + .size-btn{
-    background:var(--navy);
-    color:#fff;
-    border-color:var(--navy);
-  }
+/* Chip buton görünümü */
+.size-btn {
+  display: inline-block;
+  border-radius: 999px;
+  border: 1px solid var(--navy);
+  color: var(--navy);
+  background: #fff;
+  line-height: 1;
+  padding: .6rem 1.1rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all .15s ease;
+}
 
-  /* Klavye odağı */
-  .size-chip input[type="radio"]:focus + .size-btn{
-    box-shadow:0 0 0 .2rem rgba(13,27,76,.15);
-    outline:0;
-  }
+.size-btn:hover {
+  background: #f6f8ff;
+}
 
-  /* Görsel + sağ blok hizası için min yükseklik küçük ekranlarda da hoş dursun */
-  @media (max-width: 991.98px){
-    .size-btn{ padding:.55rem 1rem; }
-  }
+/* Seçiliyse lacivert dolu */
+.size-chip input[type="radio"]:checked+.size-btn {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
 
-  .tooltip1-btn-favorite {
+/* Klavye odağı */
+.size-chip input[type="radio"]:focus+.size-btn {
+  box-shadow: 0 0 0 .2rem rgba(13, 27, 76, .15);
+  outline: 0;
+}
+
+/* Görsel + sağ blok hizası için min yükseklik küçük ekranlarda da hoş dursun */
+@media (max-width: 991.98px) {
+  .size-btn {
+    padding: .55rem 1rem;
+  }
+}
+
+.tooltip1-btn-favorite {
   position: relative;
 }
 
@@ -1089,76 +1144,88 @@
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
 }
+
 /* XL ekranlarda 5 sütun için */
 @media (min-width: 1400px) {
-    .col-xl-2-4 {
-        flex: 0 0 auto;
-        width: 20%;
-    }
+  .col-xl-2-4 {
+    flex: 0 0 auto;
+    width: 20%;
+  }
 }
 
 .related-products-wrapper {
-            position: relative;
-            padding: 0 50px;
-        }
+  position: relative;
+  padding: 0 50px;
+}
 
-        .related-products-container {
-            display: flex;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            gap: 1rem;
-            padding: 1rem 0;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
+.related-products-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  gap: 1rem;
+  padding: 1rem 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
 
-        .related-products-container::-webkit-scrollbar {
-            display: none;
-        }
+.related-products-container::-webkit-scrollbar {
+  display: none;
+}
 
-        .related-product-card {
-            flex: 0 0 250px;
-            min-width: 250px;
-        }
+.related-product-card {
+  flex: 0 0 250px;
+  min-width: 250px;
+}
 
-        .carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(13, 27, 76, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(13, 27, 76, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
 
-        .carousel-btn:hover {
-            background-color: rgba(13, 27, 76, 1);
-            transform: translateY(-50%) scale(1.1);
-        }
+.carousel-btn:hover {
+  background-color: rgba(13, 27, 76, 1);
+  transform: translateY(-50%) scale(1.1);
+}
 
-        .carousel-btn-prev {
-            left: 0;
-        }
+.carousel-btn-prev {
+  left: 0;
+}
 
-        .carousel-btn-next {
-            right: 0;
-        }
+.carousel-btn-next {
+  right: 0;
+}
 
-        @media (max-width: 768px) {
-            .related-products-wrapper {
-                padding: 0 35px;
-            }
-            
-            .related-product-card {
-                flex: 0 0 200px;
-                min-width: 200px;
-            }
-        }
+@media (max-width: 768px) {
+  .related-products-wrapper {
+    padding: 0 35px;
+  }
+
+  .related-product-card {
+    flex: 0 0 200px;
+    min-width: 200px;
+  }
+}
+
+.order-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0); /* bazen GPU scalingi netleştirir */
+}

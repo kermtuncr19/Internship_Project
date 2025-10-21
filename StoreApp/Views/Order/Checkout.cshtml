@@ -1,71 +1,142 @@
-@model Order
+@model CheckoutViewModel
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="text-danger" asp-validation-summary="All"></div>
 
-<form method="post" asp-action="Checkout" id="checkoutForm" class="container">
-    <div class="row g-3">
-
-        <div class="col-md-6">
-            <label asp-for="Name" class="form-label">Ad Soyad</label>
-            <input asp-for="Name" class="form-control" autocomplete="name" />
-            <span class="text-danger small" asp-validation-for="Name"></span>
-        </div>
-        <!-- ✅ Yeni Telefon -->
-        <div class="col-md-6">
-            <label asp-for="PhoneNumber" class="form-label">Telefon</label>
-            <input asp-for="PhoneNumber" class="form-control" inputmode="tel" placeholder="05xx xxx xx xx" />
-            <span class="text-danger small" asp-validation-for="PhoneNumber"></span>
-        </div>
-
-        <!-- Şehir -->
-        <div class="col-md-6">
-            <label asp-for="City" class="form-label">Şehir</label>
-            <select asp-for="City" id="city" class="form-select">
-                <option value="">Seçiniz…</option>
-            </select>
-            <span class="text-danger small" asp-validation-for="City"></span>
-        </div>
-
-        <!-- İlçe -->
-        <div class="col-md-6">
-            <label asp-for="District" class="form-label">İlçe</label>
-            <select asp-for="District" id="district" class="form-select" disabled>
-                <option value="">Önce şehir seçiniz…</option>
-            </select>
-            <span class="text-danger small" asp-validation-for="District"></span>
-        </div>
-
-        <!-- Mahalle -->
-        <div class="col-md-6">
-            <label asp-for="Neighborhood" class="form-label">Mahalle</label>
-            <select asp-for="Neighborhood" id="neighborhood" class="form-select" disabled>
-                <option value="">Önce ilçe seçiniz…</option>
-            </select>
-            <span class="text-danger small" asp-validation-for="Neighborhood"></span>
-        </div>
-
-        <!-- Açık Adres -->
-        <div class="col-12">
-            <label asp-for="Address" class="form-label">Açık Adres</label>
-            <textarea asp-for="Address" rows="3" class="form-control"
-                placeholder="Cadde/Sokak, Kapı No, Daire, Bina adı…"></textarea>
-            <span class="text-danger small" asp-validation-for="Address"></span>
-        </div>
-
-        <div class="col-12">
-            <div class="form-check">
-                <input asp-for="GiftWrap" class="form-check-input" id="gift" />
-                <label for="gift" class="form-check-label">Bu ürünleri hediye paketi yap</label>
+<div class="container">
+    @* Kayıtlı Adresler Bölümü *@
+    @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fa fa-bookmark me-2"></i>Kayıtlı Adreslerim
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var addr in Model.SavedAddresses)
+                    {
+                        <div class="col-md-6">
+                            <div class="card border @(addr.IsDefault ? "border-primary" : "") saved-address-card"
+                                data-address-id="@addr.Id" data-name="@addr.FirstName @addr.LastName" data-phone="@addr.PhoneNumber"
+                                data-city="@addr.City" data-district="@addr.District" data-neighborhood="@addr.Neighborhood"
+                                data-address="@addr.AddressLine" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">@addr.Label</h6>
+                                        @if (addr.IsDefault)
+                                        {
+                                            <span class="badge bg-primary">
+                                                <i class="fa-solid fa-star"></i> Varsayılan
+                                            </span>
+                                        }
+                                    </div>
+                                    <p class="mb-1 small">@addr.FirstName @addr.LastName</p>
+                                    <p class="text-muted small mb-1">
+                                        <i class="fa fa-map-marker-alt me-1"></i>
+                                        @addr.City / @addr.District / @addr.Neighborhood
+                                    </p>
+                                    <p class="mb-1 small">@addr.AddressLine</p>
+                                    @if (!string.IsNullOrEmpty(addr.PhoneNumber))
+                                    {
+                                        <p class="text-muted small mb-0">
+                                            <i class="fa fa-phone me-1"></i>@addr.PhoneNumber
+                                        </p>
+                                    }
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-primary select-address-btn w-100">
+                                            <i class="fa fa-check me-1"></i>Bu Adresi Kullan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
+    }
 
-        <div class="col-12 text-center mt-2">
-            <button type="submit" class="btn btn-primary btn-pill">Siparişi Tamamla</button>
+    @* Manuel Adres Girişi *@
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fa fa-edit me-2"></i>
+                @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+                {
+                    <span>Veya Yeni Adres Girin</span>
+                }
+                else
+                {
+                    <span>Teslimat Bilgileri</span>
+                }
+            </h5>
         </div>
+        <div class="card-body">
+            <form method="post" asp-action="Checkout" id="checkoutForm">
+                <div class="row g-3">
 
+                    <div class="col-md-6">
+                        <label asp-for="Order.Name" class="form-label">Ad Soyad</label>
+                        <input asp-for="Order.Name" class="form-control" autocomplete="name" />
+                        <span class="text-danger small" asp-validation-for="Order.Name"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Order.PhoneNumber" class="form-label">Telefon</label>
+                        <input asp-for="Order.PhoneNumber" class="form-control" inputmode="tel"
+                            placeholder="05xx xxx xx xx" />
+                        <span class="text-danger small" asp-validation-for="Order.PhoneNumber"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Order.City" class="form-label">Şehir</label>
+                        <select asp-for="Order.City" id="city" class="form-select">
+                            <option value="">Seçiniz…</option>
+                        </select>
+                        <span class="text-danger small" asp-validation-for="Order.City"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Order.District" class="form-label">İlçe</label>
+                        <select asp-for="Order.District" id="district" class="form-select" disabled>
+                            <option value="">Önce şehir seçiniz…</option>
+                        </select>
+                        <span class="text-danger small" asp-validation-for="Order.District"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Order.Neighborhood" class="form-label">Mahalle</label>
+                        <select asp-for="Order.Neighborhood" id="neighborhood" class="form-select" disabled>
+                            <option value="">Önce ilçe seçiniz…</option>
+                        </select>
+                        <span class="text-danger small" asp-validation-for="Order.Neighborhood"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Order.Address" class="form-label">Açık Adres</label>
+                        <textarea asp-for="Order.Address" rows="3" class="form-control"
+                            placeholder="Cadde/Sokak, Kapı No, Daire, Bina adı…"></textarea>
+                        <span class="text-danger small" asp-validation-for="Order.Address"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input asp-for="Order.GiftWrap" class="form-check-input" id="gift" />
+                            <label for="gift" class="form-check-label">Bu ürünleri hediye paketi yap</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12 text-center mt-2">
+                        <button type="submit" class="btn btn-primary btn-pill">Siparişi Tamamla</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
     </div>
-</form>
+</div>
 
 @section Scripts {
     <script>
@@ -82,35 +153,34 @@
             }
 
             // Şehirleri getir
-            fetch('/api/locations/cities')
-                .then(r => r.json())
-                .then(cities => {
-                    // option value = isim (model string olduğundan)
-                    for (const c of cities) {
-                        const name = c.name ?? c.Name ?? c.sehir_adi;
-                        const id = c.id ?? c.Id ?? c.sehir_id; // ilçe/mahalle sorgusu için lazım
-                        if (!name) continue;
-                        // value = name; data-id = gerçek id
-                        const opt = new Option(name, name);
-                        if (id) opt.dataset.id = id;
-                        $city.add(opt);
-                    }
+            function loadCities() {
+                fetch('/api/locations/cities')
+                    .then(r => r.json())
+                    .then(cities => {
+                        for (const c of cities) {
+                            const name = c.name ?? c.Name ?? c.sehir_adi;
+                            const id = c.id ?? c.Id ?? c.sehir_id;
+                            if (!name) continue;
+                            const opt = new Option(name, name);
+                            if (id) opt.dataset.id = id;
+                            $city.add(opt);
+                        }
 
-                    // Sayfa önceki posttan dönmüşse seçimi koru ve alt seviyeleri aç
-                    const currentCityName = '@(Model.City ?? "")'.trim();
-                    if (currentCityName) {
-                        $city.value = currentCityName;
-                        // tetikle ki ilçeler dolsun
-                        $city.dispatchEvent(new Event('change'));
-                    }
-                });
+                        const currentCityName = '@(Model.Order.City ?? "")'.trim();
+                        if (currentCityName) {
+                            $city.value = currentCityName;
+                            $city.dispatchEvent(new Event('change'));
+                        }
+                    });
+            }
+
+            loadCities();
 
             $city.addEventListener('change', () => {
                 resetSelect($district, $city.value ? 'İlçe seçiniz…' : 'Önce şehir seçiniz…', !$city.value);
                 resetSelect($neigh, 'Önce ilçe seçiniz…', true);
                 if (!$city.value) return;
 
-                // seçilen option'ın data-id'si (API ilçe için id istiyor)
                 const selectedOpt = $city.options[$city.selectedIndex];
                 const cityId = selectedOpt?.dataset?.id;
                 if (!cityId) return;
@@ -127,8 +197,7 @@
                             $district.add(opt);
                         }
 
-                        // Önceki değer varsa geri koy
-                        const currentDistrictName = '@(Model.District ?? "")'.trim();
+                        const currentDistrictName = '@(Model.Order.District ?? "")'.trim();
                         if (currentDistrictName) {
                             $district.value = currentDistrictName;
                             $district.dispatchEvent(new Event('change'));
@@ -155,16 +224,129 @@
                         for (const it of list) {
                             const name = it.name ?? it.Name ?? it.mahalle_adi;
                             if (!name) continue;
-                            $neigh.add(new Option(name, name)); // value = isim
+                            $neigh.add(new Option(name, name));
                         }
 
-                        const currentNeighName = '@(Model.Neighborhood ?? "")'.trim();
+                        const currentNeighName = '@(Model.Order.Neighborhood ?? "")'.trim();
                         if (currentNeighName) {
                             $neigh.value = currentNeighName;
                         }
                         $neigh.disabled = false;
                     });
             });
+
+            // ===============================
+            // KAYITLI ADRES SEÇİMİ
+            // ===============================
+            document.querySelectorAll('.select-address-btn').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const card = this.closest('.saved-address-card');
+                    fillFormFromSavedAddress(card);
+                });
+            });
+
+            // Karta tıklayınca da seçim yapılabilir
+            document.querySelectorAll('.saved-address-card').forEach(card => {
+                card.addEventListener('click', function () {
+                    fillFormFromSavedAddress(this);
+                });
+            });
+
+            function fillFormFromSavedAddress(card) {
+                const name = card.dataset.name;
+                const phone = card.dataset.phone;
+                const city = card.dataset.city;
+                const district = card.dataset.district;
+                const neighborhood = card.dataset.neighborhood;
+                const address = card.dataset.address;
+
+                // Formu doldur
+                document.querySelector('[name="Order.Name"]').value = name || '';
+                document.querySelector('[name="Order.PhoneNumber"]').value = phone || '';
+                document.querySelector('[name="Order.Address"]').value = address || '';
+
+                // Şehir seç ve ilçeleri yükle
+                if (city) {
+                    $city.value = city;
+
+                    // İlçeleri yükle
+                    const selectedCityOpt = $city.options[$city.selectedIndex];
+                    const cityId = selectedCityOpt?.dataset?.id;
+
+                    if (cityId) {
+                        resetSelect($district, 'Yükleniyor...', true);
+                        fetch('/api/locations/districts?cityId=' + encodeURIComponent(cityId))
+                            .then(r => r.json())
+                            .then(list => {
+                                resetSelect($district, 'İlçe seçiniz…', false);
+                                for (const it of list) {
+                                    const name = it.name ?? it.Name ?? it.ilce_adi;
+                                    const id = it.id ?? it.Id ?? it.ilce_id;
+                                    if (!name) continue;
+                                    const opt = new Option(name, name);
+                                    if (id) opt.dataset.id = id;
+                                    $district.add(opt);
+                                }
+
+                                // İlçe seç
+                                if (district) {
+                                    $district.value = district;
+
+                                    // Mahalleleri yükle
+                                    const selectedDistOpt = $district.options[$district.selectedIndex];
+                                    const districtId = selectedDistOpt?.dataset?.id;
+
+                                    if (cityId && districtId) {
+                                        resetSelect($neigh, 'Yükleniyor...', true);
+                                        const url = '/api/locations/neighborhoods?cityId=' + encodeURIComponent(cityId)
+                                            + '&districtId=' + encodeURIComponent(districtId);
+
+                                        fetch(url)
+                                            .then(r => r.json())
+                                            .then(list => {
+                                                resetSelect($neigh, 'Mahalle seçiniz…', false);
+                                                for (const it of list) {
+                                                    const name = it.name ?? it.Name ?? it.mahalle_adi;
+                                                    if (!name) continue;
+                                                    $neigh.add(new Option(name, name));
+                                                }
+
+                                                // Mahalle seç
+                                                if (neighborhood) {
+                                                    $neigh.value = neighborhood;
+                                                }
+                                            });
+                                    }
+                                }
+                            });
+                    }
+                }
+
+                // Seçili kartı vurgula
+                document.querySelectorAll('.saved-address-card').forEach(c => {
+                    c.classList.remove('border-success', 'bg-light');
+                });
+                card.classList.add('border-success', 'bg-light');
+
+                // Forma scroll
+                document.getElementById('checkoutForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         })();
     </script>
+
+    <style>
+        .saved-address-card {
+            transition: all 0.2s ease;
+        }
+
+        .saved-address-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .saved-address-card.border-success {
+            border-width: 2px !important;
+        }
+    </style>
 }

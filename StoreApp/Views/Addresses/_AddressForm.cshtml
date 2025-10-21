@@ -16,7 +16,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Etiket</label>
+                        <label class="form-label">Adres Başlığı</label>
                         <select class="form-select form-control-soft" asp-for="Label">
                             <option value="">Seçiniz…</option>
                             <option value="Ev">Ev</option>
@@ -25,6 +25,13 @@
                         </select>
                         <span class="text-danger small" asp-validation-for="Label"></span>
                     </div>
+                    <div class="col-md-6">
+                        <label asp-for="RecipientName" class="form-label">Ad Soyad</label>
+                        <input asp-for="RecipientName" class="form-control form-control-soft"
+                            placeholder="Adınız Soyadınız" />
+                        <span class="text-danger small" asp-validation-for="RecipientName"></span>
+                    </div>
+
 
                     <!-- Şehir -->
                     <div class="col-md-6">

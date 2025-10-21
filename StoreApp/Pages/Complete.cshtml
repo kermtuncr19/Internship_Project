@@ -1,16 +1,96 @@
-@page
+@page "{OrderId:int}"
+@model CompleteModel
+@{
+    var total = Model.Order.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+    string statusText = Model.Order.Cancelled ? "İptal"
+    : (Model.Order.Shipped ? "Onaylandı" : "Onay Aşamasında");
+}
 
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-<div class="text-center">
-<p>@OrderId Numaralı Siparişi Verdiğiniz İçin Teşekkür Ederiz.</p>
-<p>En Kısa Sürede Siparişiniz Kargolanacaktır.</p>
-<a class="btn btn-primary" asp-controller="Home" asp-action="Index">
- <i class="fa-solid fa-house"></i>
-Fenerium</a>
-</div>
 
-@functions
-{
-    [BindProperty(SupportsGet =true)]
-    public String? OrderId { get; set;}
-}
+<div class="container my-5">
+
+    <!-- ✅ Yeşil tik -->
+    <div class="text-center mb-4">
+        <div class="success-icon mx-auto mb-2">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 class="fw-bold text-success">Siparişiniz başarıyla oluşturuldu!</h3>
+        <div class="text-muted">
+            <span class="fw-semibold">#@Model.Order.OrderId</span> • @Model.Order.OrderedAt.ToLocalTime().ToString("g")
+        </div>
+    </div>
+
+    <!-- ✅ Sipariş Özeti -->
+    <div class="card shadow-soft">
+        <div class="card-header bg-white d-flex justify-content-between">
+            <div>#@Model.Order.OrderId • @Model.Order.OrderedAt.ToLocalTime().ToString("g")</div>
+            <div>@statusText</div>
+        </div>
+
+        <div class="card-body">
+            <div class="mb-3">
+                <div class="fw-semibold">@Model.Order.Name</div>
+                <div class="text-muted small">
+                    @Model.Order.City • @Model.Order.District / @Model.Order.Neighborhood / @Model.Order.Address
+                </div>
+            </div>
+
+            <ul class="list-group list-group-flush">
+                @foreach (var line in Model.Order.Lines)
+                {
+                    var unit = line.Product?.Price ?? line.UnitPrice;
+                    var lineTotal = unit * line.Quantity;
+
+                    string imgSrc;
+                    if (string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+                    {
+                        imgSrc = Url.Content("~/images/placeholders/product-thumb.png");
+                    }
+                    else if (line.Product!.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                    || line.Product.ImageUrl.StartsWith("/"))
+                    {
+                        imgSrc = line.Product.ImageUrl;
+                    }
+                    else
+                    {
+                        imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+                    }
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3"
+                                loading="lazy" width="48" height="48" />
+                            <div>
+                                <div class="fw-semibold">
+                                    @line.Product?.ProductName
+                                    @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
+                                </div>
+                                <div class="text-muted small">
+                                    @line.Quantity × @unit.ToString("C2")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fw-semibold">@lineTotal.ToString("C2")</div>
+                    </li>
+                }
+
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Ara Toplam</span><span>@total.ToString("C2")</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between fw-bold">
+                    <span>Toplam</span><span>@total.ToString("C2")</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a asp-controller="MyOrders" asp-action="Index" class="btn btn-outline-navy btn-pill me-2">
+            <i class="fa-solid fa-box"></i> Siparişlerim
+        </a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-navy btn-pill">
+            <i class="fa-solid fa-house"></i> Alışverişe Devam Et
+        </a>
+    </div>
+</div>
