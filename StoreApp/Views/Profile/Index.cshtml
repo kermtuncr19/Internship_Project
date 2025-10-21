@@ -2,6 +2,10 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="container my-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success mt-3 text-center">@TempData["Success"]</div>
+    }
     <div class="row g-3">
         <div class="col-12">
             <div class="card form-card shadow-soft">

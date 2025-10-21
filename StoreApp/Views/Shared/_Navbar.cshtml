@@ -24,7 +24,6 @@
           <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
           <input type="search" class="form-control border-start-0" name="SearchTerm"
             value="@(Context.Request.Query["SearchTerm"])" placeholder="Fenerium’da Ara" aria-label="Ara" />
-          <!-- xs-sm: gizli, md+: görünür -->
           <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
 
           @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
@@ -34,22 +33,70 @@
         </div>
       </form>
 
-      <!-- SAĞ: SEPET + GİRİŞ -->
+      <!-- SAĞ: SEPET + GİRİŞ / PROFİL -->
       <ul class="navbar-nav ms-lg-auto align-items-center gap-2 order-1 order-lg-3 actions">
-        <li class="nav-item cart-slot">
+        <!-- Sepet -->
+        <li class="nav-item p-0 m-0">
           @await Component.InvokeAsync("CartSummary")
         </li>
+
         @if (User.Identity?.IsAuthenticated ?? false)
         {
-          <li class="nav-item cart-slot">
-            <a class="nav-link" asp-controller="Profile" asp-action="Index">
-              <i class="fa fa-user"></i> 
+          <!-- Kullanıcı Dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa fa-gear text-navy fa-lg"></i>
             </a>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenu">
+              <li>
+                <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                  <i class="fa fa-user me-2 text-navy"></i> Hesabım
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" asp-controller="MyOrders" asp-action="Index">
+                  <i class="fa fa-box me-2 text-navy"></i> Siparişlerim
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" asp-controller="Favorites" asp-action="Index">
+                  <i class="fa fa-heart me-2 text-navy"></i> Favorilerim
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" asp-controller="Addresses" asp-action="Index">
+                  <i class="fa fa-location-dot me-2 text-navy"></i> Adreslerim
+                </a>
+              </li>
+
+              @if (User.IsInRole("Admin"))
+              {
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                    <i class="fa-solid fa-screwdriver-wrench me-2 text-secondary"></i> Admin Paneli
+                  </a>
+                </li>
+              }
+
+              <li><hr class="dropdown-divider" /></li>
+              <li class="px-3">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                  @Html.AntiForgeryToken()
+                  <button type="submit" class="dropdown-item text-danger p-0">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i> Çıkış Yap
+                  </button>
+                </form>
+              </li>
+            </ul>
           </li>
         }
+
+        <!-- Giriş Yap (oturum yoksa) -->
         <partial name="_LoginMenu" />
       </ul>
     </div>
-
   </div>
 </nav>

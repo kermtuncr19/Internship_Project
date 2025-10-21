@@ -17,13 +17,13 @@ namespace StoreApp.Models
             return cart;
 
         }
-         public override void AddItem(Product product, int quantity, string? size)
+        public override void AddItem(Product product, int quantity, string? size)
         {
             base.AddItem(product, quantity, size);
             Session?.SetJson("cart", this);
         }
 
-        
+
         public override void Clear()
         {
             base.Clear();
@@ -44,5 +44,34 @@ namespace StoreApp.Models
             base.RemoveLineById(productId);
             Session?.SetJson<SessionCart>("cart", this);
         }
+
+        public void ChangeSize(int productId, string oldSize, string newSize)
+        {
+            var oldLine = Lines.FirstOrDefault(l =>
+                l.Product.ProductId == productId &&
+                string.Equals(l.Size ?? "", oldSize ?? "", StringComparison.OrdinalIgnoreCase));
+
+            if (oldLine != null)
+            {
+                // Eğer aynı ürün yeni bedende zaten varsa miktarları birleştir
+                var existing = Lines.FirstOrDefault(l =>
+                    l.Product.ProductId == productId &&
+                    string.Equals(l.Size ?? "", newSize ?? "", StringComparison.OrdinalIgnoreCase));
+
+                if (existing != null)
+                {
+                    existing.Quantity += oldLine.Quantity;
+                    Lines.Remove(oldLine);
+                }
+                else
+                {
+                    oldLine.Size = newSize;
+                }
+
+                // 🔥 Güncellenmiş sepeti session’a yaz
+                Session?.SetJson("cart", this);
+            }
+        }
+
     }
 }

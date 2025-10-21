@@ -54,6 +54,30 @@ namespace Entities.Models
             Lines.RemoveAll(l => l.Product.ProductId == productId);
         }
 
+        public void ChangeSize(int productId, string oldSize, string newSize)
+        {
+            var oldLine = Lines.FirstOrDefault(l =>
+                l.Product.ProductId == productId &&
+                string.Equals(l.Size ?? "", oldSize ?? "", StringComparison.OrdinalIgnoreCase));
+
+            if (oldLine == null) return;
+
+            // aynı ürünün yeni bedeni varsa miktarları birleştir
+            var existing = Lines.FirstOrDefault(l =>
+                l.Product.ProductId == productId &&
+                string.Equals(l.Size ?? "", newSize ?? "", StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+            {
+                existing.Quantity += oldLine.Quantity;
+                Lines.Remove(oldLine);
+            }
+            else
+            {
+                oldLine.Size = newSize;
+            }
+        }
+
 
         public decimal ComputeTotalValue() => Lines.Sum(e => e.Product.Price * e.Quantity);
 

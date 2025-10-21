@@ -53,7 +53,46 @@
                     @if (anySized)
                     {
                         <td class="text-center fw-semibold">
-                            @(!string.IsNullOrEmpty(line.Size) ? line.Size : "-")
+                            @{
+                                // Ürünün beden seçeneklerini CSV’den oku
+                                var sizeOptions = line.Product.SizeOptionsCsv?.Split(',', StringSplitOptions.RemoveEmptyEntries |
+                                StringSplitOptions.TrimEntries) ?? Array.Empty<string>();
+                            }
+
+                            @if (sizeOptions.Any())
+                            {
+                                <form method="post" asp-page-handler="ChangeSize" class="d-inline">
+                                    <input type="hidden" name="id" value="@line.Product.ProductId" />
+                                    <input type="hidden" name="oldSize" value="@line.Size" />
+                                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+                                    <div class="custom-select-wrapper">
+    <button class="custom-select-btn" type="button" onclick="this.nextElementSibling.classList.toggle('show')">
+        @line.Size
+        <i class="fa-solid fa-chevron-down ms-2"></i>
+    </button>
+    <ul class="custom-select-list">
+        @foreach (var s in sizeOptions)
+        {
+            <li>
+                <form method="post" asp-page-handler="ChangeSize" style="margin:0;">
+                    <input type="hidden" name="id" value="@line.Product.ProductId" />
+                    <input type="hidden" name="oldSize" value="@line.Size" />
+                    <input type="hidden" name="newSize" value="@s" />
+                    <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                    <button type="submit" class="dropdown-item">@s</button>
+                </form>
+            </li>
+        }
+    </ul>
+</div>
+
+                                </form>
+                            }
+                            else
+                            {
+                                @(!string.IsNullOrEmpty(line.Size) ? line.Size : "-")
+                            }
                         </td>
                     }
 

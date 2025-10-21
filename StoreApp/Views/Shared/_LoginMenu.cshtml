@@ -1,33 +1,19 @@
+@* Views/Shared/_LoginMenu.cshtml *@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-@if(User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+@if (User?.Identity?.IsAuthenticated ?? false)
 {
-<li class="nav-item">
-    <a class="nav-link admin-pill" aria-current="page" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-        <i class="fa-solid fa-gear"></i> Admin
-    </a>
-</li>
-}
-
-@if (User.Identity.IsAuthenticated)
-{
-    <li class="nav-item">
-        <a class="nav-link admin-pill" aria-current="page" asp-area="" asp-controller="Account"
-        asp-route-returnUrl="@Context.Request.PathAndQuery()" 
-        asp-action="Logout">
-        <i class="fa-solid fa-right-from-bracket"></i>
-            Çıkış Yap
-        </a>
-    </li>
+    @* Giriş yapılmışsa burada hiçbir şey gösterme (logout dropdown’da zaten) *@
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link admin-pill" aria-current="page" asp-area="" asp-controller="Account"
-        asp-route-returnUrl="@Context.Request.PathAndQuery()"
-        asp-action="Login">
-        <i class="fa-solid fa-right-to-bracket"></i>
-            Giriş Yap
+    <li class="nav-item p-0 m-0">
+        <a class="nav-link d-flex align-items-center text-dark text-decoration-none px-0"
+           asp-controller="Account"
+           asp-action="Login"
+           asp-route-returnUrl="@(Context.Request.Path + Context.Request.QueryString)">
+            <i class="fa-solid fa-right-to-bracket me-1 fa-lg"></i>
+            <span>Giriş Yap</span>
         </a>
     </li>
 }

@@ -1,4 +1,5 @@
 using Entities.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
@@ -147,6 +148,48 @@ namespace StoreApp.Controllers
         {
             return View();
         }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            return View(); // Views/Account/ResetPassword.cshtml
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string oldPassword, string newPassword, string confirmPassword)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            if (newPassword != confirmPassword)
+            {
+                ModelState.AddModelError("", "Yeni şifreler eşleşmiyor.");
+                return View();
+            }
+
+            // 🔸 RegisterDto’daki regex ile aynı kontrolü uygula
+            var passwordRegex = new System.Text.RegularExpressions.Regex(@"^(?=.*\p{Ll})(?=.*\p{Lu})(?=.*\d)[^\s]+$");
+            if (newPassword.Length < 8 || !passwordRegex.IsMatch(newPassword))
+            {
+                ModelState.AddModelError("", "Şifre en az 8 karakter olmalı, bir küçük, bir büyük harf ve bir rakam içermeli; boşluk içeremez.");
+                return View();
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "Şifreniz başarıyla değiştirildi.";
+                return RedirectToAction("Index", "Profile");
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError("", error.Description);
+
+            return View();
+        }
+
     }
 
 }
