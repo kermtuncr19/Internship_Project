@@ -1,76 +1,129 @@
 @model RegisterDto
 
 <div class="text-center my-5">
-
-    <h6 class="display-6">
-        <i class="fa-solid fa-user-plus text-white bg-secondary p-3 rounded-5 bg-primary"></i>
-        <br />
-        Kayıt Ol
-    </h6>
+  <h6 class="display-6">
+    <i class="fa-solid fa-user-plus text-white bg-secondary p-3 rounded-5 bg-primary"></i>
+    <br />
+    Kayıt Ol
+  </h6>
 </div>
 
-<div class="row">
-    <div class="col-md-3"></div>
-    <div class="col-md-6">
-        <div>
-            <div class="text-danger" asp-validation-summary="All"></div>
+<div class="row g-4 my-2">
+  <!-- SOL: FORM -->
+  <div class="col-lg-6">
+    <div class="text-danger" asp-validation-summary="All"></div>
+
+    <form method="post" asp-action="Register">
+      <div class="form-group my-3">
+        <label asp-for="UserName">Kullanıcı Adı</label>
+        <input asp-for="UserName" class="form-control" />
+      </div>
+
+      <div class="form-group my-3">
+        <label asp-for="Email">E-Posta</label>
+        <input asp-for="Email" class="form-control" />
+      </div>
+
+      <!-- ŞİFRE (Göster/Gizle input'un İÇİNDE) -->
+      <div class="form-group my-3">
+        <label asp-for="Password" class="form-label">Şifre</label>
+
+        <!-- ÖNEMLİ: Bu wrapper relative olmalı -->
+        <div class="pwd-field position-relative w-100">
+          <input type="password" asp-for="Password" class="form-control pe-5" id="passwordInput"
+           pattern="^(?=.*[a-zçğıöşü])(?=.*[A-ZÇĞİÖŞÜ])(?=.*[!@@#$%^&*().,_+\-?=]).{8,}$"
+            title="En az 8 karakter, 1 büyük, 1 küçük ve 1 özel karakter (! @@ # $ % ^ & * ( ) . , _ + - ? =) içermelidir." />
+
+          <!-- input'un içinde, sağda ve DİKEY ORTALI -->
+          <button type="button" id="togglePwdRegister"
+            class="pwd-toggle btn btn-sm btn-link position-absolute top-50 end-0 translate-middle-y me-2"
+            aria-pressed="false" style="text-decoration:none;">
+            Göster
+          </button>
         </div>
-        <form method="post" asp-action="Register">
 
-            <div class="form-group my-3">
-                <label asp-for="UserName">Kullanıcı Adı</label>
-                <input asp-for="UserName" class="form-control" />
-            </div>
+        <span asp-validation-for="Password" class="text-danger"></span>
+      </div>
 
-            <div class="form-group my-3">
-                <label asp-for="Email">E-Posta</label>
-                <input asp-for="Email" class="form-control" />
-            </div>
+      <div class="form-group my-4 d-flex justify-content-center">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-user-plus"></i> Kayıt Ol
+        </button>
+      </div>
+    </form>
+  </div>
 
-            <div class="form-group my-3">
-                <label asp-for="Password" class="form-label">Şifre</label>
+  <!-- SAĞ: ŞİFRE KURALLARI -->
+  <div class="col-lg-6 mt-lg-4">
+    <div class="card shadow-sm pw-card position-sticky" style="top: 3rem;">
+      <div class="card-body">
+        <h6 class="mb-3">Şifre Kuralları</h6>
+        <ul id="passwordRules" class="pw-rules list-unstyled small mb-0">
+          <li data-rule="min"><span class="mark" aria-hidden="true"></span> <span>En az 8 karakter</span></li>
+          <li data-rule="upper"><span class="mark" aria-hidden="true"></span> <span>En az 1 BÜYÜK harf (A-Z)</span></li>
+          <li data-rule="lower"><span class="mark" aria-hidden="true"></span> <span>En az 1 küçük harf (a-z)</span></li>
+          <li data-rule="special"><span class="mark" aria-hidden="true"></span> <span>En az 1 özel karakter (! @@ # $ % ^
+              & * ( ) . , _ + - ? =)</span></li>
+        </ul>
 
-                <div class="pwd-wrap">
-                    <input type="password" asp-for="Password" class="form-control pwd-input" />
-                    <span id="togglePwdRegister" class="pwd-toggle-link" role="button" tabindex="0"
-                        aria-pressed="false">
-                        Göster
-                    </span>
-                </div>
 
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-
-
-            <div class="form-group my-3 d-flex justify-content-center">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa-solid fa-user-plus"></i>
-                    Kayıt Ol
-                </button>
-            </div>
-        </form>
+      </div>
     </div>
-    <div class="col-md-3"></div>
+  </div>
 </div>
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const link = document.getElementById('togglePwdRegister');
-            const input = document.getElementById('@Html.IdFor(m => m.Password)');
-            if (!link || !input) return;
 
-            function toggle() {
-                const isHidden = input.type === 'password';
-                input.type = isHidden ? 'text' : 'password';
-                link.textContent = isHidden ? 'Gizle' : 'Göster';
-                link.setAttribute('aria-pressed', String(isHidden));
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // --- toggle ---
+  const input = document.getElementById('passwordInput');
+  const btn   = document.getElementById('togglePwdRegister');
+  function toggle() {
+    const hidden = input.type === 'password';
+    input.type = hidden ? 'text' : 'password';
+    btn.textContent = hidden ? 'Gizle' : 'Göster';
+    btn.setAttribute('aria-pressed', String(hidden));
+  }
+  btn?.addEventListener('click', toggle);
 
-            link.addEventListener('click', toggle);
-            link.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-            });
-        });
-    </script>
+  // --- kurallar ---
+  const rules = document.getElementById('passwordRules');
+  const items = rules ? {
+    min:     rules.querySelector('[data-rule="min"]'),
+    upper:   rules.querySelector('[data-rule="upper"]'),
+    lower:   rules.querySelector('[data-rule="lower"]'),
+    special: rules.querySelector('[data-rule="special"]'),
+  } : {};
+
+ const SPECIALS = "!@@#$%^&*().,_+-?=";
+
+function isLetterTR(c) {
+  // Harf olup olmadığını locale'e göre test ediyoruz
+  return c.toLocaleUpperCase('tr-TR') !== c.toLocaleLowerCase('tr-TR');
 }
+function hasUpper(s) {
+  return [...s].some(c => isLetterTR(c) && c === c.toLocaleUpperCase('tr-TR') && c !== c.toLocaleLowerCase('tr-TR'));
+}
+function hasLower(s) {
+  return [...s].some(c => isLetterTR(c) && c === c.toLocaleLowerCase('tr-TR') && c !== c.toLocaleUpperCase('tr-TR'));
+}
+function hasSpecial(s) {
+  return [...s].some(c => SPECIALS.includes(c));
+}
+
+  function setState(li, ok) {
+    if (!li) return;
+    li.classList.toggle('ok', ok);
+    li.classList.toggle('bad', !ok);
+  }
+  function validate() {
+    const v = input.value || '';
+    setState(items.min,     v.length >= 8);
+    setState(items.upper,   hasUpper(v));
+    setState(items.lower,   hasLower(v));
+    setState(items.special, hasSpecial(v));
+  }
+  input?.addEventListener('input', validate);
+  validate();
+});
+</script>

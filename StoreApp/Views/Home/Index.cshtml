@@ -12,7 +12,7 @@
   && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
 }
 
-<!-- ✅ KATEGORİ ŞERİDİ (yalnızca pill’ler, filtre yok) -->
+<!-- ✅ KATEGORİ ŞERİDİ -->
 <div class="category-bar row g-2 align-items-center mb-3 mt-4">
   <div class="col-12">
     <div class="chips d-flex flex-nowrap overflow-auto gap-2 pe-2">
@@ -35,26 +35,97 @@
   </div>
 </div>
 
+<!-- 🎨 BANNER CAROUSEL - Container dışına çıkar -->
+</div> <!-- container my-3 kapanıyor -->
+
+<div class="banner-carousel-wrapper">
+  <div class="banner-carousel-container mb-4">
+    <div class="banner-carousel">
+      <div class="banner-track">
+        <!-- Banner 1 - Chobani Forma (Futbol) -->
+        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="1" class="banner-item">
+          <img src="~/images/banners/banner1.jpg" alt="Futbol Ürünleri" class="banner-image" />
+        </a>
+        
+        <!-- Banner 2 - Basketbol İç Saha -->
+        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="2" class="banner-item">
+          <img src="~/images/banners/banner2.jpg" alt="Basketbol Ürünleri" class="banner-image" />
+        </a>
+        
+        <!-- Banner 3 - Voleybol İç Saha -->
+        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="3" class="banner-item">
+          <img src="~/images/banners/banner3.jpg" alt="Voleybol Ürünleri" class="banner-image" />
+        </a>
+      </div>
+    </div>
+    
+    <!-- Navigation Dots -->
+    <div class="banner-dots">
+      <span class="dot active" data-index="0"></span>
+      <span class="dot" data-index="1"></span>
+      <span class="dot" data-index="2"></span>
+    </div>
+  </div>
+</div>
+
+<div class="container my-3"> <!-- container my-3 tekrar açılıyor -->
+
 <!-- 🎯 Ana sayfa vitrin ürünleri -->
 <div class="my-4">
   @await Component.InvokeAsync("Showcase")
 </div>
 
 <style>
-  /* Kategori şeridi mobilde kaydırılabilir kalsın */
-  .chips {
-    scrollbar-width: none;
-  }
-
-  .chips::-webkit-scrollbar {
-    display: none;
-  }
-
-  .chips .btn {
-    white-space: nowrap;
-  }
-
-  .category-bar {
-    row-gap: .5rem;
-  }
+  
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const track = document.querySelector('.banner-track');
+    const dots = document.querySelectorAll('.dot');
+    const banners = document.querySelectorAll('.banner-item');
+    let currentIndex = 0;
+    const totalBanners = banners.length;
+    let autoSlideInterval;
+
+    function goToSlide(index) {
+      currentIndex = index;
+      const offset = -currentIndex * 100;
+      track.style.transform = `translateX(${offset}%)`;
+      
+      // Update dots
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % totalBanners;
+      goToSlide(currentIndex);
+    }
+
+    function startAutoSlide() {
+      autoSlideInterval = setInterval(nextSlide, 3500); // 3.5 saniye
+    }
+
+    function stopAutoSlide() {
+      clearInterval(autoSlideInterval);
+    }
+
+    // Dot click events
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        stopAutoSlide();
+        goToSlide(index);
+        startAutoSlide();
+      });
+    });
+
+    // Pause on hover
+    track.addEventListener('mouseenter', stopAutoSlide);
+    track.addEventListener('mouseleave', startAutoSlide);
+
+    // Start auto sliding
+    startAutoSlide();
+  });
+</script>

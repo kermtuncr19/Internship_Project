@@ -1224,16 +1224,18 @@
   height: 48px;
   object-fit: cover;
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
-  transform: translateZ(0); /* bazen GPU scalingi netleştirir */
+  transform: translateZ(0);
+  /* bazen GPU scalingi netleştirir */
 }
 
 .dropdown-menu a.dropdown-item i {
   width: 18px;
   text-align: center;
 }
+
 .dropdown-menu a.dropdown-item:hover {
   background-color: #f8f9fa;
 }
@@ -1300,8 +1302,238 @@
 }
 
 @keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
+/* Kategori şeridi */
+.chips {
+  scrollbar-width: none;
+}
 
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chips .btn {
+  white-space: nowrap;
+}
+
+.category-bar {
+  row-gap: .5rem;
+}
+
+/* Banner Carousel Wrapper - Tam genişlik */
+.banner-carousel-wrapper {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+.banner-carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-track {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+
+.banner-item {
+  min-width: 100%;
+  display: block;
+  position: relative;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.banner-image {
+  width: 100%;
+  height: 550px;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Hover effect */
+.banner-item::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  transition: background 0.3s ease;
+}
+
+.banner-item:hover::after {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Dots */
+.banner-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 0;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.dot.active {
+  background: #fff;
+  width: 12px;
+  height: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .banner-image {
+    max-height: 250px;
+  }
+
+  .banner-dots {
+    bottom: 10px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dot.active {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .banner-image {
+    max-height: 350px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .banner-image {
+    max-height: 550px;
+  }
+}
+
+/* Minimal dokunuş: kurallar yan tarafta, mobilde alta düşer */
+.pwd-wrap {
+  gap: 1rem;
+}
+
+#passwordRules {
+  min-width: 260px;
+}
+
+#passwordRules .fa-regular {
+  width: 1.1rem;
+  text-align: center;
+}
+
+.pwd-toggle-link {
+  cursor: pointer;
+  color: #0d6efd;
+  font-size: .875rem;
+}
+
+.pwd-toggle-link:hover {
+  text-decoration: underline;
+}
+
+/* Görsel iyileştirme */
+.pw-rules {
+  min-width: 260px
+}
+
+.pwd-toggle-link {
+  cursor: pointer;
+  color: #0d6efd;
+  font-size: .875rem
+}
+
+.pwd-toggle-link:hover {
+  text-decoration: underline
+}
+
+@media (max-width: 767.98px) {
+  .pw-rules {
+    margin-top: .25rem
+  }
+}
+
+/* Görsel düzen */
+.pwd-toggle-link {
+  cursor: pointer;
+  color: #0d6efd;
+  font-size: .875rem
+}
+
+.pwd-toggle-link:hover {
+  text-decoration: underline
+}
+
+.pw-card {
+  border-radius: .75rem;
+}
+
+#passwordRules i {
+  width: 1.1rem;
+  text-align: center;
+}
+/* Görünüm ve hizalar */
+.pw-card { border-radius: .75rem; }
+#passwordRules i { width: 1.1rem; text-align: center; }
+.pwd-eye { color:#6c757d; }
+.pwd-eye:hover { color:#0d6efd; }
+/* input içi butonun metinle çakışmaması için ekstra sağ padding isteyen tarayıcılar için: */
+#passwordInput { padding-right: 3.25rem; }
+/* Görünüm ufak dokunuşlar */
+#passwordInput { padding-right: 3.25rem; }              /* içteki buton için sağ boşluk */
+#togglePwdRegister { color:#6c757d; text-decoration:none }
+#togglePwdRegister:hover { color:#0d6efd; text-decoration:none }
+#passwordRules i { width:1.1rem; text-align:center; }
+
+.pw-rules li { display:flex; align-items:center; gap:.35rem; }
+.pw-rules .mark { display:inline-block; width:1.1rem; text-align:center; font-weight:700; }
+.pw-rules li.bad  .mark::after { content:"✕"; color:#dc3545; }   /* kırmızı çarpı */
+.pw-rules li.ok   .mark::after { content:"✓"; color:#198754; }   /* yeşil tik  */
