@@ -7,11 +7,9 @@
         <div class="card-body">
             <div class="text-danger mb-3" asp-validation-summary="All"></div>
 
-            <!-- Aynı rotaya post eder -->
             <form method="post" id="addressForm">
                 @Html.AntiForgeryToken()
 
-                <!-- Edit senaryosu için Id gizli alanı -->
                 <input type="hidden" asp-for="Id" />
 
                 <div class="row g-3">
@@ -32,17 +30,14 @@
                         <span class="text-danger small" asp-validation-for="RecipientName"></span>
                     </div>
 
-
-                    <!-- Şehir -->
                     <div class="col-md-6">
                         <label asp-for="City" class="form-label">Şehir</label>
                         <select asp-for="City" id="city" class="form-select">
-                            <option value="">Seçiniz…</option>
+                            <option value="">Yükleniyor...</option>
                         </select>
                         <span class="text-danger small" asp-validation-for="City"></span>
                     </div>
 
-                    <!-- İlçe -->
                     <div class="col-md-6">
                         <label asp-for="District" class="form-label">İlçe</label>
                         <select asp-for="District" id="district" class="form-select" disabled>
@@ -51,7 +46,6 @@
                         <span class="text-danger small" asp-validation-for="District"></span>
                     </div>
 
-                    <!-- Mahalle -->
                     <div class="col-md-6">
                         <label asp-for="Neighborhood" class="form-label">Mahalle</label>
                         <select asp-for="Neighborhood" id="neighborhood" class="form-select" disabled>
@@ -91,24 +85,29 @@
     </div>
 </div>
 
-
 <script>
     (function () {
-        const $city = document.getElementById('city');          // ✅ Doğru
-        const $district = document.getElementById('district');  // ✅ Doğru
-        const $neigh = document.getElementById('neighborhood'); // ✅ Doğru
+        const $city = document.getElementById('city');
+        const $district = document.getElementById('district');
+        const $neigh = document.getElementById('neighborhood');
 
-        // Yardımcı: select'i temizle + ilk option
+        // Model'den gelen değerler
+        const savedCity = '@Html.Raw(Model?.City ?? "")';
+        const savedDistrict = '@Html.Raw(Model?.District ?? "")';
+        const savedNeighborhood = '@Html.Raw(Model?.Neighborhood ?? "")';
+
         function resetSelect(sel, placeholder, disabled) {
             sel.length = 0;
             sel.add(new Option(placeholder, ''));
             sel.disabled = !!disabled;
         }
 
-        // Şehirleri getir
+        // 1️⃣ Şehirleri yükle
         fetch('/api/locations/cities')
             .then(r => r.json())
             .then(cities => {
+                resetSelect($city, 'Şehir seçiniz…', false);
+
                 for (const c of cities) {
                     const name = c.name ?? c.Name ?? c.sehir_adi;
                     const id = c.id ?? c.Id ?? c.sehir_id;
@@ -118,25 +117,24 @@
                     $city.add(opt);
                 }
 
-                const currentCityName = '@(Model?.City ?? "")'.trim();
-                if (currentCityName) {
-                    $city.value = currentCityName;
-                    $city.dispatchEvent(new Event('change'));
+                // Eğer kayıtlı şehir varsa seç ve ilçeleri yükle
+                if (savedCity) {
+                    $city.value = savedCity;
+                    loadDistricts(savedCity);
                 }
             });
 
-        $city.addEventListener('change', () => {
-            resetSelect($district, $city.value ? 'İlçe seçiniz…' : 'Önce şehir seçiniz…', !$city.value);
-            resetSelect($neigh, 'Önce ilçe seçiniz…', true);
-            if (!$city.value) return;
-
-            const selectedOpt = $city.options[$city.selectedIndex];
+        // 2️⃣ İlçeleri yükle
+        function loadDistricts(cityName) {
+            const selectedOpt = Array.from($city.options).find(opt => opt.value === cityName);
             const cityId = selectedOpt?.dataset?.id;
             if (!cityId) return;
 
             fetch('/api/locations/districts?cityId=' + encodeURIComponent(cityId))
                 .then(r => r.json())
                 .then(list => {
+                    resetSelect($district, 'İlçe seçiniz…', false);
+
                     for (const it of list) {
                         const name = it.name ?? it.Name ?? it.ilce_adi;
                         const id = it.id ?? it.Id ?? it.ilce_id;
@@ -146,20 +144,18 @@
                         $district.add(opt);
                     }
 
-                    const currentDistrictName = '@(Model?.District ?? "")'.trim();
-                    if (currentDistrictName) {
-                        $district.value = currentDistrictName;
-                        $district.dispatchEvent(new Event('change'));
+                    // Eğer kayıtlı ilçe varsa seç ve mahalleleri yükle
+                    if (savedDistrict) {
+                        $district.value = savedDistrict;
+                        loadNeighborhoods(cityName, savedDistrict);
                     }
                 });
-        });
+        }
 
-        $district.addEventListener('change', () => {
-            resetSelect($neigh, $district.value ? 'Mahalle seçiniz…' : 'Önce ilçe seçiniz…', !$district.value);
-            if (!($city.value && $district.value)) return;
-
-            const selectedCityOpt = $city.options[$city.selectedIndex];
-            const selectedDistOpt = $district.options[$district.selectedIndex];
+        // 3️⃣ Mahalleleri yükle
+        function loadNeighborhoods(cityName, districtName) {
+            const selectedCityOpt = Array.from($city.options).find(opt => opt.value === cityName);
+            const selectedDistOpt = Array.from($district.options).find(opt => opt.value === districtName);
             const cityId = selectedCityOpt?.dataset?.id;
             const districtId = selectedDistOpt?.dataset?.id;
             if (!(cityId && districtId)) return;
@@ -170,18 +166,38 @@
             fetch(url)
                 .then(r => r.json())
                 .then(list => {
+                    resetSelect($neigh, 'Mahalle seçiniz…', false);
+
                     for (const it of list) {
                         const name = it.name ?? it.Name ?? it.mahalle_adi;
                         if (!name) continue;
                         $neigh.add(new Option(name, name));
                     }
 
-                    const currentNeighName = '@(Model?.Neighborhood ?? "")'.trim();
-                    if (currentNeighName) {
-                        $neigh.value = currentNeighName;
+                    // Eğer kayıtlı mahalle varsa seç
+                    if (savedNeighborhood) {
+                        $neigh.value = savedNeighborhood;
                     }
-                    $neigh.disabled = false;
                 });
+        }
+
+        // 🔄 Şehir değiştiğinde
+        $city.addEventListener('change', () => {
+            resetSelect($district, $city.value ? 'İlçe seçiniz…' : 'Önce şehir seçiniz…', !$city.value);
+            resetSelect($neigh, 'Önce ilçe seçiniz…', true);
+
+            if ($city.value) {
+                loadDistricts($city.value);
+            }
+        });
+
+        // 🔄 İlçe değiştiğinde
+        $district.addEventListener('change', () => {
+            resetSelect($neigh, $district.value ? 'Mahalle seçiniz…' : 'Önce ilçe seçiniz…', !$district.value);
+
+            if ($city.value && $district.value) {
+                loadNeighborhoods($city.value, $district.value);
+            }
         });
     })();
 </script>

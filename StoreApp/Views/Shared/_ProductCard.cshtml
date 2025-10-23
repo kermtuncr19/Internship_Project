@@ -23,23 +23,20 @@
 
                 <div class="d-flex align-items-center gap-2">
                     @* Favori toggle *@
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
-                        var isFavorite = favoriteIds.Contains(Model.ProductId);
-                        
-                        <form method="post" asp-controller="Favorites" asp-action="Toggle" class="m-0 p-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="productId" value="@Model.ProductId" />
-                            <input type="hidden" name="returnUrl"
-                                value="@(Context.Request.Path + Context.Request.QueryString)" />
-                            <button type="submit" class="btn p-0 border-0 bg-transparent tooltip1-btn-favorite"
-                                style="line-height: 1;">
-                                <i class="@(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-2x"
-                                   style="@(isFavorite ? "color: #dc3545;" : "color: #0d1b4c;") cursor: pointer; transition: color 0.2s;"></i>
-                            </button>
-                        </form>
-                    }
+                   @if (User.Identity?.IsAuthenticated == true)
+{
+    var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
+    var isFavorite = favoriteIds.Contains(Model.ProductId);
+
+   <button type="button"
+        class="btn p-0 border-0 bg-transparent js-fav-btn"
+        data-product-id="@Model.ProductId"
+        aria-pressed="@(isFavorite.ToString().ToLower())"
+        style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+  <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+     style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+</button>
+}
 
                     @* Sepete ekle: beden gerektiriyorsa detaya yönlendir *@
                     @if (Model.RequiresSize)

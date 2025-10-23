@@ -41,17 +41,14 @@
                                             var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
                                             var isFavorite = favoriteIds.Contains(product.ProductId);
 
-                                            <form method="post" asp-controller="Favorites" asp-action="Toggle" class="m-0 p-0">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="productId" value="@product.ProductId" />
-                                                <input type="hidden" name="returnUrl"
-                                                    value="@(Context.Request.Path + Context.Request.QueryString)" />
-                                                <button type="submit" class="btn p-0 border-0 bg-transparent"
-                                                    style="line-height: 1;">
-                                                    <i class="@(isFavorite ? "fa-solid" : "fa-regular") fa-heart "
-                                                        style="@(isFavorite ? "color: #dc3545;" : "color: #0d1b4c;") cursor: pointer;"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+        class="btn p-0 border-0 bg-transparent js-fav-btn"
+        data-product-id="@product.ProductId"
+        aria-pressed="@(isFavorite.ToString().ToLower())"
+        style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+  <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+     style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+</button>
                                         }
 
                                         @if (product.RequiresSize)

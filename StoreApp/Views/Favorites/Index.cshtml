@@ -1,34 +1,19 @@
 @model List<Entities.Models.Product>
-<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
 <div class="container my-4">
-    <div class="h5 mb-3">Favorilerim</div>
-    @if (!Model.Any())
-    {
-        <div class="alert alert-light">Henüz favori ürün eklemediniz.</div>
-    }
-    else
-    {
-        <div class="row g-3">
-            @foreach (var p in Model)
-            {
-                <div class="col-6 col-md-4 col-lg-3">
-                    <div class="card shadow-soft h-100">
-                        <img src="@p.ImageUrl" class="card-img-top" alt="@p.ProductName" />
-                        <div class="card-body">
-                            <div class="fw-semibold">@p.ProductName</div>
-                            <div class="text-primary fw-bold">@p.Price.ToString("C2")</div>
-                            <div class="d-flex gap-2 mt-2">
-                                <a asp-controller="Product" asp-action="Get" asp-route-id="@p.ProductId"
-                                    class="btn btn-outline-navy btn-sm">Detay</a>
-                                <form method="post" asp-action="Toggle">
-                                    <input type="hidden" name="productId" value="@p.ProductId" />
-                                    <button class="btn btn-danger btn-sm" type="submit">Favorilerden Çıkar</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    }
+  <div class="h5 mb-3">Favorilerim</div>
+
+  @if (!(Model?.Any() ?? false))
+  {
+      <div class="alert alert-light">Henüz favori ürün eklemediniz.</div>
+  }
+  else
+  {
+      <div class="row">
+          @foreach (var p in Model)
+          {
+              @await Html.PartialAsync("_ProductCard", p)  // ortak kart partial'ı
+          }
+      </div>
+  }
 </div>

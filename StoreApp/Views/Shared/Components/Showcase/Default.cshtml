@@ -1,12 +1,144 @@
-@model IEnumerable<Product>
+@model List<Entities.Models.Product>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-<div class="text-center">
-    <h6 class="display-6"></h6>
-</div>
+@if (Model != null && Model.Any())
+{
+    <div class="container py-5">
+        
 
-<div class="row">
-    @foreach (var prd in Model)
-    {
-        <partial name="_ProductCard" model="prd" />
-    }
-</div>
+        <div class="related-products-wrapper">
+            <button class="carousel-btn carousel-btn-prev" id="showcaseScrollLeft">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+
+            <div class="related-products-container" id="showcaseContainer">
+                @foreach (var product in Model)
+                {
+                    <div class="related-product-card">
+                        <div class="card h-100">
+                            <div
+                                style="height: 200px; padding: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                <img src="@product.ImageUrl" class="img-fluid" alt="@product.ProductName"
+                                    style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                            <div class="card-body d-flex flex-column p-3">
+                                <div class="text-navy text-center mb-2 fw-bold">
+                                    @product.Price.ToString("c")
+                                </div>
+
+                                <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
+
+                                <div class="mt-auto d-flex align-items-center justify-content-between">
+                                    <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
+                                        class="btn btn-sm tooltip1-btn"
+                                        style="background-color:#ffea00; color:black; border:none;">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
+                                            var isFavorite = favoriteIds.Contains(product.ProductId);
+
+                                            <button type="button"
+        class="btn p-0 border-0 bg-transparent js-fav-btn"
+        data-product-id="@product.ProductId"
+        aria-pressed="@(isFavorite.ToString().ToLower())"
+        style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+  <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+     style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+</button>
+                                        }
+
+                                        @if (product.RequiresSize)
+                                        {
+                                            <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
+                                                class="btn btn-primary btn-sm" style="border:none;">
+                                                <i class="fa fa-cart-plus"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <form asp-page="/cart" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ProductId" value="@product.ProductId" />
+                                                <input type="hidden" name="returnUrl"
+                                                    value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                <button type="submit" class="btn btn-primary btn-sm" style="border:none;">
+                                                    <i class="fa fa-cart-plus"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button class="carousel-btn carousel-btn-next" id="showcaseScrollRight">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const container = document.getElementById('showcaseContainer');
+            const btnLeft = document.getElementById('showcaseScrollLeft');
+            const btnRight = document.getElementById('showcaseScrollRight');
+
+            if (!container || !btnLeft || !btnRight) return;
+
+            const scrollAmount = 270; // Kart genişliği + gap
+            let isScrolling = false;
+
+            function scroll(direction) {
+                if (isScrolling) return;
+                isScrolling = true;
+
+                const scrollLeft = container.scrollLeft;
+                const maxScroll = container.scrollWidth - container.clientWidth;
+
+                if (direction === 'right') {
+                    if (scrollLeft >= maxScroll - 10) {
+                        // Sona geldiysek başa dön
+                        container.scrollTo({ left: 0, behavior: 'smooth' });
+                    } else {
+                        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    }
+                } else {
+                    if (scrollLeft <= 10) {
+                        // Başta isek sona git
+                        container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+                    } else {
+                        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    }
+                }
+
+                setTimeout(() => { isScrolling = false; }, 500);
+            }
+
+            btnRight.addEventListener('click', () => scroll('right'));
+            btnLeft.addEventListener('click', () => scroll('left'));
+
+            // Otomatik kaydırma
+            let autoScrollInterval = setInterval(() => {
+                scroll('right');
+            }, 5000); // 5 saniyede bir otomatik kaydır
+
+            // Hover'da otomatik kaydırmayı durdur
+            container.addEventListener('mouseenter', () => {
+                clearInterval(autoScrollInterval);
+            });
+
+            container.addEventListener('mouseleave', () => {
+                autoScrollInterval = setInterval(() => {
+                    scroll('right');
+                }, 5000);
+            });
+        });
+    </script>
+}

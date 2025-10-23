@@ -90,7 +90,7 @@ namespace Repositories.Extensions
         public static IQueryable<Product> ToPaginate(this IQueryable<Product> products, int pageNumber, int pageSize)
         {
             if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1) pageSize = 6; // varsayılan
+            if (pageSize < 1) pageSize = 10; // varsayılan
 
             var skip = (pageNumber - 1) * pageSize;  
             return products.Skip(skip).Take(pageSize);

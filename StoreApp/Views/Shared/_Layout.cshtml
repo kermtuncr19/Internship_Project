@@ -8,11 +8,17 @@
     <link rel="stylesheet" asp-append-version="true" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" asp-append-version="true" href="~/css/site.css" />
     <link rel="stylesheet" asp-append-version="true" href="~/lib/font-awesome/css/all.css" />
+    @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
+@{ var tokens = Xsrf.GetAndStoreTokens(Context); }
+<meta name="csrf-token" content="@tokens.RequestToken" />
+
 </head>
 
 <body class="d-flex flex-column min-vh-100">
+    @* ✅ AntiForgeryToken eklendi *@
+    @Html.AntiForgeryToken()
+    
     <header>
-
         <partial name="_Navbar" />
         @RenderSection("Header", false)
     </header>
@@ -24,7 +30,6 @@
     <footer>
         @RenderSection("Footer", false)
         @await Html.PartialAsync("_Footer")
-
     </footer>
 
     <script asp-append-version="true" src="~/lib/jquery/jquery.min.js"></script>
@@ -32,6 +37,100 @@
     <script asp-append-version="true" src="~/js/site.js"></script>
     <script asp-append-version="true" src="~/lib/font-awesome/js/all.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    
+ <script>
+(function () {
+  if (window.favInit) return; window.favInit = true;
+
+  // CSRF (head içinde meta ile üretildiğini varsayıyoruz)
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  function ensureIcon(btn) {
+    // .fav-icon yoksa oluştur
+    let icon = btn.querySelector('.fav-icon');
+    if (!icon) {
+      icon = document.createElement('i');
+      icon.className = 'fav-icon fa-regular fa-heart fa-lg';
+      icon.style.cssText = 'color:#0d1b4c; cursor:pointer; transition:color .2s;';
+      btn.appendChild(icon);
+    }
+    return icon;
+  }
+
+  function setUI(btn, solid) {
+    const icon = ensureIcon(btn);
+    icon.classList.toggle('fa-solid', solid);
+    icon.classList.toggle('fa-regular', !solid);
+    icon.style.color = solid ? '#dc3545' : '#0d1b4c';
+    btn.setAttribute('aria-pressed', solid ? 'true' : 'false');
+    btn.dataset.fav = solid ? '1' : '0';
+  }
+
+  async function onFavClick(ev) {
+    const btn = ev.currentTarget;
+    const productId = Number(btn.dataset.productId || 0);
+    if (!productId) return;
+
+    const icon = ensureIcon(btn);
+    const wasSolid = icon.classList.contains('fa-solid');
+    const wantSolid = !wasSolid;
+
+    // İyimser UI (hemen değiştir)
+    setUI(btn, wantSolid);
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch('/Favorites/ToggleAjax', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrf ? { 'RequestVerificationToken': csrf } : {})
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ productId })
+      });
+
+      if (!resp.ok) {
+        // başarısız → geri al
+        setUI(btn, wasSolid);
+        console.warn('Favorites AJAX status:', resp.status);
+        return;
+      }
+      // Sunucu sonucu ile senkronize et (güvence)
+      const data = await resp.json(); // { isFavorite: bool }
+      if (typeof data?.isFavorite === 'boolean') {
+        setUI(btn, !!data.isFavorite);
+      }
+    } catch (err) {
+      console.error('Favorites AJAX error:', err);
+      setUI(btn, wasSolid);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function bindAll() {
+    document.querySelectorAll('.js-fav-btn').forEach(btn => {
+      btn.removeEventListener('click', onFavClick);
+      btn.addEventListener('click', onFavClick);
+      // İlk render’da aria-pressed’a göre normalize et
+      const pressed = (btn.getAttribute('aria-pressed') || 'false') === 'true';
+      setUI(btn, pressed);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', bindAll);
+  window.bindFavoriteButtons = bindAll; // sonsuz scroll vs. için dışarıdan çağırabilirsin
+  
+})();
+</script>
+
+
+
+
+
+
+
 </body>
 
 </html>

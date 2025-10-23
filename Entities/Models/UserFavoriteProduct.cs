@@ -6,10 +6,10 @@ namespace Entities.Models
 public class UserFavoriteProduct
 {
     public string UserId { get; set; } = default!;
-    public IdentityUser User { get; set; } = default!;
+    public IdentityUser? User { get; set; } 
 
     public int ProductId { get; set; }
-    public Product Product { get; set; } = default!;
+    public Product? Product { get; set; }
 
     public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 }

@@ -1537,3 +1537,17 @@
 .pw-rules .mark { display:inline-block; width:1.1rem; text-align:center; font-weight:700; }
 .pw-rules li.bad  .mark::after { content:"✕"; color:#dc3545; }   /* kırmızı çarpı */
 .pw-rules li.ok   .mark::after { content:"✓"; color:#198754; }   /* yeşil tik  */
+
+/* Favorilerde kart kaldırma animasyonu */
+.fav-removing {
+  transition: opacity .25s ease, transform .25s ease, height .25s ease, margin .25s ease, padding .25s ease;
+  opacity: 0;
+  transform: scale(.98);
+}
+.fav-collapse {
+  height: 0 !important;
+  margin: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: hidden !important;
+}

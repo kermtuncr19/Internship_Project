@@ -21,7 +21,7 @@ namespace StoreApp.Components
 
         public async Task<IViewComponentResult> InvokeAsync(string page = "default")
         {
-            var products = _manager.PoductService.GetShowcaseProducts(false);
+            var products = _manager.PoductService.GetShowcaseProducts(false).ToList();
 
             // Kullanıcı giriş yaptıysa favori ürünlerini al
             if (HttpContext.User.Identity?.IsAuthenticated == true)
