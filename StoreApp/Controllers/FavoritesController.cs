@@ -81,6 +81,27 @@ namespace StoreApp.Controllers
             }
         }
 
+         // ✅ YENİ: Favorilerden KALDIR (AJAX)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Remove(int productId)
+        {
+            var userId = _um.GetUserId(User);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized(new { message = "Not authenticated" });
+
+            var fav = _db.UserFavoriteProducts
+                         .FirstOrDefault(f => f.UserId == userId && f.ProductId == productId);
+
+            if (fav != null)
+            {
+                _db.UserFavoriteProducts.Remove(fav);
+                _db.SaveChanges();
+            }
+
+            // Sayfayı yenilemeden DOM'dan sileceğiz
+            return Json(new { ok = true, id = productId });
+        }
 
         public IActionResult Index()
         {

@@ -9,6 +9,7 @@ public class Product
     public decimal Price { get; set; }
     public String? Summary { get; set; } = String.Empty;
     public String? ImageUrl { get; set; }
+    //public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     public int? CategoryId { get; set; }//foreign key
     public Category? Category { get; set; }//navigation property
     public bool ShowCase { get; set; }

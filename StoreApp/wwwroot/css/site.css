@@ -1551,3 +1551,205 @@
   padding-bottom: 0 !important;
   overflow: hidden !important;
 }
+
+/* Yalnızca görsel alanı tıklanabilir olsun */
+.product-card { position: relative; }
+.card-img-link {
+  display: block;
+  text-decoration: none;
+  /* Kartın geri kalanında yanlışlıkla tıklanma olmasın diye alan net */
+}
+
+/* Hover efekti: sadece görsel alanına hover olunca kart büyüsün */
+.hover-card {
+  transition: transform .18s ease, box-shadow .18s ease;
+  will-change: transform;
+}
+
+/* :has() sayesinde sadece img linki hover iken kart büyür */
+.hover-card:has(.card-img-link:hover) {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+}
+
+/* Görsel kutusunu hafifçe “pop” yaptırmak istersen */
+.card-img-link .img-box {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.card-img-link:hover .img-box {
+  transform: scale(1.03);
+  box-shadow: 0 10px 25px rgba(0,0,0,.12);
+}
+
+/* Güvenlik: tüm kart tıklanmasın; buton/formlar tıklanabilir kalsın */
+/* (Genelde gerekmez; sadece entire-card overlay/stretched-link kullanıyorsan açıktır.) */
+/*
+.product-card { pointer-events: none; }
+.product-card .card-img-link,
+.product-card .btn,
+.product-card form,
+.product-card form * { pointer-events: auto; }
+*/
+
+/* Stretched-link varsa kapat (kullanmıyorsan gerekmez) */
+.card .stretched-link { position: static !important; }
+.card .stretched-link::after { content: none !important; display: none !important; }
+
+.tooltip1-btn-favorite-remove {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-favorite-remove::after {
+  content: "Favorilerden Çıkar";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-favorite-remove::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-favorite-remove:hover::after,
+.tooltip1-btn-favorite-remove:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* Çift kalp sorununu kalıcı olarak çözer */
+.js-fav-btn i.fa-heart::before,
+.js-fav-btn i.fas.fa-heart::before,
+.js-fav-btn i.far.fa-heart::before,
+.js-fav-btn i.fa-solid.fa-heart::before,
+.js-fav-btn i.fa-regular.fa-heart::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* 🔵 Üst promo şeridi genişlik düzeltmesi */
+.promo-strip{
+  background:#0d1b4c;
+  color:#fff;
+  height:36px;
+  line-height:36px;
+  font-size:.95rem;
+  font-weight:600;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+/* Şeritteki iç kap geniş olsun ama merkezde kalsın */
+.promo-strip .container-fluid{
+  max-width: 1280px;        /* isteğe göre 1140/1320 yapabilirsin */
+  padding-inline: 16px;
+}
+
+/* Mesaj görünüm alanı: genişleyebilir + ortalı */
+.promo-viewport{
+  position: relative;
+  height: 36px;
+  overflow: hidden;
+  /* ÖNEMLİ: Flex içinde kısıtlanmasın */
+  flex: 1 1 600px;          /* default genişlik 600px, küçülüp büyüyebilir */
+  min-width: 0;             /* flex shrinking sırasında gerçek genişlik alabilsin */
+  width: clamp(320px, 70vw, 980px); /* küçük ekranda 320px, büyükte 980px’e kadar */
+  text-align: center;
+}
+
+/* Mesajlar ortalı dursun, yumuşak geçiş */
+.promo-msg{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;  /* ortala */
+  align-items: center;
+  white-space: nowrap;      /* tek satır */
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .45s ease, transform .45s ease;
+}
+.promo-msg.active{
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Küçük ekran */
+@media (max-width: 576px){
+  .promo-strip{ font-size:.85rem; height:34px; line-height:34px; }
+  .promo-viewport{ height:34px; width: clamp(260px, 90vw, 600px); }
+}
+
+/* ---- Sipariş listesi görsel stilleri ---- */
+.order-thumb-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+}
+
+.order-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 🔹 Oran koruyarak doldurur */
+    transition: transform 0.2s ease;
+    image-rendering: -webkit-optimize-contrast; /* 🔹 Retina ekranlarda netlik */
+    image-rendering: crisp-edges;
+}
+
+.order-thumb-box:hover .order-thumb-img {
+    transform: scale(1.05);
+}
+
+/* 🔹 Kayan ürün adı stili */
+.scroll-text-wrapper {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.scroll-text {
+    display: inline-block;
+    transition: transform 6s linear;
+}
+
+/* 🔹 Fareyle üzerine gelince yazı sağa doğru kayar */
+.scroll-text-wrapper:hover .scroll-text {
+    transform: translateX(-100%);
+}
+
+
+
+
+
+

@@ -101,6 +101,7 @@ namespace StoreApp.Controllers
             {
                 ViewBag.IsFavorite = false;
             }
+            
 
             return View(model);
         }

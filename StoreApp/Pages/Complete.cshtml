@@ -4,6 +4,14 @@
     var total = Model.Order.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
     string statusText = Model.Order.Cancelled ? "İptal"
     : (Model.Order.Shipped ? "Onaylandı" : "Onay Aşamasında");
+
+    // Kargo hesapları
+    decimal shippingThreshold = 2000m;
+    decimal shippingCost = total >= shippingThreshold ? 0m : 39.99m;
+    decimal grandTotal = total + shippingCost;
+
+     int installment = Model.Installment; // 👈 buradan
+    decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
 }
 
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -78,9 +86,32 @@
                 <li class="list-group-item d-flex justify-content-between">
                     <span>Ara Toplam</span><span>@total.ToString("C2")</span>
                 </li>
-                <li class="list-group-item d-flex justify-content-between fw-bold">
-                    <span>Toplam</span><span>@total.ToString("C2")</span>
+
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Kargo</span>
+                    @if (shippingCost == 0m)
+                    {
+                        <span class="text-success fw-semibold">Ücretsiz</span>
+                    }
+                    else
+                    {
+                        <span>@shippingCost.ToString("C2")</span>
+                    }
                 </li>
+
+               <li class="list-group-item d-flex justify-content-between fw-bold align-items-baseline">
+  <span>Toplam</span>
+  <span class="text-primary text-end">
+    @grandTotal.ToString("C2")
+    @if (installment > 1)
+    {
+      <span class="text-muted"> (@installment taksit)</span>
+      <div class="small text-muted">@installment × @perInstallment.ToString("C2")</div>
+    }
+  </span>
+</li>
+
+
             </ul>
         </div>
     </div>

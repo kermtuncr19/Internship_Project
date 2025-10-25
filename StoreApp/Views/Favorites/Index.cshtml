@@ -12,8 +12,53 @@
       <div class="row">
           @foreach (var p in Model)
           {
-              @await Html.PartialAsync("_ProductCard", p)  // ortak kart partial'ı
+              @await Html.PartialAsync("_FavoriteCard", p)
           }
       </div>
   }
 </div>
+
+<!-- Tek seferlik gizli form: AntiForgery token'ı buradan alacağız -->
+<form id="favRemoveTokenForm" class="d-none">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+<script>
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.js-fav-remove');
+  if (!btn) return;
+
+  e.preventDefault();
+
+  const cardCol = btn.closest('.fav-card'); // sütun kapsayıcı
+  const productId = btn.getAttribute('data-product-id');
+
+  const token = document.querySelector('#favRemoveTokenForm input[name="__RequestVerificationToken"]')?.value || '';
+
+  try {
+    const res = await fetch('/Favorites/Remove', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'RequestVerificationToken': token
+      },
+      body: `productId=${encodeURIComponent(productId)}`
+    });
+
+    const data = await res.json();
+    if (data?.ok) {
+      // ufak bir fade-out animasyonu ile kaldır
+      cardCol.style.transition = 'opacity .25s ease, transform .25s ease';
+      cardCol.style.opacity = '0';
+      cardCol.style.transform = 'scale(.98)';
+      setTimeout(() => cardCol.remove(), 250);
+    } else {
+      alert('Favoriden çıkarma işlemi başarısız oldu.');
+    }
+  } catch (err) {
+    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+  }
+});
+</script>
+}

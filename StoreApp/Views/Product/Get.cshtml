@@ -3,7 +3,9 @@
 
 <div class="container py-4">
 
+    
     <h1 class="display-6 text-center mb-4">@Model.ProductName</h1>
+
 
     @if (TempData["CartError"] is string err && !string.IsNullOrWhiteSpace(err))
     {
@@ -25,24 +27,27 @@
                     @Model.Price.ToString("c")
                 </div>
 
-               @if (User.Identity?.IsAuthenticated == true)
+            @if (User.Identity?.IsAuthenticated == true)
 {
     var isFavorite = ViewBag.IsFavorite ?? false;
-    <form method="post"
-          asp-controller="Favorites"
-          asp-action="Toggle"
-          class="m-0 p-0 d-inline">
+    <form class="m-0 p-0 d-inline js-fav-form" id="favForm-@Model.ProductId">
         @Html.AntiForgeryToken()
         <input type="hidden" name="productId" value="@Model.ProductId" />
-        <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-        <button type="submit"
-                class="btn p-0 border-0 bg-transparent tooltip1-btn-favorite"
-                style="line-height: 1;">
-            <i class="@(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-2x" 
-               style="@(isFavorite ? "color: #dc3545;" : "color: #0d1b4c;") cursor: pointer; transition: color 0.2s;"></i>
+
+        <button type="button"
+                class="btn p-0 border-0 bg-transparent js-fav-btn"
+                data-url="@Url.Action("ToggleAjax","Favorites")"
+                data-id="@Model.ProductId"
+                aria-pressed="@(isFavorite.ToString().ToLower())"
+                style="line-height:1;">
+            <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+               style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
         </button>
     </form>
 }
+
+
+
             </div>
 
             <form id="addToCartForm" class="mt-2" method="post" asp-page="/cart">
@@ -116,5 +121,64 @@
             radios.forEach(r => r.addEventListener('change', syncState));
             syncState();
         });
+    </script>
+
+    <script>
+      document.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.js-fav-btn');
+        if (!btn) return;
+
+        const form = btn.closest('.js-fav-form');
+        const icon = btn.querySelector('.fav-icon');
+
+        if (!form || !icon) return;
+
+        // Antiforgery token'ı formdaki hidden input'tan al
+        const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+        const token = tokenInput ? tokenInput.value : null;
+
+        const url = btn.getAttribute('data-url');
+        const productId = Number(btn.getAttribute('data-id') || 0);
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              // ASP.NET Core antiforgery header'ı:
+              ...(token ? { 'RequestVerificationToken': token } : {})
+            },
+            body: JSON.stringify({ ProductId: productId })
+          });
+
+          if (!res.ok) {
+            console.error('Fav toggle HTTP error', res.status);
+            return;
+          }
+
+          const ct = res.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            // Muhtemel login sayfası/HTML dönerse
+            window.location.reload();
+            return;
+          }
+
+          const data = await res.json();
+          if (data?.isFavorite === true) {
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid');
+            icon.style.color = '#dc3545';
+          } else if (data?.isFavorite === false) {
+            icon.classList.remove('fa-solid');
+            icon.classList.add('fa-regular');
+            icon.style.color = '#0d1b4c';
+          }
+        } catch (err) {
+          console.error('Favorites toggle failed', err);
+        }
+      });
     </script>
 }

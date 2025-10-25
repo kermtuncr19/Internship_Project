@@ -38,6 +38,8 @@ namespace Entities.Models
 
         public DateTime OrderedAt { get; set; } = DateTime.UtcNow;
 
+        public int? Installment { get; set; }
+
         public string? UserId { get; set; }
         public IdentityUser? User { get; set; }
     }

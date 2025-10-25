@@ -1,5 +1,21 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
+<!-- 🔵 PROMO ŞERİDİ (NAVBAR ÜSTÜ) -->
+<div class="promo-strip" role="region" aria-label="Kampanya duyuruları">
+  <div class="container-fluid d-flex justify-content-center align-items-center gap-2">
+    
+    <div class="promo-viewport" aria-live="polite">
+      <span class="promo-msg active">
+      <i class="fa-solid fa-bullhorn"></i> 
+      2000 TL ve üzeri alışverişlerde kargo bedava! 🚚</span>
+      <span class="promo-msg">
+      <i class="fa-solid fa-bullhorn"></i> 
+      2000 TL ve üzeri alışverişlerde peşin fiyatına 3 taksit! 💳</span>
+    </div>
+  </div>
+</div>
+
+
 <nav class="navbar navbar-expand-lg border-bottom" style="background-color:#ffea00; border:none;" data-bs-theme="light">
   <div class="container-fluid">
 
@@ -100,3 +116,28 @@
     </div>
   </div>
 </nav>
+
+<script>
+  // Her 4.5 saniyede bir mesaj değiştir
+  document.addEventListener('DOMContentLoaded', function(){
+    const msgs = document.querySelectorAll('.promo-viewport .promo-msg');
+    if (!msgs.length) return;
+
+    let i = 0, t;
+    function show(n){
+      msgs.forEach((m,idx)=> m.classList.toggle('active', idx===n));
+    }
+    function next(){
+      i = (i+1) % msgs.length;
+      show(i);
+    }
+    // Otomatik kaydır
+    t = setInterval(next, 5500);
+
+    // Üzerine gelince durdur, çıkınca devam et
+    const viewport = document.querySelector('.promo-viewport');
+    viewport.addEventListener('mouseenter', ()=> clearInterval(t));
+    viewport.addEventListener('mouseleave', ()=> t = setInterval(next, 4500));
+  });
+</script>
+

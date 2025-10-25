@@ -1,3 +1,4 @@
+@using System.Diagnostics.Eventing.Reader
 @model PaymentViewModel
 @{
     ViewData["Title"] = "Ödeme";
@@ -5,6 +6,12 @@
 
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
+@{
+    // Para biriminde her zaman decimal kullan
+    decimal shippingThreshold = 2000m;
+    decimal shippingCost = Model.TotalAmount >= shippingThreshold ? 0m : 39.99m;
+    decimal grandTotal = Model.TotalAmount + shippingCost;
+}
 <div class="container my-4">
     <div class="row">
         <!-- Sol Taraf: Ödeme Formu -->
@@ -61,6 +68,46 @@
                                     type="password" id="cvv" />
                                 <span asp-validation-for="PaymentInfo.CVV" class="text-danger small"></span>
                             </div>
+
+                            @{
+                                var installmentEligible = grandTotal >= 2000m; // 2000 TL ve ÜZERİ
+                            }
+
+                            <!-- TAKSİT SEÇENEĞİ -->
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="fa fa-receipt me-1"></i>Taksit Seçeneği
+                                </label>
+
+                                @if (installmentEligible)
+                                {
+                                    <!-- 2000 TL ve üzeri: Tek çekim / 2 / 3 taksit göster -->
+                                    <div class="btn-group w-100" role="group" aria-label="Taksit Seçenekleri">
+                                        <input class="btn-check" type="radio" name="Installment" id="inst1" value="1"
+                                            checked>
+                                        <label class="btn btn-outline-secondary" for="inst1">Tek Çekim</label>
+
+                                        <input class="btn-check" type="radio" name="Installment" id="inst2" value="2">
+                                        <label class="btn btn-outline-secondary" for="inst2">2 Taksit</label>
+
+                                        <input class="btn-check" type="radio" name="Installment" id="inst3" value="3">
+                                        <label class="btn btn-outline-secondary" for="inst3">3 Taksit</label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        2000 TL ve üzeri alışverişlerde taksit imkânı sunulur.
+                                    </small>
+                                }
+                                else
+                                {
+                                    <!-- 2000 TL altı: yalnızca tek çekim; backend'e değer gitsin diye hidden -->
+                                    <input type="hidden" name="Installment" value="1" />
+                                    <div class="alert alert-secondary mb-0 small">
+                                        Bu sipariş tutarı için taksit seçeneği yoktur. Ödeme <strong>tek çekim</strong>
+                                        yapılacaktır.
+                                    </div>
+                                }
+                            </div>
+
                         </div>
 
                         <div class="alert alert-info">
@@ -71,7 +118,8 @@
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success btn-lg" id="payButton">
                                 <i class="fa fa-lock me-2"></i>
-                                <span id="payButtonText">@Model.TotalAmount.ToString("C2") Öde</span>
+                                <span id="payButtonText"
+                                    data-amount="@grandTotal.ToString("C2")">@grandTotal.ToString("C2") Öde</span>
                                 <span id="payButtonLoading" style="display: none;">
                                     <span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...
                                 </span>
@@ -94,6 +142,8 @@
                 </small>
             </div>
         </div>
+
+
 
         <!-- Sağ Taraf: Sipariş Özeti -->
         <div class="col-lg-5">
@@ -128,15 +178,28 @@
                             <span>Ara Toplam:</span>
                             <span>@Model.TotalAmount.ToString("C2")</span>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between mb-2">
                             <span>Kargo:</span>
-                            <span class="text-success">Ücretsiz</span>
+                            @if (shippingCost == 0m)
+                            {
+                                <span class="text-success">Ücretsiz</span>
+                            }
+                            else
+                            {
+                                <span>@shippingCost.ToString("C2")</span>
+                            }
                         </div>
                         <hr />
                         <div class="d-flex justify-content-between">
                             <strong class="fs-5">Toplam:</strong>
-                            <strong class="fs-5 text-primary">@((Model.TotalAmount).ToString("C2"))</strong>
+                            <strong class="fs-5 text-primary">
+                                <span id="summaryTotal" data-amount="@grandTotal.ToString("C2")">
+                                    @grandTotal.ToString("C2")
+                                </span>
+                                <span id="installmentInfo" class="text-muted"></span>
+                            </strong>
+
                         </div>
                     </div>
                 </div>
@@ -208,6 +271,48 @@
             payButtonLoading.style.display = 'inline';
         });
     </script>
+    <script>
+        (function () {
+            const payButtonText = document.getElementById('payButtonText');
+            const radios = document.querySelectorAll('input[name="Installment"]');
+            const summaryTotal = document.getElementById('summaryTotal');
+            const installmentInfo = document.getElementById('installmentInfo');
+
+            if (!payButtonText) return;
+
+            const numericValue = parseFloat('@grandTotal'.replace(',', '.'));
+
+            function formatCurrency(value) {
+                return new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+
+            function refresh() {
+                const picked = document.querySelector('input[name="Installment"]:checked');
+                const n = picked ? parseInt(picked.value, 10) : 1;
+
+                if (n > 1) {
+                    const perInstallment = numericValue / n;
+                    // 🟢 Buton
+                    payButtonText.textContent = `${n}×${formatCurrency(perInstallment)} Öde`;
+                    // 🟢 Sağ taraf toplam kısmı
+                    installmentInfo.textContent = ` (${n} Taksit)`;
+                } else {
+                    payButtonText.textContent = `${formatCurrency(numericValue)} Öde`;
+                    installmentInfo.textContent = '';
+                }
+            }
+
+            radios.forEach(r => r.addEventListener('change', refresh));
+            refresh();
+        })();
+    </script>
+
+
+
 
     <style>
         .card {
@@ -231,6 +336,15 @@
 
         .shadow-sm {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        .btn-group .btn {
+            min-width: 0;
+        }
+
+        /* taşma olmasın */
+        .btn-group {
+            gap: .25rem;
         }
     </style>
 }

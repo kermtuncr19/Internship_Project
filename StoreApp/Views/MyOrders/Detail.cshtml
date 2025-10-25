@@ -2,7 +2,15 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 @{
     var total = Model.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+
+    decimal shippingThreshold = 2000m;
+    decimal shippingCost = total >= shippingThreshold ? 0m : 39.99m;
+    decimal grandTotal = total + shippingCost;
+
+    int installment = Model.Installment ?? 1;                 // 👈 DB’den
+    decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
 }
+
 <div class="container my-4">
     <div class="card shadow-soft">
         <div class="card-header bg-white d-flex justify-content-between">
@@ -57,12 +65,35 @@
                     </li>
                 }
 
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>Ara Toplam</span><span>@total.ToString("C2")</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between fw-bold">
-                    <span>Toplam</span><span>@total.ToString("C2")</span>
-                </li>
+              <li class="list-group-item d-flex justify-content-between">
+    <span>Ara Toplam</span><span>@total.ToString("C2")</span>
+</li>
+
+<li class="list-group-item d-flex justify-content-between">
+    <span>Kargo</span>
+    @if (shippingCost == 0m)
+    {
+        <span class="text-success fw-semibold">Ücretsiz</span>
+    }
+    else
+    {
+        <span>@shippingCost.ToString("C2")</span>
+    }
+</li>
+
+<li class="list-group-item d-flex justify-content-between fw-bold align-items-baseline">
+    <span>Toplam</span>
+    <span class="text-primary text-end">
+        @grandTotal.ToString("C2")
+        @if (installment > 1)
+        {
+            <span class="text-muted"> (@installment taksit)</span>
+            <div class="small text-muted">@installment × @perInstallment.ToString("C2")</div>
+        }
+    </span>
+</li>
+
+
             </ul>
         </div>
     </div>

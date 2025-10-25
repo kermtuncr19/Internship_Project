@@ -13,6 +13,7 @@ public class CompleteModel : PageModel
     public int OrderId { get; set; }
 
     public Order Order { get; private set; } = default!;
+    public int Installment { get; private set; } = 1;
 
     public IActionResult OnGet()
     {
@@ -24,6 +25,13 @@ public class CompleteModel : PageModel
 
         if (Order == null)
             return RedirectToPage("/Index");
+
+             if (TempData["Installment"] != null &&
+            int.TryParse(TempData["Installment"].ToString(), out var taksit) &&
+            taksit > 0)
+        {
+            Installment = taksit;
+        }
 
         return Page();
     }

@@ -1,5 +1,6 @@
 @model List<Entities.Models.Order>
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
 <div class="container my-4">
     <div class="h5 mb-3">Siparişlerim</div>
     @if (!Model.Any())
@@ -12,7 +13,7 @@
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>Ürün</th>
                         <th>Tarih</th>
                         <th>Durum</th>
                         <th>Toplam</th>
@@ -23,14 +24,46 @@
                     @foreach (var o in Model)
                     {
                         var total = o.Lines.Sum(l => l.Product.Price * l.Quantity);
+                        var firstProduct = o.Lines.FirstOrDefault()?.Product;
+                        var imgSrc = "~/images/placeholders/product-thumb.png";
+                        if (!string.IsNullOrWhiteSpace(firstProduct?.ImageUrl))
+                        {
+                            if (firstProduct.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
+                                firstProduct.ImageUrl.StartsWith("/"))
+                            {
+                                imgSrc = firstProduct.ImageUrl;
+                            }
+                            else
+                            {
+                                imgSrc = Url.Content($"~/images/{firstProduct.ImageUrl}");
+                            }
+                        }
+
                         <tr>
-                            <td>@o.OrderId</td>
+                            <td>
+    <div class="d-flex align-items-center">
+        <div class="order-thumb-box me-2">
+            <img src="@imgSrc"
+                 alt="@(firstProduct?.ProductName ?? "Ürün")"
+                 class="order-thumb-img" loading="lazy" />
+        </div>
+        <div>
+          <div class="fw-semibold small scroll-text-wrapper" style="max-width: 180px;">
+    <span class="scroll-text">@firstProduct?.ProductName</span>
+</div>
+
+            <div class="text-muted small">#@o.OrderId</div>
+        </div>
+    </div>
+</td>
+
                             <td>@o.OrderedAt.ToLocalTime().ToString("g")</td>
                             <td>@(o.Cancelled ? "İptal" : (o.Shipped ? "Onaylandı" : "Onay Aşamasında"))</td>
                             <td>@total.ToString("C2")</td>
                             <td class="text-end">
-                                <a asp-action="Detail" asp-route-id="@o.OrderId"
-                                    class="btn btn-outline-primary btn-sm">Detay</a>
+                                <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm">
+                                    Detay
+                                </a>
                             </td>
                         </tr>
                     }

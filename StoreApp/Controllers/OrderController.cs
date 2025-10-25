@@ -134,13 +134,23 @@ namespace StoreApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ProcessPayment([FromForm] PaymentInfo paymentInfo)
         {
+
+
             // Session'dan order bilgilerini al
             var order = HttpContext.Session.GetJson<Order>("PendingOrder");
+
 
             if (order == null || !_cart.Lines.Any())
             {
                 TempData["Error"] = "Sipariş bilgileri bulunamadı. Lütfen tekrar deneyin.";
                 return RedirectToAction(nameof(Checkout));
+            }
+            
+            var instStr = Request.Form["Installment"].ToString();
+            if (int.TryParse(instStr, out var taksit) && taksit > 0)
+            {
+                TempData["Installment"] = taksit;
+                order.Installment = taksit;
             }
 
             // Payment validation

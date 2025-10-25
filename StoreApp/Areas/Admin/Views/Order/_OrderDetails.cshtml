@@ -2,9 +2,21 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 @{
-    // Toplam
-    var total = Model.Lines.Sum(c => c.Product.Price * c.Quantity);
+    // Ara toplam (null güvenli)
+    decimal subTotal = Model.Lines.Sum(l => (l.Product?.Price ?? 0m) * l.Quantity);
+
+    // Kargo politikası
+    decimal shippingThreshold = 2000m;
+    decimal shippingCost = subTotal >= shippingThreshold ? 0m : 39.99m;
+
+    // Genel toplam
+    decimal grandTotal = subTotal + shippingCost;
+
+    // 🔹 Taksit bilgisi (Order modelinde Installment alanı varsa)
+    int installment = Model.Installment ?? 1;
+    decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
 }
+
 
 <div class="row shadow my-3">
     <div class="col-md-3 border-1 border-dark p-3 bg-light shadow">
@@ -64,69 +76,89 @@
                 <!-- Ara Toplam -->
                 <div class="list-group-item py-3 d-flex justify-content-between">
                     <div class="text-muted">Ara Toplam</div>
-                    <div class="price-col">@total.ToString("C2")</div>
+                    <div class="price-col">@subTotal.ToString("C2")</div>
                 </div>
 
+                <!-- Kargo -->
                 <div class="list-group-item py-3 d-flex justify-content-between">
                     <div class="text-muted">Kargo</div>
-                    <div class="price-col">₺0,00</div>
+                    <div class="price-col">
+                        @if (shippingCost == 0m)
+                        {
+                            <span class="text-success fw-semibold">Ücretsiz</span>
+                        }
+                        else
+                        {
+                            @shippingCost.ToString("C2")
+                        }
+                    </div>
                 </div>
 
                 <!-- Toplam (vurgulu) -->
-                <div class="list-group-item py-3 d-flex justify-content-between align-items-center total-row">
+                <div class="list-group-item py-3 d-flex justify-content-between align-items-baseline total-row">
                     <div class="fw-semibold">Toplam</div>
-                    <div class="price-col fw-bold display-7">@total.ToString("C2")</div>
+                    <div class="price-col fw-bold display-7 text-end">
+                        @grandTotal.ToString("C2")
+                        @if (installment > 1)
+                        {
+                            <span class="text-muted"> (@installment taksit)</span>
+                            <div class="small text-muted fw-normal">
+                                @installment × @perInstallment.ToString("C2")
+                            </div>
+                        }
+                    </div>
+                </div>
+
+
+
+
+                <div class="text-center mt-3 p-2">
+                    <!-- Onayla -->
+                    <form method="post" asp-action="Complete" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-primary"
+                            disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
+                            Siparişi Onayla
+                        </button>
+                    </form>
+
+                    <!-- İptal Et -->
+                    <form method="post" asp-action="Cancel" class="d-inline"
+                        onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-warning ms-2"
+                            disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
+                            <i class="fa fa-ban"></i> Siparişi İptal Et
+                        </button>
+                    </form>
+
+                    <!-- Sil -->
+                    <form method="post" asp-action="Delete" class="d-inline"
+                        onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-danger ms-2">
+                            <i class="fa fa-trash"></i> Siparişi Sil
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <div class="text-center mt-3 p-2">
-            <!-- Onayla -->
-            <form method="post" asp-action="Complete" class="d-inline">
-                <input type="hidden" name="id" value="@Model.OrderId" />
-                <button type="submit" class="btn btn-primary"
-                    disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
-                    Siparişi Onayla
-                </button>
-            </form>
-
-            <!-- İptal Et -->
-            <form method="post" asp-action="Cancel" class="d-inline"
-                onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
-                <input type="hidden" name="id" value="@Model.OrderId" />
-                <button type="submit" class="btn btn-warning ms-2"
-                    disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
-                    <i class="fa fa-ban"></i> Siparişi İptal Et
-                </button>
-            </form>
-
-            <!-- Sil -->
-            <form method="post" asp-action="Delete" class="d-inline"
-                onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
-                <input type="hidden" name="id" value="@Model.OrderId" />
-                <button type="submit" class="btn btn-danger ms-2">
-                    <i class="fa fa-trash"></i> Siparişi Sil
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function confirmDelete(form) {
-        event.preventDefault();
-        Swal.fire({
-            title: 'Emin misiniz?',
-            text: "Bu siparişi silmek üzeresiniz!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Evet, sil!',
-            cancelButtonText: 'Vazgeç'
-        }).then((result) => {
-            if (result.isConfirmed) form.submit();
-        });
-    }
-</script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            function confirmDelete(form) {
+                event.preventDefault();
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu siparişi silmek üzeresiniz!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Evet, sil!',
+                    cancelButtonText: 'Vazgeç'
+                }).then((result) => {
+                    if (result.isConfirmed) form.submit();
+                });
+            }
+        </script>
