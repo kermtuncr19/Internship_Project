@@ -44,12 +44,23 @@
         <span class="form-text text-muted">Boş bırakırsanız varsayılan liste: XS,S,M,L,XL</span>
     </div>
 
-
+    <!-- ✅ ANA FOTOĞRAF -->
     <div class="form-group my-3">
-        <label asp-for="ImageUrl">Fotoğraf URL</label>
-        <input name="file" type="file" class="form-control" />
+        <label class="fw-bold">Ana Fotoğraf <span class="text-danger">*</span></label>
+        <input name="file" type="file" class="form-control" accept="image/*" required />
+        <span class="form-text text-muted">
+            <i class="bi bi-info-circle"></i> Bu fotoğraf otomatik olarak ana fotoğraf olarak ayarlanacak
+        </span>
     </div>
 
+    <!-- ✅ EK FOTOĞRAFLAR -->
+    <div class="form-group my-4">
+        <label class="fw-bold">Ek Fotoğraflar (İsteğe Bağlı)</label>
+        <input name="additionalImages" type="file" class="form-control" accept="image/*" multiple />
+        <span class="form-text text-muted">
+            <i class="bi bi-images"></i> Birden fazla fotoğraf seçebilirsiniz
+        </span>
+    </div>
 
     <div class="form-group my-3">
         <div class="d-flex justify-content-left">

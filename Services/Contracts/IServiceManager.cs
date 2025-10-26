@@ -9,5 +9,6 @@ namespace Services.Contracts
         IProfileService ProfileService { get; }
         IAddressService AddressService { get; }
         IFavoriteService FavoriteService { get; }
+        IProductImageService ProductImageService { get; }
     }
 }

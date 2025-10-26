@@ -287,6 +287,113 @@ namespace StoreApp.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductImage", b =>
+                {
+                    b.Property<int>("ProductImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProductImageId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<bool>("IsMain")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProductImageId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductImages");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductImageId = 1,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/forma3.jpg",
+                            IsMain = true,
+                            ProductId = 1
+                        },
+                        new
+                        {
+                            ProductImageId = 2,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/2.jpg",
+                            IsMain = true,
+                            ProductId = 2
+                        },
+                        new
+                        {
+                            ProductImageId = 3,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/3.jpg",
+                            IsMain = true,
+                            ProductId = 3
+                        },
+                        new
+                        {
+                            ProductImageId = 4,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/4.jpg",
+                            IsMain = true,
+                            ProductId = 4
+                        },
+                        new
+                        {
+                            ProductImageId = 5,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/5.jpg",
+                            IsMain = true,
+                            ProductId = 5
+                        },
+                        new
+                        {
+                            ProductImageId = 6,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/6.jpg",
+                            IsMain = true,
+                            ProductId = 6
+                        },
+                        new
+                        {
+                            ProductImageId = 7,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/9.jpg",
+                            IsMain = true,
+                            ProductId = 7
+                        },
+                        new
+                        {
+                            ProductImageId = 8,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/8.jpg",
+                            IsMain = true,
+                            ProductId = 8
+                        },
+                        new
+                        {
+                            ProductImageId = 9,
+                            DisplayOrder = 0,
+                            ImageUrl = "/images/10.jpg",
+                            IsMain = true,
+                            ProductId = 9
+                        });
+                });
+
             modelBuilder.Entity("Entities.Models.UserAddress", b =>
                 {
                     b.Property<int>("Id")
@@ -656,6 +763,17 @@ namespace StoreApp.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductImage", b =>
+                {
+                    b.HasOne("Entities.Models.Product", "Product")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Entities.Models.UserAddress", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -756,6 +874,11 @@ namespace StoreApp.Migrations
             modelBuilder.Entity("Entities.Models.Order", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Entities.Models.Product", b =>
+                {
+                    b.Navigation("Images");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,7 +9,6 @@ using Services.Contracts;
 using StoreApp.Models;
 using Repositories.Extensions;
 
-
 namespace StoreApp.Controllers
 {
     public class ProductController : Controller
@@ -56,10 +55,10 @@ namespace StoreApp.Controllers
 
             // 1) Filtrelenmiş temel sorgu (henüz pagination yok)
             var filtered = _manager.PoductService.GetAllProducts(false)
-            .FilteredByCategoryId(p.CategoryId)
-            .FilteredBySearchTerm(p.SearchTerm)
-            .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
-             .OrderBy(pr => pr.ProductId);
+                .FilteredByCategoryId(p.CategoryId)
+                .FilteredBySearchTerm(p.SearchTerm)
+                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+                .OrderBy(pr => pr.ProductId);
 
             // 2) Sayfalık veri
             var products = filtered.ToPaginate(p.PageNumber, p.PageSize);
@@ -83,7 +82,11 @@ namespace StoreApp.Controllers
 
         public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
         {
-            var model = _manager.PoductService.GetOneProduct(id, false);
+            // ✅ Include ile Images koleksiyonunu yükle
+            var model = _manager.PoductService
+                .GetAllProducts(false)
+                .Include(p => p.Images)
+                .FirstOrDefault(p => p.ProductId == id);
 
             if (model == null)
                 return NotFound();
@@ -101,7 +104,6 @@ namespace StoreApp.Controllers
             {
                 ViewBag.IsFavorite = false;
             }
-            
 
             return View(model);
         }

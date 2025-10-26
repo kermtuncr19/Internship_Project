@@ -11,9 +11,10 @@ namespace Services
         private readonly IProfileService _profileService;
         private readonly IFavoriteService _favoriteService;
         private readonly IAddressService _addressService;
+        private readonly IProductImageService _productImageService;
 
 
-        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService)
+        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService, IProductImageService productImageService)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -22,6 +23,7 @@ namespace Services
             _profileService = profileService;
             _favoriteService = favoriteService;
             _addressService = addressService;
+            _productImageService = productImageService;
         }
 
         public IProductService PoductService => _productService;
@@ -37,5 +39,7 @@ namespace Services
         public IAddressService AddressService => _addressService;
 
         public IFavoriteService FavoriteService => _favoriteService;
+
+        public IProductImageService ProductImageService => _productImageService;
     }
 }

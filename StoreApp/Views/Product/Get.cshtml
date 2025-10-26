@@ -2,10 +2,7 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="container py-4">
-
-    
     <h1 class="display-6 text-center mb-4">@Model.ProductName</h1>
-
 
     @if (TempData["CartError"] is string err && !string.IsNullOrWhiteSpace(err))
     {
@@ -13,46 +10,79 @@
     }
 
     <div class="row g-4 align-items-start">
-        <div class="col-lg-6 text-center">
-            <img class="img-fluid rounded shadow-sm"
-                 src="@Model?.ImageUrl"
-                 alt="@Model?.ProductName"
-                 style="max-height:560px; object-fit:contain;" />
+        <!-- ✅ FOTOĞRAF GALERİSİ -->
+        <div class="col-lg-6">
+            <div class="product-gallery">
+                <!-- Ana Fotoğraf -->
+                <div class="main-image-container position-relative">
+                    @{
+                        var images = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ProductImage>();
+                        var mainImage = images.FirstOrDefault(i => i.IsMain) ?? images.FirstOrDefault();
+                        var mainImageUrl = mainImage?.ImageUrl ?? Model.ImageUrl ?? "/images/default.jpg";
+                    }
+                    
+                    <img id="mainImage" class="img-fluid rounded shadow-sm w-100" 
+                         src="@mainImageUrl" 
+                         alt="@Model.ProductName"
+                         style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
+                    
+                    @if (images.Count > 1)
+                    {
+                        <button id="prevBtn" class="gallery-nav-btn gallery-nav-left">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <button id="nextBtn" class="gallery-nav-btn gallery-nav-right">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    }
+                </div>
+
+                <!-- Küçük Resim Listesi -->
+                @if (images.Count > 1)
+                {
+                    <div class="thumbnail-container mt-3 d-flex gap-2 justify-content-center flex-wrap">
+                        @for (int i = 0; i < images.Count; i++)
+                        {
+                            var img = images[i];
+                            <img src="@img.ImageUrl" 
+                                 class="thumbnail @(i == 0 ? "active" : "")" 
+                                 alt="@Model.ProductName"
+                                 data-index="@i"
+                                 style="width:80px; height:80px; object-fit:cover; cursor:pointer; border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
+                        }
+                    </div>
+                }
+            </div>
         </div>
 
+        <!-- ÜRÜN BİLGİLERİ -->
         <div class="col-lg-6">
-
             <div class="d-flex align-items-center gap-2 mb-3">
                 <div class="fs-4 text-primary fw-semibold m-0">
                     @Model.Price.ToString("c")
                 </div>
 
-            @if (User.Identity?.IsAuthenticated == true)
-{
-    var isFavorite = ViewBag.IsFavorite ?? false;
-    <form class="m-0 p-0 d-inline js-fav-form" id="favForm-@Model.ProductId">
-        @Html.AntiForgeryToken()
-        <input type="hidden" name="productId" value="@Model.ProductId" />
-
-        <button type="button"
-                class="btn p-0 border-0 bg-transparent js-fav-btn"
-                data-url="@Url.Action("ToggleAjax","Favorites")"
-                data-id="@Model.ProductId"
-                aria-pressed="@(isFavorite.ToString().ToLower())"
-                style="line-height:1;">
-            <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
-               style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
-        </button>
-    </form>
-}
-
-
-
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    var isFavorite = ViewBag.IsFavorite ?? false;
+                    <form class="m-0 p-0 d-inline js-fav-form" id="favForm-@Model.ProductId">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                        <button type="button"
+                                class="btn p-0 border-0 bg-transparent js-fav-btn"
+                                data-url="@Url.Action("ToggleAjax","Favorites")"
+                                data-id="@Model.ProductId"
+                                aria-pressed="@(isFavorite.ToString().ToLower())"
+                                style="line-height:1;">
+                            <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+                               style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+                        </button>
+                    </form>
+                }
             </div>
 
             <form id="addToCartForm" class="mt-2" method="post" asp-page="/cart">
                 @Html.AntiForgeryToken()
-
                 <input type="hidden" asp-for="ProductId" />
                 <input type="hidden" name="returnUrl" value="@ViewContext.HttpContext.Request.PathAndQuery()" />
 
@@ -100,10 +130,98 @@
 
 @await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
 
+<style>
+    .gallery-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: all 0.3s;
+        z-index: 10;
+    }
+    
+    .gallery-nav-btn:hover {
+        background: rgba(13, 27, 76, 0.9);
+        color: white;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .gallery-nav-left { left: 10px; }
+    .gallery-nav-right { right: 10px; }
+    
+    .thumbnail.active {
+        border-color: #0d1b4c !important;
+        box-shadow: 0 0 0 2px rgba(13, 27, 76, 0.3);
+    }
+    
+    .thumbnail:hover {
+        border-color: #0d1b4c !important;
+        opacity: 0.8;
+    }
+</style>
 
 @section Scripts {
     <script>
+        // ✅ FOTOĞRAF GALERİSİ
         document.addEventListener('DOMContentLoaded', function () {
+            const mainImage = document.getElementById('mainImage');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (!mainImage || thumbnails.length === 0) return;
+            
+            let currentIndex = 0;
+            const totalImages = thumbnails.length;
+            
+            function updateImage(index) {
+                mainImage.style.opacity = '0';
+                setTimeout(() => {
+                    mainImage.src = thumbnails[index].src;
+                    mainImage.style.opacity = '1';
+                    
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    thumbnails[index].classList.add('active');
+                    currentIndex = index;
+                }, 150);
+            }
+            
+            // Thumbnail tıklama
+            thumbnails.forEach((thumb, index) => {
+                thumb.addEventListener('click', () => updateImage(index));
+            });
+            
+            // Önceki/Sonraki butonlar
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    const newIndex = (currentIndex - 1 + totalImages) % totalImages;
+                    updateImage(newIndex);
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    const newIndex = (currentIndex + 1) % totalImages;
+                    updateImage(newIndex);
+                });
+            }
+            
+            // Klavye navigasyonu
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
+                if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
+            });
+
+            // Beden seçimi
             const requires = @(Model.RequiresSize.ToString().ToLowerInvariant());
             const form = document.getElementById('addToCartForm');
             if (!form) return;
@@ -121,64 +239,59 @@
             radios.forEach(r => r.addEventListener('change', syncState));
             syncState();
         });
-    </script>
 
-    <script>
-      document.addEventListener('click', async function (e) {
-        const btn = e.target.closest('.js-fav-btn');
-        if (!btn) return;
+        // Favoriler
+        document.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.js-fav-btn');
+            if (!btn) return;
 
-        const form = btn.closest('.js-fav-form');
-        const icon = btn.querySelector('.fav-icon');
+            const form = btn.closest('.js-fav-form');
+            const icon = btn.querySelector('.fav-icon');
 
-        if (!form || !icon) return;
+            if (!form || !icon) return;
 
-        // Antiforgery token'ı formdaki hidden input'tan al
-        const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
-        const token = tokenInput ? tokenInput.value : null;
+            const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+            const token = tokenInput ? tokenInput.value : null;
+            const url = btn.getAttribute('data-url');
+            const productId = Number(btn.getAttribute('data-id') || 0);
 
-        const url = btn.getAttribute('data-url');
-        const productId = Number(btn.getAttribute('data-id') || 0);
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'RequestVerificationToken': token } : {})
+                    },
+                    body: JSON.stringify({ ProductId: productId })
+                });
 
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              // ASP.NET Core antiforgery header'ı:
-              ...(token ? { 'RequestVerificationToken': token } : {})
-            },
-            body: JSON.stringify({ ProductId: productId })
-          });
+                if (!res.ok) {
+                    console.error('Fav toggle HTTP error', res.status);
+                    return;
+                }
 
-          if (!res.ok) {
-            console.error('Fav toggle HTTP error', res.status);
-            return;
-          }
+                const ct = res.headers.get('content-type') || '';
+                if (!ct.includes('application/json')) {
+                    window.location.reload();
+                    return;
+                }
 
-          const ct = res.headers.get('content-type') || '';
-          if (!ct.includes('application/json')) {
-            // Muhtemel login sayfası/HTML dönerse
-            window.location.reload();
-            return;
-          }
-
-          const data = await res.json();
-          if (data?.isFavorite === true) {
-            icon.classList.remove('fa-regular');
-            icon.classList.add('fa-solid');
-            icon.style.color = '#dc3545';
-          } else if (data?.isFavorite === false) {
-            icon.classList.remove('fa-solid');
-            icon.classList.add('fa-regular');
-            icon.style.color = '#0d1b4c';
-          }
-        } catch (err) {
-          console.error('Favorites toggle failed', err);
-        }
-      });
+                const data = await res.json();
+                if (data?.isFavorite === true) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid');
+                    icon.style.color = '#dc3545';
+                } else if (data?.isFavorite === false) {
+                    icon.classList.remove('fa-solid');
+                    icon.classList.add('fa-regular');
+                    icon.style.color = '#0d1b4c';
+                }
+            } catch (err) {
+                console.error('Favorites toggle failed', err);
+            }
+        });
     </script>
 }

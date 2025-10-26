@@ -8,6 +8,7 @@ namespace Repositories.Contracts
         IUserProfileRepository UserProfile { get; }
         IUserAddressRepository UserAddress { get; }
         IFavoriteRepository Favorite { get; }
+        IProductImageRepository ProductImage { get; } 
         void Save();
     }
 }

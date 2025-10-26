@@ -15,6 +15,7 @@ namespace Repositories
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<UserFavoriteProduct> UserFavoriteProducts { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
 
         public RepositoryContext(DbContextOptions<RepositoryContext> options) : base(options) //RepositoryContext ten nesne üretmek isteyen DbContextOptions ile gelcek ve biz de onu base e göndereceğiz yani DbContext e.
         {

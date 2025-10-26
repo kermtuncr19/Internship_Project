@@ -21,11 +21,12 @@ namespace Services
             _mapper = mapper;
         }
 
-        public void CreateProduct(ProductDtoForInsertion productDto)
+        public Product CreateProduct(ProductDtoForInsertion productDto)
         {
             Product product = _mapper.Map<Product>(productDto); // mapledik
             _manager.Product.Create(product);
             _manager.Save();
+            return product;
         }
 
         public void DeleteOneProduct(int id)
