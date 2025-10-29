@@ -13,7 +13,7 @@
         <!-- ✅ FOTOĞRAF GALERİSİ -->
         <div class="col-lg-6">
             <div class="product-gallery">
-                <!-- Ana Fotoğraf -->
+                <!-- Ana Fotoğraf Container -->
                 <div class="main-image-container position-relative">
                     @{
                         var images = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ProductImage>();
@@ -21,10 +21,24 @@
                         var mainImageUrl = mainImage?.ImageUrl ?? Model.ImageUrl ?? "/images/default.jpg";
                     }
                     
-                    <img id="mainImage" class="img-fluid rounded shadow-sm w-100" 
-                         src="@mainImageUrl" 
-                         alt="@Model.ProductName"
-                         style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
+                    <!-- Büyüteç İkonu -->
+                    <div id="zoomIcon" class="zoom-icon">
+                        <i class="fa fa-search-plus"></i>
+                    </div>
+
+                    <!-- Ana Resim Wrapper (Zoom için) -->
+                    <div id="imageWrapper" class="image-zoom-wrapper">
+                        <img id="mainImage" class="img-fluid rounded shadow-sm w-100" 
+                             src="@mainImageUrl" 
+                             alt="@Model.ProductName"
+                             style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
+                        
+                        <!-- Büyüteç Lens -->
+                        <div id="zoomLens" class="zoom-lens"></div>
+                    </div>
+
+                    <!-- Büyütülmüş Görüntü Container -->
+                    <div id="zoomResult" class="zoom-result"></div>
                     
                     @if (images.Count > 1)
                     {
@@ -130,60 +144,106 @@
 
 @await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
 
-<style>
-    .gallery-nav-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        transition: all 0.3s;
-        z-index: 10;
-    }
-    
-    .gallery-nav-btn:hover {
-        background: rgba(13, 27, 76, 0.9);
-        color: white;
-        transform: translateY(-50%) scale(1.1);
-    }
-    
-    .gallery-nav-left { left: 10px; }
-    .gallery-nav-right { right: 10px; }
-    
-    .thumbnail.active {
-        border-color: #0d1b4c !important;
-        box-shadow: 0 0 0 2px rgba(13, 27, 76, 0.3);
-    }
-    
-    .thumbnail:hover {
-        border-color: #0d1b4c !important;
-        opacity: 0.8;
-    }
-</style>
+
 
 @section Scripts {
     <script>
-        // ✅ FOTOĞRAF GALERİSİ
         document.addEventListener('DOMContentLoaded', function () {
             const mainImage = document.getElementById('mainImage');
             const thumbnails = document.querySelectorAll('.thumbnail');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
+            const imageWrapper = document.getElementById('imageWrapper');
+            const zoomLens = document.getElementById('zoomLens');
+            const zoomResult = document.getElementById('zoomResult');
+            const zoomIcon = document.getElementById('zoomIcon');
             
-            if (!mainImage || thumbnails.length === 0) return;
+            if (!mainImage) return;
             
             let currentIndex = 0;
             const totalImages = thumbnails.length;
+            let isZoomActive = false;
+            
+            // ✅ BÜYÜTEÇ AÇMA/KAPAMA
+            imageWrapper.addEventListener('click', function(e) {
+                // Ok butonlarına tıklanırsa zoom toggle yapma
+                if (e.target.closest('.gallery-nav-btn')) return;
+                
+                isZoomActive = !isZoomActive;
+                
+                if (isZoomActive) {
+                    imageWrapper.classList.add('zoom-active');
+                    initZoom();
+                } else {
+                    imageWrapper.classList.remove('zoom-active');
+                    removeZoomListeners();
+                }
+            });
+            
+            let moveHandler = null;
+            
+            function initZoom() {
+                let cx = zoomResult.offsetWidth / zoomLens.offsetWidth;
+                let cy = zoomResult.offsetHeight / zoomLens.offsetHeight;
+                
+                zoomResult.style.backgroundImage = `url('${mainImage.src}')`;
+                zoomResult.style.backgroundSize = (mainImage.width * cx) + "px " + (mainImage.height * cy) + "px";
+                
+                moveHandler = function(e) {
+                    moveLens(e);
+                };
+                
+                imageWrapper.addEventListener('mousemove', moveHandler);
+                
+                function moveLens(e) {
+                    e.preventDefault();
+                    
+                    let pos = getCursorPos(e);
+                    let x = pos.x - (zoomLens.offsetWidth / 2);
+                    let y = pos.y - (zoomLens.offsetHeight / 2);
+                    
+                    if (x > imageWrapper.offsetWidth - zoomLens.offsetWidth) {
+                        x = imageWrapper.offsetWidth - zoomLens.offsetWidth;
+                    }
+                    if (x < 0) { x = 0; }
+                    if (y > imageWrapper.offsetHeight - zoomLens.offsetHeight) {
+                        y = imageWrapper.offsetHeight - zoomLens.offsetHeight;
+                    }
+                    if (y < 0) { y = 0; }
+                    
+                    zoomLens.style.left = x + "px";
+                    zoomLens.style.top = y + "px";
+                    
+                    zoomResult.style.backgroundPosition = "-" + (x * cx) + "px -" + (y * cy) + "px";
+                }
+                
+                function getCursorPos(e) {
+                    let a, x = 0, y = 0;
+                    e = e || window.event;
+                    a = imageWrapper.getBoundingClientRect();
+                    x = e.pageX - a.left;
+                    y = e.pageY - a.top;
+                    x = x - window.pageXOffset;
+                    y = y - window.pageYOffset;
+                    return {x : x, y : y};
+                }
+            }
+            
+            function removeZoomListeners() {
+                if (moveHandler) {
+                    imageWrapper.removeEventListener('mousemove', moveHandler);
+                    moveHandler = null;
+                }
+            }
             
             function updateImage(index) {
+                if (thumbnails.length === 0) return;
+                
+                // Zoom'u kapat
+                isZoomActive = false;
+                imageWrapper.classList.remove('zoom-active');
+                removeZoomListeners();
+                
                 mainImage.style.opacity = '0';
                 setTimeout(() => {
                     mainImage.src = thumbnails[index].src;
@@ -229,15 +289,15 @@
             const radios = form.querySelectorAll('input[name="size"]');
             const button = document.getElementById('addToCartBtn');
 
-            if (!requires || radios.length === 0) return;
+            if (requires && radios.length > 0) {
+                function syncState() {
+                    const anyChecked = Array.from(radios).some(r => r.checked);
+                    button.disabled = !anyChecked;
+                }
 
-            function syncState() {
-                const anyChecked = Array.from(radios).some(r => r.checked);
-                button.disabled = !anyChecked;
+                radios.forEach(r => r.addEventListener('change', syncState));
+                syncState();
             }
-
-            radios.forEach(r => r.addEventListener('change', syncState));
-            syncState();
         });
 
         // Favoriler

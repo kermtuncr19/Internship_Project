@@ -7,6 +7,7 @@
         <div class="alert alert-success mt-3 text-center">@TempData["Success"]</div>
     }
     <div class="row g-3">
+        <!-- Profil Kartı -->
         <div class="col-12">
             <div class="card form-card shadow-soft">
                 <div class="card-body d-flex align-items-center gap-3">
@@ -21,6 +22,7 @@
             </div>
         </div>
 
+        <!-- İstatistik Kartları -->
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -51,27 +53,119 @@
             </div>
         </div>
 
+        <!-- ✅ GELİŞMİŞ SON SİPARİŞLER -->
         <div class="col-12">
-            <div class="card shadow-soft">
-                <div class="card-header bg-white">Son Siparişler</div>
-                <ul class="list-group list-group-flush">
-                    @if (Model.LastOrders.Any())
-                    {
-                        @foreach (var o in Model.LastOrders)
-                        {
-                            <li class="list-group-item d-flex justify-content-between">
-                                <span>#@o.OrderId • @o.OrderedAt.ToLocalTime().ToString("g")</span>
-                                <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId"
-                                    class="btn btn-outline-secondary btn-sm">Detay</a>
-                            </li>
-                        }
-                    }
-                    else
-                    {
-                        <li class="list-group-item text-muted">Henüz siparişiniz yok.</li>
-                    }
-                </ul>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0">Son Siparişler</h5>
+                <a asp-controller="MyOrders" asp-action="Index" class="btn btn-outline-navy btn-sm">
+                    Tümünü Gör <i class="fa fa-arrow-right ms-1"></i>
+                </a>
             </div>
+
+            @if (Model.LastOrders.Any())
+            {
+                <div class="recent-orders">
+                    @foreach (var o in Model.LastOrders.Take(2))
+                    {
+                        // ✅ Null-safe toplam hesaplama
+                        var total = o.Lines?.Sum(l => (l.Product?.Price ?? 0) * l.Quantity) ?? 0;
+                        
+                        <div class="order-card-mini mb-3">
+                            <div class="order-card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-semibold">Sipariş #@o.OrderId</span>
+                                        <span class="text-muted ms-3 small">@o.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                    </div>
+                                    <span class="badge @(o.Cancelled ? "bg-danger" : (o.Shipped ? "bg-success" : "bg-warning text-dark"))">
+                                        @(o.Cancelled ? "İptal" : (o.Shipped ? "Onaylandı" : "Onay Aşamasında"))
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="order-card-body">
+                                <!-- Ürün Listesi -->
+                                <div class="order-products-list">
+                                    @foreach (var line in o.Lines.Take(3))
+                                    {
+                                        // ✅ Product Image'ları kontrol et
+                                        var mainImage = line.Product?.Images?.FirstOrDefault(i => i.IsMain) 
+                                                     ?? line.Product?.Images?.FirstOrDefault();
+                                        
+                                        var imgSrc = mainImage?.ImageUrl 
+                                                  ?? line.Product?.ImageUrl 
+                                                  ?? "/images/placeholders/product-thumb.png";
+                                        
+                                        // URL düzeltmesi
+                                        if (!string.IsNullOrWhiteSpace(imgSrc) && 
+                                            !imgSrc.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&
+                                            !imgSrc.StartsWith("/"))
+                                        {
+                                            imgSrc = Url.Content($"~/images/{imgSrc}");
+                                        }
+                                        
+                                        <div class="order-product-mini">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="product-thumb-mini">
+                                                    <img src="@imgSrc"
+                                                         alt="@line.Product?.ProductName"
+                                                         class="img-fluid" />
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-semibold small">@(line.Product?.ProductName ?? "Ürün")</div>
+                                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                                        @if (!string.IsNullOrWhiteSpace(line.Size))
+                                                        {
+                                                            <span class="me-2">Beden: @line.Size</span>
+                                                        }
+                                                        <span>@line.Quantity adet</span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-primary fw-semibold small">
+                                                    @((line.Product?.Price ?? 0).ToString("C2"))
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    
+                                    @if (o.Lines.Count > 3)
+                                    {
+                                        <div class="text-muted small text-center mt-2">
+                                            +@(o.Lines.Count - 3) ürün daha
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="order-card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted small">Toplam:</span>
+                                        <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
+                                    </div>
+                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-eye me-1"></i> Detay
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-soft">
+                    <div class="card-body text-center text-muted py-4">
+                        <i class="fa fa-shopping-bag fa-3x mb-3 opacity-50"></i>
+                        <div>Henüz siparişiniz yok.</div>
+                        <a asp-controller="Product" asp-action="Index" class="btn btn-navy btn-pill mt-3">
+                            Alışverişe Başla
+                        </a>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>
+

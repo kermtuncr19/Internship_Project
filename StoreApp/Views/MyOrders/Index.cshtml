@@ -9,66 +9,91 @@
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Ürün</th>
-                        <th>Tarih</th>
-                        <th>Durum</th>
-                        <th>Toplam</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var o in Model)
-                    {
-                        var total = o.Lines.Sum(l => l.Product.Price * l.Quantity);
-                        var firstProduct = o.Lines.FirstOrDefault()?.Product;
-                        var imgSrc = "~/images/placeholders/product-thumb.png";
-                        if (!string.IsNullOrWhiteSpace(firstProduct?.ImageUrl))
-                        {
-                            if (firstProduct.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
-                                firstProduct.ImageUrl.StartsWith("/"))
+        <div class="orders-list">
+            @foreach (var o in Model)
+            {
+                var total = o.Lines.Sum(l => l.Product.Price * l.Quantity);
+                
+                <div class="order-card mb-3">
+                    <div class="order-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold">Sipariş #@o.OrderId</span>
+                                <span class="text-muted ms-3 small">@o.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                            </div>
+                            <div>
+                                <span class="badge @(o.Cancelled ? "bg-danger" : (o.Shipped ? "bg-success" : "bg-warning text-dark"))">
+                                    @(o.Cancelled ? "İptal" : (o.Shipped ? "Onaylandı" : "Onay Aşamasında"))
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-body">
+                        <div class="row g-3">
+                            @foreach (var line in o.Lines)
                             {
-                                imgSrc = firstProduct.ImageUrl;
+                                var imgSrc = "/images/placeholders/product-thumb.png";
+                                
+                                if (!string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+                                {
+                                    if (line.Product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ||
+                                        line.Product.ImageUrl.StartsWith("/"))
+                                    {
+                                        imgSrc = line.Product.ImageUrl;
+                                    }
+                                    else
+                                    {
+                                        imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+                                    }
+                                }
+                                
+                                <div class="col-md-6">
+                                    <div class="order-product-item">
+                                        <div class="d-flex align-items-center">
+                                            <div class="order-product-image me-3">
+                                                <img src="@imgSrc"
+                                                     alt="@line.Product?.ProductName"
+                                                     class="img-fluid rounded" 
+                                                     loading="lazy" />
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-semibold mb-1">@line.Product?.ProductName</div>
+                                                <div class="text-muted small">
+                                                    @if (!string.IsNullOrWhiteSpace(line.Size))
+                                                    {
+                                                        <span class="me-2">Beden: <strong>@line.Size</strong></span>
+                                                    }
+                                                    <span>Adet: <strong>@line.Quantity</strong></span>
+                                                </div>
+                                                <div class="text-primary fw-semibold mt-1">
+                                                    @((line.Product?.Price ?? 0).ToString("C2"))
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             }
-                            else
-                            {
-                                imgSrc = Url.Content($"~/images/{firstProduct.ImageUrl}");
-                            }
-                        }
-
-                        <tr>
-                            <td>
-    <div class="d-flex align-items-center">
-        <div class="order-thumb-box me-2">
-            <img src="@imgSrc"
-                 alt="@(firstProduct?.ProductName ?? "Ürün")"
-                 class="order-thumb-img" loading="lazy" />
-        </div>
-        <div>
-          <div class="fw-semibold small scroll-text-wrapper" style="max-width: 180px;">
-    <span class="scroll-text">@firstProduct?.ProductName</span>
-</div>
-
-            <div class="text-muted small">#@o.OrderId</div>
-        </div>
-    </div>
-</td>
-
-                            <td>@o.OrderedAt.ToLocalTime().ToString("g")</td>
-                            <td>@(o.Cancelled ? "İptal" : (o.Shipped ? "Onaylandı" : "Onay Aşamasında"))</td>
-                            <td>@total.ToString("C2")</td>
-                            <td class="text-end">
-                                <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm">
-                                    Detay
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="order-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small">Toplam Tutar:</span>
+                                <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
+                            </div>
+                            <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary">
+                                <i class="fa fa-eye me-1"></i> Detay Gör
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>
+
+<style>
+
+</style>

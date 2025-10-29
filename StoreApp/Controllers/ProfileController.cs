@@ -34,6 +34,9 @@ namespace StoreApp.Controllers
 
             var lastOrders = await _ctx.Orders
                 .AsNoTracking()
+                .Include(o => o.Lines)
+                    .ThenInclude(l => l.Product)
+                        .ThenInclude(p => p.Images)
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.OrderedAt)
                 .Take(5)
