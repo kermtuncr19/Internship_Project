@@ -2016,6 +2016,120 @@
         }
     }
 
+     /* Profil Avatarı */
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #0d1b4c;
+    transition: all 0.3s;
+  }
+
+  .user-dropdown-hover:hover .user-avatar {
+    transform: scale(1.05);
+    border-color: #1a2f6f;
+    box-shadow: 0 0 0 3px rgba(13, 27, 76, 0.1);
+  }
+
+  /* Hover ile Dropdown açma */
+  .user-dropdown-hover:hover .dropdown-menu {
+    display: block;
+    animation: fadeInDown 0.3s ease-out;
+  }
+
+  .user-dropdown-hover .dropdown-menu {
+    margin-top: 10px;
+    min-width: 250px;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Dropdown header styling */
+  .dropdown-header {
+    padding: 12px 16px;
+    background: #f8f9fa;
+  }
+
+  /* Dropdown items hover */
+  .dropdown-item {
+    padding: 10px 20px;
+    transition: all 0.2s;
+  }
+
+  .dropdown-item:hover {
+    background: #f8f9fa;
+    padding-left: 24px;
+  }
+
+  /* Mobile için normal tıklama davranışı */
+  @media (max-width: 991px) {
+    .user-dropdown-hover .dropdown-menu {
+      display: none;
+    }
+
+    .user-dropdown-hover.show .dropdown-menu {
+      display: block;
+    }
+
+    .user-avatar {
+      width: 35px;
+      height: 35px;
+    }
+  }
+
+  /* Konum referansı */
+.user-dropdown-hover { position: relative; }
+
+/* Masaüstü: hover ile aç, boşluk bırakma */
+@media (min-width: 992px) {
+  .user-dropdown-hover:hover .dropdown-menu {
+    display: block;
+    animation: fadeInDown 0.18s ease-out;
+  }
+
+  .user-dropdown-hover .dropdown-menu {
+    position: absolute;
+    top: 100%;     /* avatarın hemen altına yapışık */
+    right: 0;
+    left: auto;
+    margin-top: 0; /* <-- GAP YOK */
+    min-width: 250px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 120px);
+    overflow: auto;
+    transform: translateX(var(--dd-shift, 0));
+    will-change: transform;
+  }
+
+  /* GAP köprüsü: aradaki 10-12 px’i görünmez alanla kapatır */
+  .user-dropdown-hover .dropdown-menu::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    top: -12px;          /* menünün üstünden yukarı taşır */
+    height: 12px;        /* köprü yüksekliği */
+    pointer-events: auto;/* hover alanı olarak kabul edilsin */
+    /* görünmez: arka plan yok */
+  }
+}
+
+/* Mobil aynı kalsın (tıklama) */
+@media (max-width: 991px) {
+  .user-dropdown-hover .dropdown-menu { display: none; }
+  .user-dropdown-hover.show .dropdown-menu { display: block; }
+}
+
+
 
 
 

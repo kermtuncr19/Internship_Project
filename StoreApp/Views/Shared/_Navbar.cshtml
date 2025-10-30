@@ -15,7 +15,6 @@
   </div>
 </div>
 
-
 <nav class="navbar navbar-expand-lg border-bottom" style="background-color:#ffea00; border:none;" data-bs-theme="light">
   <div class="container-fluid">
 
@@ -39,7 +38,7 @@
         <div class="input-group nav-search w-100">
           <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
           <input type="search" class="form-control border-start-0" name="SearchTerm"
-            value="@(Context.Request.Query["SearchTerm"])" placeholder="Fenerium’da Ara" aria-label="Ara" />
+            value="@(Context.Request.Query["SearchTerm"])" placeholder="Fenerium'da Ara" aria-label="Ara" />
           <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
 
           @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
@@ -58,14 +57,31 @@
 
         @if (User.Identity?.IsAuthenticated ?? false)
         {
-          <!-- Kullanıcı Dropdown -->
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu"
-               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fa fa-gear text-navy fa-lg"></i>
+          
+            // ✅ ViewBag'den profil fotoğrafını al (Layout'ta set edilecek)
+            var avatarUrl = ViewBag.UserAvatarUrl as string ?? "/images/avatar-placeholder.png";
+            var userName = ViewBag.UserFullName as string ?? User.Identity.Name ?? "Kullanıcı";
+          
+
+          <!-- Kullanıcı Dropdown (Hover ile açılan) -->
+          <li class="nav-item dropdown user-dropdown-hover">
+            <a class="nav-link d-flex align-items-center gap-2" href="#" id="userMenu" role="button">
+              <img src="@avatarUrl" alt="@userName" class="user-avatar" />
+              <span class="d-none d-lg-inline text-navy fw-semibold">@userName</span>
             </a>
 
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenu">
+            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
+              <li class="dropdown-header">
+                <div class="d-flex align-items-center gap-2">
+                  <img src="@avatarUrl" alt="@userName" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" />
+                  <div>
+                    <div class="fw-semibold">@userName</div>
+                    <div class="small text-muted">@User.Identity.Name</div>
+                  </div>
+                </div>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              
               <li>
                 <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
                   <i class="fa fa-user me-2 text-navy"></i> Hesabım
@@ -109,16 +125,22 @@
             </ul>
           </li>
         }
-
-        <!-- Giriş Yap (oturum yoksa) -->
-        <partial name="_LoginMenu" />
+        else
+        {
+          <!-- Giriş Yap (oturum yoksa) -->
+          <partial name="_LoginMenu" />
+        }
       </ul>
     </div>
   </div>
 </nav>
 
+<style>
+ 
+</style>
+
 <script>
-  // Her 4.5 saniyede bir mesaj değiştir
+  
   document.addEventListener('DOMContentLoaded', function(){
     const msgs = document.querySelectorAll('.promo-viewport .promo-msg');
     if (!msgs.length) return;
@@ -131,13 +153,32 @@
       i = (i+1) % msgs.length;
       show(i);
     }
-    // Otomatik kaydır
     t = setInterval(next, 5500);
 
-    // Üzerine gelince durdur, çıkınca devam et
     const viewport = document.querySelector('.promo-viewport');
     viewport.addEventListener('mouseenter', ()=> clearInterval(t));
     viewport.addEventListener('mouseleave', ()=> t = setInterval(next, 4500));
   });
-</script>
 
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.innerWidth <= 991) {
+      const userDropdown = document.querySelector('.user-dropdown-hover');
+      const userMenu = document.getElementById('userMenu');
+      
+      if (userDropdown && userMenu) {
+        userMenu.addEventListener('click', function(e) {
+          e.preventDefault();
+          userDropdown.classList.toggle('show');
+        });
+
+         
+        document.addEventListener('click', function(e) {
+          if (!userDropdown.contains(e.target)) {
+            userDropdown.classList.remove('show');
+          }
+        });
+      }
+    }
+  });
+</script>

@@ -1,3 +1,23 @@
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using Repositories
+@inject UserManager<IdentityUser> UserManager
+@inject RepositoryContext Ctx
+
+@{
+    // ✅ Kullanıcı giriş yaptıysa profil bilgilerini yükle
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var userId = UserManager.GetUserId(User);
+        var profile = await Ctx.UserProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        ViewBag.UserAvatarUrl = profile?.AvatarUrl ?? "/images/avatar-placeholder.png";
+        ViewBag.UserFullName = profile?.FullName ?? User.Identity.Name ?? "Kullanıcı";
+    }
+}
+
 <!DOCTYPE html>
 <html lang="en">
 
