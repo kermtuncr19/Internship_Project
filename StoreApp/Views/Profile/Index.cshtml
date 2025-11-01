@@ -7,12 +7,10 @@
         <div class="alert alert-success mt-3 text-center">@TempData["Success"]</div>
     }
     <div class="row g-3">
-        <!-- Profil Kartı -->
         <div class="col-12">
             <div class="card form-card shadow-soft">
                 <div class="card-body d-flex align-items-center gap-3">
-                    <img src="@(Model.Profile?.AvatarUrl ?? "/images/avatar-placeholder.png")" class="rounded-circle"
-                        style="width:64px;height:64px;object-fit:cover;" />
+                    <img src="@(Model.Profile?.AvatarUrl ?? "/images/avatar-placeholder.png")" class="rounded-circle" style="width:64px;height:64px;object-fit:cover;" />
                     <div>
                         <div class="h5 m-0">@Model.Profile?.FullName</div>
                         <div class="text-muted small">@User.Identity?.Name</div>
@@ -21,8 +19,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- İstatistik Kartları -->
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -32,7 +28,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -42,7 +37,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -52,8 +46,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- ✅ GELİŞMİŞ SON SİPARİŞLER -->
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="m-0">Son Siparişler</h5>
@@ -61,15 +53,44 @@
                     Tümünü Gör <i class="fa fa-arrow-right ms-1"></i>
                 </a>
             </div>
-
             @if (Model.LastOrders.Any())
             {
                 <div class="recent-orders">
                     @foreach (var o in Model.LastOrders.Take(2))
                     {
-                        // ✅ Null-safe toplam hesaplama
                         var total = o.Lines?.Sum(l => (l.Product?.Price ?? 0) * l.Quantity) ?? 0;
-                        
+                        string statusBadge = "";
+                        string statusText = "";
+                        if (o.Cancelled)
+                        {
+                            statusBadge = "bg-danger";
+                            statusText = "İptal Edildi";
+                        }
+                        else if (o.Delivered)
+                        {
+                            statusBadge = "bg-success";
+                            statusText = "Teslim Edildi";
+                        }
+                        else if (o.InTransit)
+                        {
+                            statusBadge = "bg-info";
+                            statusText = "Kargoda";
+                        }
+                        else if (o.Preparing)
+                        {
+                            statusBadge = "bg-warning text-dark";
+                            statusText = "Hazırlanıyor";
+                        }
+                        else if (o.Shipped)
+                        {
+                            statusBadge = "bg-primary";
+                            statusText = "Onaylandı";
+                        }
+                        else
+                        {
+                            statusBadge = "bg-secondary";
+                            statusText = "Onay Bekliyor";
+                        }
                         <div class="order-card-mini mb-3">
                             <div class="order-card-header">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -77,39 +98,23 @@
                                         <span class="fw-semibold">Sipariş #@o.OrderId</span>
                                         <span class="text-muted ms-3 small">@o.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
                                     </div>
-                                    <span class="badge @(o.Cancelled ? "bg-danger" : (o.Shipped ? "bg-success" : "bg-warning text-dark"))">
-                                        @(o.Cancelled ? "İptal" : (o.Shipped ? "Onaylandı" : "Onay Aşamasında"))
-                                    </span>
+                                    <span class="badge @statusBadge">@statusText</span>
                                 </div>
                             </div>
-                            
                             <div class="order-card-body">
-                                <!-- Ürün Listesi -->
                                 <div class="order-products-list">
                                     @foreach (var line in o.Lines.Take(3))
                                     {
-                                        // ✅ Product Image'ları kontrol et
-                                        var mainImage = line.Product?.Images?.FirstOrDefault(i => i.IsMain) 
-                                                     ?? line.Product?.Images?.FirstOrDefault();
-                                        
-                                        var imgSrc = mainImage?.ImageUrl 
-                                                  ?? line.Product?.ImageUrl 
-                                                  ?? "/images/placeholders/product-thumb.png";
-                                        
-                                        // URL düzeltmesi
-                                        if (!string.IsNullOrWhiteSpace(imgSrc) && 
-                                            !imgSrc.StartsWith("http", StringComparison.OrdinalIgnoreCase) &&
-                                            !imgSrc.StartsWith("/"))
+                                        var mainImage = line.Product?.Images?.FirstOrDefault(i => i.IsMain) ?? line.Product?.Images?.FirstOrDefault();
+                                        var imgSrc = mainImage?.ImageUrl ?? line.Product?.ImageUrl ?? "/images/placeholders/product-thumb.png";
+                                        if (!string.IsNullOrWhiteSpace(imgSrc) && !imgSrc.StartsWith("http", StringComparison.OrdinalIgnoreCase) && !imgSrc.StartsWith("/"))
                                         {
                                             imgSrc = Url.Content($"~/images/{imgSrc}");
                                         }
-                                        
                                         <div class="order-product-mini">
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="product-thumb-mini">
-                                                    <img src="@imgSrc"
-                                                         alt="@line.Product?.ProductName"
-                                                         class="img-fluid" />
+                                                    <img src="@imgSrc" alt="@line.Product?.ProductName" class="img-fluid" />
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <div class="fw-semibold small">@(line.Product?.ProductName ?? "Ürün")</div>
@@ -127,7 +132,6 @@
                                             </div>
                                         </div>
                                     }
-                                    
                                     @if (o.Lines.Count > 3)
                                     {
                                         <div class="text-muted small text-center mt-2">
@@ -136,15 +140,13 @@
                                     }
                                 </div>
                             </div>
-                            
                             <div class="order-card-footer">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="text-muted small">Toplam:</span>
                                         <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
                                     </div>
-                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" 
-                                       class="btn btn-outline-primary btn-sm">
+                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm">
                                         <i class="fa fa-eye me-1"></i> Detay
                                     </a>
                                 </div>
@@ -168,4 +170,3 @@
         </div>
     </div>
 </div>
-

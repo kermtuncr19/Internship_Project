@@ -103,9 +103,18 @@ namespace StoreApp.Migrations
                     b.Property<bool>("Cancelled")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("Delivered")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("District")
                         .IsRequired()
@@ -113,6 +122,12 @@ namespace StoreApp.Migrations
 
                     b.Property<bool>("GiftWrap")
                         .HasColumnType("boolean");
+
+                    b.Property<bool>("InTransit")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("InTransitAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("Installment")
                         .HasColumnType("integer");
@@ -133,8 +148,17 @@ namespace StoreApp.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<bool>("Preparing")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PreparingAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("Shipped")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserId")
                         .HasColumnType("text");

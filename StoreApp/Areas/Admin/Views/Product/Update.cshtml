@@ -25,8 +25,10 @@
     </div>
 
     <div class="form-group my-3">
-        <label asp-for="Summary">Özet</label>
-        <input asp-for="Summary" class="form-control" />
+        <label asp-for="Summary" class="form-label">Özet</label>
+        <textarea asp-for="Summary" class="form-control" rows="6"
+            placeholder="Her satıra bir madde yazabilirsiniz"></textarea>
+        <span asp-validation-for="Summary" class="text-danger"></span>
     </div>
 
     <div class="form-group my-3">
@@ -62,7 +64,8 @@
                 {
                     <div class="col-md-3" data-image-id="@img.ProductImageId">
                         <div class="card">
-                            <img src="@img.ImageUrl" class="card-img-top" alt="Ürün fotoğrafı" style="height:200px; object-fit:cover;">
+                            <img src="@img.ImageUrl" class="card-img-top" alt="Ürün fotoğrafı"
+                                style="height:200px; object-fit:cover;">
                             <div class="card-body p-2">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">Sıra: @img.DisplayOrder</small>
@@ -72,14 +75,14 @@
                                     }
                                     else
                                     {
-                                        <button type="button" class="btn btn-sm btn-outline-primary set-main-btn" 
-                                                data-image-id="@img.ProductImageId">
+                                        <button type="button" class="btn btn-sm btn-outline-primary set-main-btn"
+                                            data-image-id="@img.ProductImageId">
                                             Ana Yap
                                         </button>
                                     }
                                 </div>
-                                <button type="button" class="btn btn-sm btn-danger w-100 mt-2 delete-image-btn" 
-                                        data-image-id="@img.ProductImageId">
+                                <button type="button" class="btn btn-sm btn-danger w-100 mt-2 delete-image-btn"
+                                    data-image-id="@img.ProductImageId">
                                     <i class="fa fa-trash"></i> Sil
                                 </button>
                             </div>
@@ -93,10 +96,11 @@
     <!-- ✅ YENİ FOTOĞRAF EKLEME - GELİŞMİŞ -->
     <div class="form-group my-4">
         <label class="form-label fw-bold">Yeni Fotoğraflar Ekle</label>
-        
+
         <!-- Dosya seçme butonu -->
         <div class="file-upload-wrapper mb-3">
-            <input name="newImages" type="file" class="form-control d-none" id="newImagesInput" accept="image/*" multiple />
+            <input name="newImages" type="file" class="form-control d-none" id="newImagesInput" accept="image/*"
+                multiple />
             <button type="button" class="btn btn-outline-primary" id="selectFilesBtn">
                 <i class="fa fa-images me-2"></i>Fotoğraf Seç
             </button>
@@ -172,9 +176,9 @@
             newImagesInput.click();
         });
 
-        newImagesInput.addEventListener('change', function(e) {
+        newImagesInput.addEventListener('change', function (e) {
             const files = Array.from(e.target.files);
-            
+
             // Mevcut seçililere ekle
             selectedFiles = [...selectedFiles, ...files];
             updateFileCount();
@@ -197,26 +201,26 @@
             selectedFiles.forEach((file, index) => {
                 const reader = new FileReader();
 
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const col = document.createElement('div');
                     col.className = 'col-md-3';
-                    
+
                     col.innerHTML = `
-                        <div class="preview-card">
-                            <img src="${e.target.result}" class="preview-image" alt="Önizleme">
-                            <button type="button" class="remove-preview-btn" data-index="${index}">
-                                <i class="fa fa-times"></i>
-                            </button>
-                            <div class="text-center mt-2">
-                                <small class="text-muted">${file.name}</small>
+                            <div class="preview-card">
+                                <img src="${e.target.result}" class="preview-image" alt="Önizleme">
+                                <button type="button" class="remove-preview-btn" data-index="${index}">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted">${file.name}</small>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
 
                     imagePreviewContainer.appendChild(col);
 
                     // Silme butonunu bağla
-                    col.querySelector('.remove-preview-btn').addEventListener('click', function() {
+                    col.querySelector('.remove-preview-btn').addEventListener('click', function () {
                         removeFile(parseInt(this.getAttribute('data-index')));
                     });
                 };
@@ -242,16 +246,16 @@
         }
 
         // Form submit edilmeden önce input'u güncelle
-        document.getElementById('updateForm').addEventListener('submit', function() {
+        document.getElementById('updateForm').addEventListener('submit', function () {
             updateFileInput();
         });
 
         // Ana fotoğraf yapma
         document.querySelectorAll('.set-main-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 const imageId = this.getAttribute('data-image-id');
                 const productId = @Model.ProductId;
-                
+
                 try {
                     const response = await fetch('/Admin/Product/SetMainImage', {
                         method: 'POST',
@@ -261,7 +265,7 @@
                         },
                         body: JSON.stringify({ productId: productId, imageId: imageId })
                     });
-                    
+
                     if (response.ok) {
                         location.reload();
                     } else {
@@ -273,14 +277,14 @@
                 }
             });
         });
-        
+
         // Fotoğraf silme
         document.querySelectorAll('.delete-image-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.addEventListener('click', async function () {
                 if (!confirm('Bu fotoğrafı silmek istediğinize emin misiniz?')) return;
-                
+
                 const imageId = this.getAttribute('data-image-id');
-                
+
                 try {
                     const response = await fetch(`/Admin/Product/DeleteImage/${imageId}`, {
                         method: 'POST',
@@ -288,7 +292,7 @@
                             'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                         }
                     });
-                    
+
                     if (response.ok) {
                         document.querySelector(`[data-image-id="${imageId}"]`).remove();
                     } else {

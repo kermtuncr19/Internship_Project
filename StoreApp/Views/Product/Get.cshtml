@@ -100,43 +100,69 @@
                 <input type="hidden" asp-for="ProductId" />
                 <input type="hidden" name="returnUrl" value="@ViewContext.HttpContext.Request.PathAndQuery()" />
 
-                @{
-                    var sizeCsv = string.IsNullOrWhiteSpace(Model.SizeOptionsCsv)
-                                  ? "XS,S,M,L,XL"
-                                  : Model.SizeOptionsCsv;
+               @{
+    // 1) Yalnızca RequiresSize true ise bedenlerle ilgilen
+    var requires = Model.RequiresSize;
 
-                    var sizeList = sizeCsv
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        .ToList();
+    // 2) Listeyi oluştur
+    List<string> sizeList = new();
+    if (requires)
+    {
+        var csv = (Model.SizeOptionsCsv ?? "").Trim();
+        sizeList = string.IsNullOrWhiteSpace(csv)
+            ? new List<string> { "XS","S","M","L","XL" } // varsayılan sadece requires=true ve csv boşsa
+            : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+    }
 
-                    var showSizes = sizeList.Any();
-                }
+    // 3) Göster/gizle koşulu
+    var showSizes = requires && sizeList.Count > 0;
+}
 
-                @if (showSizes)
-                {
-                    <div class="mb-3">
-                        <div class="small text-muted mb-2">Beden Seçin</div>
-                        <fieldset class="size-list d-flex flex-wrap gap-2" role="radiogroup" aria-label="Beden Seçimi">
-                            @foreach (var s in sizeList)
-                            {
-                                var id = $"size_{s}";
-                                <div class="size-chip">
-                                    <input type="radio" id="@id" name="size" value="@s" class="visually-hidden" />
-                                    <label for="@id" class="size-btn">@s</label>
-                                </div>
-                            }
-                        </fieldset>
-                    </div>
-                }
+               @if (showSizes)
+{
+    <div class="mb-3">
+        <div class="small text-muted mb-2">Beden Seçin</div>
+        <fieldset class="size-list d-flex flex-wrap gap-2" role="radiogroup" aria-label="Beden Seçimi">
+            @foreach (var s in sizeList)
+            {
+                var id = $"size_{s}";
+                <div class="size-chip">
+                    <input type="radio" id="@id" name="size" value="@s" class="visually-hidden" />
+                    <label for="@id" class="size-btn">@s</label>
+                </div>
+            }
+        </fieldset>
+    </div>
+}
 
                 <div class="d-flex align-items-center gap-2">
                     <button id="addToCartBtn"
-                            type="submit"
-                            class="btn btn-navy btn-pill px-4"
-                            @(Model.RequiresSize && showSizes ? "disabled" : null)>
-                        <i class="fa fa-cart-plus me-1"></i> Sepete Ekle
-                    </button>
+        type="submit"
+        class="btn btn-navy btn-pill px-4"
+        @(Model.RequiresSize ? "disabled" : null)>
+    <i class="fa fa-cart-plus me-1"></i> Sepete Ekle
+</button>
                 </div>
+                <!-- Ürün Bilgileri kutusu -->
+<div class="mt-3">
+  <div class="card border-0 shadow-sm product-info">
+    <div class="card-header bg-white fw-semibold">Ürün Bilgileri</div>
+    <div class="card-body">
+      @if (!string.IsNullOrWhiteSpace(Model?.Summary))
+      {
+        <div class="small text-muted" style="white-space: pre-line; line-height:1.7;">
+          @Model.Summary
+        </div>
+      }
+      else
+      {
+        <p class="mb-0 text-muted fst-italic">Bu ürün için detaylar yakında eklenecek.</p>
+      }
+    </div>
+  </div>
+</div>
+
+
             </form>
         </div>
     </div>
