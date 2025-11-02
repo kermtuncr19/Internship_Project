@@ -75,7 +75,7 @@
                                 }
                                 <div class="col-md-6">
                                     <div class="order-product-item">
-                                        <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center mb-2">
                                             <div class="order-product-image me-3">
                                                 <img src="@imgSrc" alt="@line.Product?.ProductName" class="img-fluid rounded" loading="lazy" />
                                             </div>
@@ -93,6 +93,14 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        @if (o.Delivered && line.Product != null)
+                                        {
+                                            <div class="mt-2">
+                                                <a asp-controller="Review" asp-action="Create" asp-route-productId="@line.Product.ProductId" asp-route-orderId="@o.OrderId" class="btn btn-sm btn-outline-warning">
+                                                    <i class="fa fa-star me-1"></i> Değerlendir
+                                                </a>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -104,9 +112,12 @@
                                 <span class="text-muted small">Toplam Tutar:</span>
                                 <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
                             </div>
-                            <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary">
-                                <i class="fa fa-eye me-1"></i> Detay Gör
-                            </a>
+                            <div class="d-flex gap-2">
+                                
+                                <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary">
+                                    <i class="fa fa-eye me-1"></i> Detay Gör
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

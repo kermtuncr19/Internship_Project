@@ -23,7 +23,30 @@ namespace StoreApp.Components
         {
             var products = _manager.PoductService.GetShowcaseProducts(false).ToList();
 
-            // Kullanıcı giriş yaptıysa favori ürünlerini al
+            // --- Ratings (avg, count) sözlüğü ---
+            var ids = products.Select(p => p.ProductId).ToList();
+
+            var ratingData = await _db.Reviews
+                .Where(r => r.IsApproved && ids.Contains(r.ProductId))
+                .GroupBy(r => r.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    Count = g.Count(),
+                    Avg = g.Average(x => x.Rating)
+                })
+                .ToListAsync();
+
+            var ratingsDict = ratingData.ToDictionary(
+                x => x.ProductId,
+                x => (count: x.Count, avg: x.Avg)
+            );
+
+            // Hem ViewBag hem ViewData ile ver
+            ViewBag.Ratings = ratingsDict;
+            ViewData["Ratings"] = ratingsDict;
+
+            // Kullanıcı giriş yaptıysa favoriler
             if (HttpContext.User.Identity?.IsAuthenticated == true)
             {
                 var userId = _um.GetUserId(HttpContext.User)!;

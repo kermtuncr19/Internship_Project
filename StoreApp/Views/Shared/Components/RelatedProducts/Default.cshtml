@@ -35,6 +35,36 @@
 
                                 <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
 
+                                @{
+    var ratings = ViewData["Ratings"] as Dictionary<int,(int count,double avg)>
+                  ?? new Dictionary<int,(int,double)>();
+    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
+    var reviewCount = hasR ? rdata.count : 0;
+    var avgRating = hasR ? rdata.avg : 0.0;
+}
+
+
+
+<div class="d-flex align-items-center gap-1 mb-2">
+    @for (int i = 1; i <= 5; i++)
+    {
+        if (i <= Math.Floor(avgRating))
+        {
+            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
+        }
+        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
+        {
+            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
+        }
+        else
+        {
+            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
+        }
+    }
+    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
+</div>
+
+
                                 <div class="mt-auto d-flex align-items-center justify-content-between">
                                     <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
                                        class="btn btn-sm tooltip1-btn"

@@ -2282,3 +2282,29 @@
 .remove-preview-btn:hover { background: #dc3545; transform: scale(1.1); }
 .file-upload-wrapper { display: flex; align-items: center; }
 
+
+ .star-rating { display: flex; gap: 0.5rem; font-size: 2.5rem; justify-content: center; margin: 2rem 0; }
+    .star { cursor: pointer; color: #ddd; transition: color 0.2s; }
+    .star.active, .star:hover { color: #ffc107; }
+    .star:hover ~ .star { color: #ddd; }
+    .product-review-card { max-width: 600px; margin: 2rem auto; }
+    .review-product-info { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 2rem; }
+    .review-product-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+
+    .tracking-container { padding: 2rem 0; margin: 2rem 0; }
+    .tracking-steps { display: flex; justify-content: space-between; position: relative; margin-bottom: 3rem; }
+    .tracking-step { flex: 1; text-align: center; position: relative; z-index: 1; }
+    .step-icon { width: 50px; height: 50px; border-radius: 50%; background: #e9ecef; color: #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; font-size: 1.5rem; border: 3px solid #e9ecef; transition: all 0.3s ease; }
+    .tracking-step.completed .step-icon { background: #28a745; color: white; border-color: #28a745; }
+    .tracking-step.active .step-icon { background: #007bff; color: white; border-color: #007bff; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .step-label { font-size: 0.875rem; font-weight: 500; color: #6c757d; }
+    .tracking-step.completed .step-label, .tracking-step.active .step-label { color: #212529; font-weight: 600; }
+    .step-date { font-size: 0.75rem; color: #6c757d; margin-top: 0.25rem; }
+    .tracking-steps::before { content: ''; position: absolute; top: 25px; left: 10%; right: 10%; height: 3px; background: #e9ecef; z-index: 0; }
+    .tracking-progress { position: absolute; top: 25px; left: 10%; height: 3px; background: #28a745; z-index: 0; transition: width 0.5s ease; max-width: 80%; }
+    @media (max-width: 768px) {
+        .tracking-steps { flex-direction: column; align-items: center; }
+        .tracking-step { margin-bottom: 2rem; }
+        .tracking-steps::before, .tracking-progress { display: none; }
+    }

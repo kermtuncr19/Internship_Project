@@ -24,88 +24,128 @@ namespace StoreApp.Controllers
             _um = um;
         }
 
-        public async Task<IActionResult> Index(ProductRequestParameters p)
+       public async Task<IActionResult> Index(ProductRequestParameters p)
+{
+    ViewData["Title"] = "Ürünler";
+    if (!p.IsValidPrice)
+    {
+        TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
+        p.MinPrice = 0;
+        p.MaxPrice = int.MaxValue;
+    }
+
+    ViewBag.Categories = _manager.CategoryService.GetAllCategories(false);
+    ViewBag.ActiveCategoryId = p.CategoryId;
+
+    // Kullanıcı giriş yaptıysa favoriler
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var userId = _um.GetUserId(User)!;
+        var favoriteIds = await _db.UserFavoriteProducts
+            .Where(f => f.UserId == userId)
+            .Select(f => f.ProductId)
+            .ToListAsync();
+
+        ViewBag.FavoriteIds = favoriteIds;
+    }
+    else
+    {
+        ViewBag.FavoriteIds = new List<int>();
+    }
+
+    // 1) Filtrelenmiş temel sorgu
+    var filtered = _manager.PoductService.GetAllProducts(false)
+        .FilteredByCategoryId(p.CategoryId)
+        .FilteredBySearchTerm(p.SearchTerm)
+        .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+        .OrderBy(pr => pr.ProductId);
+
+    // 2) Sayfalık veri -> materialize et (List) ki id'lerini kullanabilelim
+    var products = filtered.ToPaginate(p.PageNumber, p.PageSize).ToList();
+
+    // 3) Toplam eleman sayısı (aynı filtrelerle)
+    var total = filtered.Count();
+
+    // 4) Bu sayfada görünen ürünlerin onaylı yorum (avg,count) verileri
+    var ids = products.Select(x => x.ProductId).ToList();
+
+    var ratingData = await _db.Reviews
+        .Where(r => r.IsApproved && ids.Contains(r.ProductId))
+        .GroupBy(r => r.ProductId)
+        .Select(g => new
         {
-            ViewData["Title"] = "Ürünler";
-            if (!p.IsValidPrice)
-            {
-                TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
-                p.MinPrice = 0;
-                p.MaxPrice = int.MaxValue;
-            }
+            ProductId = g.Key,
+            Count = g.Count(),
+            Avg = g.Average(x => x.Rating)
+        })
+        .ToListAsync();
 
-            ViewBag.Categories = _manager.CategoryService.GetAllCategories(false);
-            ViewBag.ActiveCategoryId = p.CategoryId;
+    // View tarafında hızlı erişim için sözlük
+    ViewBag.Ratings = ratingData.ToDictionary(
+        x => x.ProductId,
+        x => (count: x.Count, avg: x.Avg)
+    );
 
-            // Kullanıcı giriş yaptıysa favori ürünlerini al
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userId = _um.GetUserId(User)!;
-                var favoriteIds = await _db.UserFavoriteProducts
-                    .Where(f => f.UserId == userId)
-                    .Select(f => f.ProductId)
-                    .ToListAsync();
+    var pagination = new Pagination
+    {
+        CurrentPage = p.PageNumber < 1 ? 1 : p.PageNumber,
+        ItemsPerPage = p.PageSize < 1 ? 10 : p.PageSize,
+        TotalItems = total
+    };
 
-                ViewBag.FavoriteIds = favoriteIds;
-            }
-            else
-            {
-                ViewBag.FavoriteIds = new List<int>();
-            }
+    return View(new ProductListViewModel
+    {
+        Products = products,         // List<Product> -> IEnumerable olarak sorunsuz
+        Pagination = pagination
+    });
+}
 
-            // 1) Filtrelenmiş temel sorgu (henüz pagination yok)
-            var filtered = _manager.PoductService.GetAllProducts(false)
-                .FilteredByCategoryId(p.CategoryId)
-                .FilteredBySearchTerm(p.SearchTerm)
-                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
-                .OrderBy(pr => pr.ProductId);
 
-            // 2) Sayfalık veri
-            var products = filtered.ToPaginate(p.PageNumber, p.PageSize);
+        // ProductController.cs - Get metodunu güncelle
 
-            // 3) Toplam eleman sayısı (aynen aynı filtrelerle)
-            var total = filtered.Count();
+public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
+{
+    var model = _manager.PoductService
+        .GetAllProducts(false)
+        .Include(p => p.Images)
+        .FirstOrDefault(p => p.ProductId == id);
 
-            var pagination = new Pagination
-            {
-                CurrentPage = p.PageNumber < 1 ? 1 : p.PageNumber,
-                ItemsPerPage = p.PageSize < 1 ? 10 : p.PageSize,
-                TotalItems = total
-            };
+    if (model == null)
+        return NotFound();
 
-            return View(new ProductListViewModel
-            {
-                Products = products,
-                Pagination = pagination
-            });
-        }
+    // Yorumları include et
+    var productWithReviews = _db.Products
+        .Include(p => p.Reviews.Where(r => r.IsApproved))
+        .ThenInclude(r => r.User)
+        .FirstOrDefault(p => p.ProductId == id);
 
-        public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
-        {
-            // ✅ Include ile Images koleksiyonunu yükle
-            var model = _manager.PoductService
-                .GetAllProducts(false)
-                .Include(p => p.Images)
-                .FirstOrDefault(p => p.ProductId == id);
+    if (productWithReviews != null)
+    {
+        model.Reviews = productWithReviews.Reviews;
+        
+        // User profilleri için dictionary oluştur
+        var userIds = model.Reviews.Select(r => r.UserId).Distinct().ToList();
+        var profiles = await _db.UserProfiles
+            .Where(p => userIds.Contains(p.UserId))
+            .ToDictionaryAsync(p => p.UserId, p => p.FullName ?? "Kullanıcı");
+        
+        ViewBag.UserProfiles = profiles;
+    }
 
-            if (model == null)
-                return NotFound();
+    ViewData["Title"] = model?.ProductName;
 
-            ViewData["Title"] = model?.ProductName;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var userId = _um.GetUserId(User)!;
+        ViewBag.IsFavorite = await _db.UserFavoriteProducts
+            .AnyAsync(f => f.UserId == userId && f.ProductId == id);
+    }
+    else
+    {
+        ViewBag.IsFavorite = false;
+    }
 
-            // Kullanıcı giriş yaptıysa bu ürünün favori durumunu kontrol et
-            if (User.Identity?.IsAuthenticated == true)
-            {
-                var userId = _um.GetUserId(User)!;
-                ViewBag.IsFavorite = await _db.UserFavoriteProducts
-                    .AnyAsync(f => f.UserId == userId && f.ProductId == id);
-            }
-            else
-            {
-                ViewBag.IsFavorite = false;
-            }
-
-            return View(model);
-        }
+    return View(model);
+}
     }
 }

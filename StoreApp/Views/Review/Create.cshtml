@@ -1,0 +1,103 @@
+@model StoreApp.Models.ReviewViewModel
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+    <div class="product-review-card">
+        <div class="card shadow-soft">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">@(ViewBag.IsEdit ? "Yorumunuzu Düzenleyin" : "Ürünü Değerlendirin")</h5>
+            </div>
+            <div class="card-body">
+                <div class="review-product-info">
+                    <img src="@(Model.ProductImageUrl ?? "/images/placeholders/product-thumb.png")" alt="@Model.ProductName" class="review-product-thumb" />
+                    <div>
+                        <div class="fw-semibold">@Model.ProductName</div>
+                        <div class="text-muted small">Sipariş #@Model.OrderId</div>
+                    </div>
+                </div>
+                <form asp-action="Create" method="post">
+                    <input type="hidden" asp-for="ProductId" />
+                    <input type="hidden" asp-for="OrderId" />
+                    <input type="hidden" asp-for="ProductName" />
+                    <input type="hidden" asp-for="ProductImageUrl" />
+                    <input type="hidden" asp-for="Rating" id="ratingInput" />
+                    <div class="mb-4">
+                        <label class="form-label text-center d-block fw-semibold">Puanınız</label>
+                        <div class="star-rating" id="starRating">
+                            <i class="fa-solid fa-star star" data-rating="1"></i>
+                            <i class="fa-solid fa-star star" data-rating="2"></i>
+                            <i class="fa-solid fa-star star" data-rating="3"></i>
+                            <i class="fa-solid fa-star star" data-rating="4"></i>
+                            <i class="fa-solid fa-star star" data-rating="5"></i>
+                        </div>
+                        <div class="text-center text-muted small" id="ratingText">Puan vermek için yıldızlara tıklayın</div>
+                        <span asp-validation-for="Rating" class="text-danger d-block text-center"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Comment" class="form-label fw-semibold">Yorumunuz (İsteğe Bağlı)</label>
+                        <textarea asp-for="Comment" class="form-control" rows="5" placeholder="Ürün hakkındaki düşüncelerinizi paylaşın..."></textarea>
+                        <span asp-validation-for="Comment" class="text-danger"></span>
+                        <div class="form-text">Maksimum 1000 karakter</div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" asp-for="ShowFullName" class="form-check-input" id="showFullName" />
+                            <label class="form-check-label" for="showFullName">
+                                Adım soyadım tam olarak görünsün
+                                <small class="text-muted d-block">İşaretli değilse: "Ke** Tu***" şeklinde gözükecek</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="fa fa-paper-plane me-2"></i>@(ViewBag.IsEdit ? "Yorumu Güncelle" : "Yorumu Gönder")
+                        </button>
+                        <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@Model.OrderId" class="btn btn-outline-secondary">İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('starRating');
+  const ratingInput = document.getElementById('ratingInput');
+  const ratingText = document.getElementById('ratingText');
+  const texts = ['Çok Kötü','Kötü','Orta','İyi','Mükemmel'];
+
+  let current = parseInt(ratingInput.value || '0', 10);
+
+  function paint(r) {
+    container.querySelectorAll('.star').forEach((el, i) => {
+      el.classList.toggle('active', i < r);
+    });
+    if (r > 0) {
+      ratingText.textContent = texts[r-1];
+      ratingText.style.color = '#ffc107';
+      ratingText.style.fontWeight = '600';
+    } else {
+      ratingText.textContent = 'Puan vermek için yıldızlara tıklayın';
+      ratingText.style.color = '';
+      ratingText.style.fontWeight = '';
+    }
+  }
+
+  paint(current);
+
+  // tek bir dinleyici yeter
+  container.addEventListener('click', (e) => {
+    const star = e.target.closest('.star');
+    if (!star) return;
+    current = parseInt(star.dataset.rating, 10);
+    ratingInput.value = String(current);   // <-- model binding için kritik
+    paint(current);
+  });
+
+  container.addEventListener('mousemove', (e) => {
+    const star = e.target.closest('.star');
+    if (star) paint(parseInt(star.dataset.rating, 10));
+  });
+  container.addEventListener('mouseleave', () => paint(current));
+});
+</script>

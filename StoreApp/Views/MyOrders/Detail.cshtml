@@ -119,20 +119,30 @@
                         {
                             imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
                         }
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center">
-                                <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3" loading="lazy" width="48" height="48" />
-                                <div>
-                                    <div class="fw-semibold">
-                                        @line.Product?.ProductName
-                                        @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
-                                    </div>
-                                    <div class="text-muted small">
-                                        @line.Quantity × @unit.ToString("C2")
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex align-items-center flex-grow-1">
+                                    <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3" loading="lazy" width="48" height="48" />
+                                    <div>
+                                        <div class="fw-semibold">
+                                            @line.Product?.ProductName
+                                            @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
+                                        </div>
+                                        <div class="text-muted small">
+                                            @line.Quantity × @unit.ToString("C2")
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="fw-semibold">@lineTotal.ToString("C2")</div>
                             </div>
-                            <div class="fw-semibold">@lineTotal.ToString("C2")</div>
+                            @if (Model.Delivered && line.Product != null)
+                            {
+                                <div class="mt-2">
+                                    <a asp-controller="Review" asp-action="Create" asp-route-productId="@line.Product.ProductId" asp-route-orderId="@Model.OrderId" class="btn btn-sm btn-outline-warning">
+                                        <i class="fa fa-star me-1"></i> Değerlendir
+                                    </a>
+                                </div>
+                            }
                         </li>
                     }
                     <li class="list-group-item d-flex justify-content-between">

@@ -1,45 +1,67 @@
 @model Product
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
+@functions {
+    string GetDisplayName(Review review)
+    {
+        if (review.ShowFullName)
+        {
+            // UserProfile'dan tam adı al
+            var profile = ViewBag.UserProfiles as Dictionary<string, string>;
+            if (profile != null && profile.ContainsKey(review.UserId))
+            {
+                return profile[review.UserId];
+            }
+            return review.User?.Email?.Split('@').FirstOrDefault() ?? "Kullanıcı";
+        }
+        else
+        {
+            // İlk iki harf + yıldız
+            var profile = ViewBag.UserProfiles as Dictionary<string, string>;
+            string fullName = "Kullanıcı";
+            if (profile != null && profile.ContainsKey(review.UserId))
+            {
+                fullName = profile[review.UserId];
+            }
+            else if (review.User?.Email != null)
+            {
+                fullName = review.User.Email.Split('@').FirstOrDefault() ?? "Kullanıcı";
+            }
+            var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 2)
+            {
+                var firstName = parts[0].Length >= 2 ? parts[0].Substring(0, 2) + new string('*', parts[0].Length - 2) : parts[0];
+                var lastName = parts[1].Length >= 2 ? parts[1].Substring(0, 2) + new string('*', parts[1].Length - 2) : parts[1];
+                return $"{firstName} {lastName}";
+            }
+            return fullName.Length >= 2 ? fullName.Substring(0, 2) + "***" : fullName;
+        }
+    }
+}
 <div class="container py-4">
     <h1 class="display-6 text-center mb-4">@Model.ProductName</h1>
-
     @if (TempData["CartError"] is string err && !string.IsNullOrWhiteSpace(err))
     {
         <div class="alert alert-warning text-center" role="alert">@err</div>
     }
-
     <div class="row g-4 align-items-start">
-        <!-- ✅ FOTOĞRAF GALERİSİ -->
         <div class="col-lg-6">
             <div class="product-gallery">
-                <!-- Ana Fotoğraf Container -->
                 <div class="main-image-container position-relative">
                     @{
                         var images = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ProductImage>();
                         var mainImage = images.FirstOrDefault(i => i.IsMain) ?? images.FirstOrDefault();
                         var mainImageUrl = mainImage?.ImageUrl ?? Model.ImageUrl ?? "/images/default.jpg";
                     }
-                    
-                    <!-- Büyüteç İkonu -->
                     <div id="zoomIcon" class="zoom-icon">
                         <i class="fa fa-search-plus"></i>
                     </div>
-
-                    <!-- Ana Resim Wrapper (Zoom için) -->
                     <div id="imageWrapper" class="image-zoom-wrapper">
-                        <img id="mainImage" class="img-fluid rounded shadow-sm w-100" 
-                             src="@mainImageUrl" 
-                             alt="@Model.ProductName"
-                             style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
-                        
-                        <!-- Büyüteç Lens -->
+                        <img id="mainImage" class="img-fluid rounded shadow-sm w-100" src="@mainImageUrl" alt="@Model.ProductName" style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
                         <div id="zoomLens" class="zoom-lens"></div>
                     </div>
-
-                    <!-- Büyütülmüş Görüntü Container -->
                     <div id="zoomResult" class="zoom-result"></div>
-                    
                     @if (images.Count > 1)
                     {
                         <button id="prevBtn" class="gallery-nav-btn gallery-nav-left">
@@ -50,128 +72,199 @@
                         </button>
                     }
                 </div>
-
-                <!-- Küçük Resim Listesi -->
                 @if (images.Count > 1)
                 {
                     <div class="thumbnail-container mt-3 d-flex gap-2 justify-content-center flex-wrap">
                         @for (int i = 0; i < images.Count; i++)
                         {
                             var img = images[i];
-                            <img src="@img.ImageUrl" 
-                                 class="thumbnail @(i == 0 ? "active" : "")" 
-                                 alt="@Model.ProductName"
-                                 data-index="@i"
-                                 style="width:80px; height:80px; object-fit:cover; cursor:pointer; border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
+                            <img src="@img.ImageUrl" class="thumbnail @(i == 0 ? "active" : "")" alt="@Model.ProductName" data-index="@i" style="width:80px; height:80px; object-fit:cover; cursor:pointer; border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
                         }
                     </div>
                 }
             </div>
         </div>
-
-        <!-- ÜRÜN BİLGİLERİ -->
         <div class="col-lg-6">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <div class="fs-4 text-primary fw-semibold m-0">
                     @Model.Price.ToString("c")
                 </div>
-
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     var isFavorite = ViewBag.IsFavorite ?? false;
                     <form class="m-0 p-0 d-inline js-fav-form" id="favForm-@Model.ProductId">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="productId" value="@Model.ProductId" />
-                        <button type="button"
-                                class="btn p-0 border-0 bg-transparent js-fav-btn"
-                                data-url="@Url.Action("ToggleAjax","Favorites")"
-                                data-id="@Model.ProductId"
-                                aria-pressed="@(isFavorite.ToString().ToLower())"
-                                style="line-height:1;">
-                            <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
-                               style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+                        <button type="button" class="btn p-0 border-0 bg-transparent js-fav-btn" data-url="@Url.Action("ToggleAjax","Favorites")" data-id="@Model.ProductId" aria-pressed="@(isFavorite.ToString().ToLower())" style="line-height:1;">
+                            <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg" style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
                         </button>
                     </form>
                 }
             </div>
-
+            @{
+                var avgRating = Model.Reviews?.Any(r => r.IsApproved) == true ? Model.Reviews.Where(r => r.IsApproved).Average(r => r.Rating) : 0;
+                var reviewCount = Model.Reviews?.Count(r => r.IsApproved) ?? 0;
+            }
+            <div class="d-flex align-items-center gap-1 mb-3">
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (reviewCount > 0)
+                    {
+                        if (i <= Math.Floor(avgRating))
+                        {
+                            <i class="fa fa-star" style="color: #ffc107; font-size: 1.2rem;"></i>
+                        }
+                        else if (i == Math.Ceiling(avgRating) && avgRating % 1 != 0)
+                        {
+                            <i class="fa fa-star-half-alt" style="color: #ffc107; font-size: 1.2rem;"></i>
+                        }
+                        else
+                        {
+                            <i class="fa fa-star" style="color: #ddd; font-size: 1.2rem;"></i>
+                        }
+                    }
+                    else
+                    {
+                        <i class="fa fa-star" style="color: #ddd; font-size: 1.2rem;"></i>
+                    }
+                }
+                @if (reviewCount > 0)
+                {
+                    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount Değerlendirme)</span>
+                }
+                else
+                {
+                    <span class="text-muted small ms-2">(Henüz Değerlendirme Yok)</span>
+                }
+            </div>
             <form id="addToCartForm" class="mt-2" method="post" asp-page="/cart">
                 @Html.AntiForgeryToken()
                 <input type="hidden" asp-for="ProductId" />
                 <input type="hidden" name="returnUrl" value="@ViewContext.HttpContext.Request.PathAndQuery()" />
-
-               @{
-    // 1) Yalnızca RequiresSize true ise bedenlerle ilgilen
-    var requires = Model.RequiresSize;
-
-    // 2) Listeyi oluştur
-    List<string> sizeList = new();
-    if (requires)
-    {
-        var csv = (Model.SizeOptionsCsv ?? "").Trim();
-        sizeList = string.IsNullOrWhiteSpace(csv)
-            ? new List<string> { "XS","S","M","L","XL" } // varsayılan sadece requires=true ve csv boşsa
-            : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
-    }
-
-    // 3) Göster/gizle koşulu
-    var showSizes = requires && sizeList.Count > 0;
-}
-
-               @if (showSizes)
-{
-    <div class="mb-3">
-        <div class="small text-muted mb-2">Beden Seçin</div>
-        <fieldset class="size-list d-flex flex-wrap gap-2" role="radiogroup" aria-label="Beden Seçimi">
-            @foreach (var s in sizeList)
-            {
-                var id = $"size_{s}";
-                <div class="size-chip">
-                    <input type="radio" id="@id" name="size" value="@s" class="visually-hidden" />
-                    <label for="@id" class="size-btn">@s</label>
-                </div>
-            }
-        </fieldset>
-    </div>
-}
-
+                @{
+                    var requires = Model.RequiresSize;
+                    List<string> sizeList = new();
+                    if (requires)
+                    {
+                        var csv = (Model.SizeOptionsCsv ?? "").Trim();
+                        sizeList = string.IsNullOrWhiteSpace(csv) ? new List<string> { "XS","S","M","L","XL" } : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    }
+                    var showSizes = requires && sizeList.Count > 0;
+                }
+                @if (showSizes)
+                {
+                    <div class="mb-3">
+                        <div class="small text-muted mb-2">Beden Seçin</div>
+                        <fieldset class="size-list d-flex flex-wrap gap-2" role="radiogroup" aria-label="Beden Seçimi">
+                            @foreach (var s in sizeList)
+                            {
+                                var id = $"size_{s}";
+                                <div class="size-chip">
+                                    <input type="radio" id="@id" name="size" value="@s" class="visually-hidden" />
+                                    <label for="@id" class="size-btn">@s</label>
+                                </div>
+                            }
+                        </fieldset>
+                    </div>
+                }
                 <div class="d-flex align-items-center gap-2">
-                    <button id="addToCartBtn"
-        type="submit"
-        class="btn btn-navy btn-pill px-4"
-        @(Model.RequiresSize ? "disabled" : null)>
-    <i class="fa fa-cart-plus me-1"></i> Sepete Ekle
-</button>
+                    <button id="addToCartBtn" type="submit" class="btn btn-navy btn-pill px-4" @(Model.RequiresSize ? "disabled" : null)>
+                        <i class="fa fa-cart-plus me-1"></i> Sepete Ekle
+                    </button>
                 </div>
-                <!-- Ürün Bilgileri kutusu -->
-<div class="mt-3">
-  <div class="card border-0 shadow-sm product-info">
-    <div class="card-header bg-white fw-semibold">Ürün Bilgileri</div>
-    <div class="card-body">
-      @if (!string.IsNullOrWhiteSpace(Model?.Summary))
-      {
-        <div class="small text-muted" style="white-space: pre-line; line-height:1.7;">
-          @Model.Summary
-        </div>
-      }
-      else
-      {
-        <p class="mb-0 text-muted fst-italic">Bu ürün için detaylar yakında eklenecek.</p>
-      }
-    </div>
-  </div>
-</div>
-
-
+                <div class="mt-3">
+                    <div class="card border-0 shadow-sm product-info">
+                        <div class="card-header bg-white fw-semibold">Ürün Bilgileri</div>
+                        <div class="card-body">
+                            @if (!string.IsNullOrWhiteSpace(Model?.Summary))
+                            {
+                                <div class="small text-muted" style="white-space: pre-line; line-height:1.7;">
+                                    @Model.Summary
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted fst-italic">Bu ürün için detaylar yakında eklenecek.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
 </div>
-
 @await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
-
-
-
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h4 class="mb-4">Müşteri Değerlendirmeleri</h4>
+            @{
+                var approvedReviews = Model.Reviews?.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).ToList() ?? new List<Review>();
+            }
+            @if (reviewCount > 0)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body text-center py-4">
+                        <div class="display-4 fw-bold text-primary mb-2">@avgRating.ToString("0.0")</div>
+                        <div class="mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Math.Floor(avgRating))
+                                {
+                                    <i class="fa fa-star" style="color: #ffc107; font-size: 1.5rem;"></i>
+                                }
+                                else if (i == Math.Ceiling(avgRating) && avgRating % 1 != 0)
+                                {
+                                    <i class="fa fa-star-half-alt" style="color: #ffc107; font-size: 1.5rem;"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa fa-star" style="color: #ddd; font-size: 1.5rem;"></i>
+                                }
+                            }
+                        </div>
+                        <div class="text-muted">@reviewCount Değerlendirme</div>
+                    </div>
+                </div>
+                <div class="reviews-list">
+                    @foreach (var review in approvedReviews)
+                    {
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-semibold">@GetDisplayName(review)</div>
+                                        <div class="small text-muted">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+                                    </div>
+                                    <div>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fa fa-star" style="color: @(i <= review.Rating ? "#ffc107" : "#ddd");"></i>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(review.Comment))
+                                {
+                                    <p class="mb-0" style="white-space: pre-line;">@review.Comment</p>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5 text-muted">
+                        <i class="fa fa-star-o fa-3x mb-3 opacity-50"></i>
+                        <div>Bu ürün için henüz değerlendirme yapılmamış.</div>
+                        <div class="small mt-2">İlk değerlendirmeyi siz yapın!</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -183,20 +276,13 @@
             const zoomLens = document.getElementById('zoomLens');
             const zoomResult = document.getElementById('zoomResult');
             const zoomIcon = document.getElementById('zoomIcon');
-            
             if (!mainImage) return;
-            
             let currentIndex = 0;
             const totalImages = thumbnails.length;
             let isZoomActive = false;
-            
-            // ✅ BÜYÜTEÇ AÇMA/KAPAMA
             imageWrapper.addEventListener('click', function(e) {
-                // Ok butonlarına tıklanırsa zoom toggle yapma
                 if (e.target.closest('.gallery-nav-btn')) return;
-                
                 isZoomActive = !isZoomActive;
-                
                 if (isZoomActive) {
                     imageWrapper.classList.add('zoom-active');
                     initZoom();
@@ -205,29 +291,21 @@
                     removeZoomListeners();
                 }
             });
-            
             let moveHandler = null;
-            
             function initZoom() {
                 let cx = zoomResult.offsetWidth / zoomLens.offsetWidth;
                 let cy = zoomResult.offsetHeight / zoomLens.offsetHeight;
-                
                 zoomResult.style.backgroundImage = `url('${mainImage.src}')`;
                 zoomResult.style.backgroundSize = (mainImage.width * cx) + "px " + (mainImage.height * cy) + "px";
-                
                 moveHandler = function(e) {
                     moveLens(e);
                 };
-                
                 imageWrapper.addEventListener('mousemove', moveHandler);
-                
                 function moveLens(e) {
                     e.preventDefault();
-                    
                     let pos = getCursorPos(e);
                     let x = pos.x - (zoomLens.offsetWidth / 2);
                     let y = pos.y - (zoomLens.offsetHeight / 2);
-                    
                     if (x > imageWrapper.offsetWidth - zoomLens.offsetWidth) {
                         x = imageWrapper.offsetWidth - zoomLens.offsetWidth;
                     }
@@ -236,13 +314,10 @@
                         y = imageWrapper.offsetHeight - zoomLens.offsetHeight;
                     }
                     if (y < 0) { y = 0; }
-                    
                     zoomLens.style.left = x + "px";
                     zoomLens.style.top = y + "px";
-                    
                     zoomResult.style.backgroundPosition = "-" + (x * cx) + "px -" + (y * cy) + "px";
                 }
-                
                 function getCursorPos(e) {
                     let a, x = 0, y = 0;
                     e = e || window.event;
@@ -254,93 +329,69 @@
                     return {x : x, y : y};
                 }
             }
-            
             function removeZoomListeners() {
                 if (moveHandler) {
                     imageWrapper.removeEventListener('mousemove', moveHandler);
                     moveHandler = null;
                 }
             }
-            
             function updateImage(index) {
                 if (thumbnails.length === 0) return;
-                
-                // Zoom'u kapat
                 isZoomActive = false;
                 imageWrapper.classList.remove('zoom-active');
                 removeZoomListeners();
-                
                 mainImage.style.opacity = '0';
                 setTimeout(() => {
                     mainImage.src = thumbnails[index].src;
                     mainImage.style.opacity = '1';
-                    
                     thumbnails.forEach(t => t.classList.remove('active'));
                     thumbnails[index].classList.add('active');
                     currentIndex = index;
                 }, 150);
             }
-            
-            // Thumbnail tıklama
             thumbnails.forEach((thumb, index) => {
                 thumb.addEventListener('click', () => updateImage(index));
             });
-            
-            // Önceki/Sonraki butonlar
             if (prevBtn) {
                 prevBtn.addEventListener('click', () => {
                     const newIndex = (currentIndex - 1 + totalImages) % totalImages;
                     updateImage(newIndex);
                 });
             }
-            
             if (nextBtn) {
                 nextBtn.addEventListener('click', () => {
                     const newIndex = (currentIndex + 1) % totalImages;
                     updateImage(newIndex);
                 });
             }
-            
-            // Klavye navigasyonu
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
                 if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
             });
-
-            // Beden seçimi
             const requires = @(Model.RequiresSize.ToString().ToLowerInvariant());
             const form = document.getElementById('addToCartForm');
             if (!form) return;
-
             const radios = form.querySelectorAll('input[name="size"]');
             const button = document.getElementById('addToCartBtn');
-
             if (requires && radios.length > 0) {
                 function syncState() {
                     const anyChecked = Array.from(radios).some(r => r.checked);
                     button.disabled = !anyChecked;
                 }
-
                 radios.forEach(r => r.addEventListener('change', syncState));
                 syncState();
             }
         });
-
-        // Favoriler
         document.addEventListener('click', async function (e) {
             const btn = e.target.closest('.js-fav-btn');
             if (!btn) return;
-
             const form = btn.closest('.js-fav-form');
             const icon = btn.querySelector('.fav-icon');
-
             if (!form || !icon) return;
-
             const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
             const token = tokenInput ? tokenInput.value : null;
             const url = btn.getAttribute('data-url');
             const productId = Number(btn.getAttribute('data-id') || 0);
-
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -353,18 +404,15 @@
                     },
                     body: JSON.stringify({ ProductId: productId })
                 });
-
                 if (!res.ok) {
                     console.error('Fav toggle HTTP error', res.status);
                     return;
                 }
-
                 const ct = res.headers.get('content-type') || '';
                 if (!ct.includes('application/json')) {
                     window.location.reload();
                     return;
                 }
-
                 const data = await res.json();
                 if (data?.isFavorite === true) {
                     icon.classList.remove('fa-regular');

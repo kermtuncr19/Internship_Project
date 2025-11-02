@@ -1,0 +1,76 @@
+@model IEnumerable<Entities.Models.Review>
+
+@{
+    ViewData["Title"] = "Yorum Yönetimi";
+}
+
+<div class="container my-4">
+    <h3 class="mb-3 text-white">Yorum Yönetimi</h3>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success">@TempData["success"]</div>
+    }
+
+    <table class="table table-bordered table-striped bg-white align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Ürün</th>
+                <th>Kullanıcı</th>
+                <th>Puan</th>
+                <th>Yorum</th>
+                <th>Tarih</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>
+                    <img src="@r.Product?.ImageUrl" alt="" style="width:50px;height:50px;object-fit:cover;border-radius:6px;margin-right:6px;" />
+                    <span>@r.Product?.ProductName</span>
+                </td>
+                <td>@r.User?.UserName</td>
+                <td>
+                    <span class="text-warning">@string.Concat(Enumerable.Repeat("★", r.Rating))</span>
+                </td>
+                <td style="max-width:350px;white-space:pre-wrap;">@r.Comment</td>
+                <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                <td>
+                    @if (r.IsApproved)
+                    {
+                        <span class="badge bg-success">Onaylı</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Bekliyor</span>
+                    }
+                </td>
+                <td>
+                    @if (!r.IsApproved)
+                    {
+                        <form asp-action="Approve" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@r.ReviewId" />
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fa fa-check"></i> Onayla
+                            </button>
+                        </form>
+                        <form asp-action="Reject" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@r.ReviewId" />
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                <i class="fa fa-trash"></i> Sil
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
