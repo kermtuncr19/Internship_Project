@@ -1,0 +1,17 @@
+@{
+    var success = TempData["success"] as string;
+    var error   = TempData["error"]   as string;
+
+    // Aynı request içinde tekrar gösterilmesin:
+    if (success != null) TempData.Remove("success");
+    if (error   != null) TempData.Remove("error");
+}
+
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert alert-success">@success</div>
+}
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger">@error</div>
+}

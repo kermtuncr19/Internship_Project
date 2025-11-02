@@ -11,6 +11,8 @@ namespace Repositories.Config
             builder.HasKey(c => c.CategoryId);
             builder.Property(c => c.CategoryName).IsRequired();
 
+            builder.HasIndex(c => c.CategoryName).IsUnique();
+
             builder.HasData(
                  new Category() { CategoryId = 1, CategoryName = "Futbol" },
                 new Category() { CategoryId = 2, CategoryName = "Basketbol" },

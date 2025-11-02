@@ -23,7 +23,9 @@
             </div>
             @RenderBody()
         </div>
+         <partial name="_Flash" />
     </main>
+   
     <footer>
         @RenderSection("Footer", false)
         @await Html.PartialAsync("_Footer")
@@ -35,6 +37,8 @@
     <script asp-append-version="true" src="~/js/site.js"></script>
     <script asp-append-version="true" src="~/lib/font-awesome/js/all.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    
+
 </body>
 
 </html>

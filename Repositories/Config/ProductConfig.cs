@@ -11,11 +11,17 @@ namespace Repositories.Config
             builder.HasKey(p => p.ProductId);
             builder.Property(p => p.ProductName).IsRequired();
             builder.Property(p => p.Price).IsRequired();
-            
+
             // ✅ Images koleksiyonu için ilişki
             builder.HasMany(p => p.Images)
                 .WithOne(pi => pi.Product)
                 .HasForeignKey(pi => pi.ProductId);
+                
+            builder
+            .HasOne(p => p.Category)
+            .WithMany(c => c.Products)
+            .HasForeignKey(p => p.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict); 
 
             builder.HasData(
                 new Product() { ProductId = 1, CategoryId = 1, ImageUrl = "/images/forma3.jpg", ProductName = "Fenerbahçe 2025/26 Lacivert Forma", Price = 4249, ShowCase = true },
