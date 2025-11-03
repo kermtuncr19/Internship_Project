@@ -1,6 +1,7 @@
 /* Lacivert tonu */
 :root {
   --navy: #0d1b4c;
+  --yellow: #ffea00;
 }
 
 /* SOL menü: Ürünler / Kategoriler / İletişim -> lacivert metin + ikon */
@@ -84,6 +85,18 @@
   background-color: var(--navy) !important;
   color: #fff !important;
   border-color: var(--navy) !important;
+}
+
+.btn-outline-warning {
+  color: var(--yellow) !important;
+  border-color: var(--yellow) !important;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+  background-color: var(--yellow) !important;
+  color: #0d1b4c !important;
+  border-color: var(--yellow) !important;
 }
 
 .tooltip-btn {

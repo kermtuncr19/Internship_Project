@@ -12,39 +12,37 @@
         <div class="orders-list">
             @foreach (var o in Model)
             {
-                var total = o.Lines.Sum(l => l.Product.Price * l.Quantity);
+                var total = o.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+
                 string statusBadge = "";
                 string statusText = "";
-                if (o.Cancelled)
-                {
-                    statusBadge = "bg-danger";
-                    statusText = "İptal Edildi";
-                }
-                else if (o.Delivered)
-                {
-                    statusBadge = "bg-success";
-                    statusText = "Teslim Edildi";
-                }
-                else if (o.InTransit)
-                {
-                    statusBadge = "bg-info";
-                    statusText = "Kargoda";
-                }
-                else if (o.Preparing)
-                {
-                    statusBadge = "bg-warning text-dark";
-                    statusText = "Hazırlanıyor";
-                }
-                else if (o.Shipped)
-                {
-                    statusBadge = "bg-primary";
-                    statusText = "Onaylandı";
-                }
-                else
-                {
-                    statusBadge = "bg-secondary";
-                    statusText = "Onay Bekliyor";
-                }
+
+                if (o.CancelledByUser) { statusBadge = "bg-danger"; statusText = "İptal Edildi (Sizin tarafınızdan)"; }
+                else if (o.Cancelled)  { statusBadge = "bg-danger"; statusText = "İptal Edildi"; }
+                else if (o.Delivered)  { statusBadge = "bg-success"; statusText = "Teslim Edildi"; }
+                else if (o.InTransit)  { statusBadge = "bg-info";    statusText = "Kargoda"; }
+                else if (o.Preparing)  { statusBadge = "bg-warning text-dark"; statusText = "Hazırlanıyor"; }
+                else if (o.Shipped)    { statusBadge = "bg-primary"; statusText = "Onaylandı"; }
+                else                   { statusBadge = "bg-secondary"; statusText = "Onay Bekliyor"; }
+
+                // --- İade özetleri (sipariş seviyesinde) ---
+                var rrAll = o.ReturnRequests ?? new List<Entities.Models.ReturnRequest>();
+                var rrPending   = rrAll.Count(r => r.Status == Entities.Models.ReturnStatus.Pending);
+                var rrApproved  = rrAll.Count(r => r.Status == Entities.Models.ReturnStatus.Approved);
+                var rrRejected  = rrAll.Count(r => r.Status == Entities.Models.ReturnStatus.Rejected);
+                var rrCompleted = rrAll.Count(r => r.Status == Entities.Models.ReturnStatus.Completed);
+
+                var hasActiveReturn = rrPending + rrApproved > 0;
+                var canReturn = o.Delivered && !o.Cancelled && o.DeliveredAt.HasValue && DateTime.UtcNow <= o.DeliveredAt.Value.AddDays(15) && !hasActiveReturn;
+                var canCancel = !o.Cancelled && !o.CancelledByUser && !o.Preparing && !o.InTransit && !o.Delivered;
+
+                // --- Satır bazında en güncel iade statüsü (CartLineId -> Status) ---
+                var lineReturnStatus = rrAll
+                    .OrderByDescending(r => r.ReturnRequestId)
+                    .SelectMany(r => r.Lines.Select(rl => new { rl.CartLineId, r.Status }))
+                    .GroupBy(x => x.CartLineId)
+                    .ToDictionary(g => g.Key, g => g.First().Status);
+
                 <div class="order-card mb-3">
                     <div class="order-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -52,11 +50,24 @@
                                 <span class="fw-semibold">Sipariş #@o.OrderId</span>
                                 <span class="text-muted ms-3 small">@o.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
                             </div>
-                            <div>
+                            <div class="d-flex align-items-center">
                                 <span class="badge @statusBadge">@statusText</span>
+
+                                @* Sipariş üstü iade özet rozetleri *@
+                                @if (rrAll.Any())
+                                {
+                                    <span class="badge text-bg-light ms-2">
+                                        <i class="fa fa-undo me-1"></i> İade Talebi: @rrAll.Count
+                                    </span>
+                                    @if (rrPending  > 0) { <span class="badge bg-warning text-dark ms-1">Bekleyen: @rrPending</span> }
+                                    @if (rrApproved > 0) { <span class="badge bg-success ms-1">Onaylı: @rrApproved</span> }
+                                    @if (rrRejected > 0) { <span class="badge bg-danger ms-1">Reddedilen: @rrRejected</span> }
+                                    @if (rrCompleted> 0) { <span class="badge bg-primary ms-1">Tamamlanan: @rrCompleted</span> }
+                                }
                             </div>
                         </div>
                     </div>
+
                     <div class="order-body">
                         <div class="row g-3">
                             @foreach (var line in o.Lines)
@@ -73,6 +84,44 @@
                                         imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
                                     }
                                 }
+
+                                // Satırın iade statüsünü çek
+                                Entities.Models.ReturnStatus? lineSt = null;
+                                if (lineReturnStatus.TryGetValue(line.CartLineId, out var stVal))
+                                {
+                                    lineSt = stVal;
+                                }
+
+                                // Rozet metni/sınıfı
+                                string lineBadgeClass = "";
+                                string lineBadgeText  = "";
+                                if (lineSt.HasValue)
+                                {
+                                    switch (lineSt.Value)
+                                    {
+                                        case Entities.Models.ReturnStatus.Pending:
+                                            lineBadgeClass = "badge bg-warning text-dark ms-2";
+                                            lineBadgeText  = "İade: Beklemede";
+                                            break;
+                                        case Entities.Models.ReturnStatus.Approved:
+                                            lineBadgeClass = "badge bg-success ms-2";
+                                            lineBadgeText  = "İade: Onaylandı";
+                                            break;
+                                        case Entities.Models.ReturnStatus.Rejected:
+                                            lineBadgeClass = "badge bg-danger ms-2";
+                                            lineBadgeText  = "İade: Reddedildi";
+                                            break;
+                                        case Entities.Models.ReturnStatus.Completed:
+                                            lineBadgeClass = "badge bg-primary ms-2";
+                                            lineBadgeText  = "İade: Tamamlandı";
+                                            break;
+                                    }
+                                }
+
+                                // Değerlendir butonunun gizlenme kuralı:
+                                var hideReview = lineSt == Entities.Models.ReturnStatus.Approved
+                                              || lineSt == Entities.Models.ReturnStatus.Completed;
+
                                 <div class="col-md-6">
                                     <div class="order-product-item">
                                         <div class="d-flex align-items-center mb-2">
@@ -80,7 +129,13 @@
                                                 <img src="@imgSrc" alt="@line.Product?.ProductName" class="img-fluid rounded" loading="lazy" />
                                             </div>
                                             <div class="flex-grow-1">
-                                                <div class="fw-semibold mb-1">@line.Product?.ProductName</div>
+                                                <div class="fw-semibold mb-1">
+                                                    @line.Product?.ProductName
+                                                    @if (!string.IsNullOrWhiteSpace(lineBadgeText))
+                                                    {
+                                                        <span class="@lineBadgeClass">@lineBadgeText</span>
+                                                    }
+                                                </div>
                                                 <div class="text-muted small">
                                                     @if (!string.IsNullOrWhiteSpace(line.Size))
                                                     {
@@ -93,10 +148,14 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        @if (o.Delivered && line.Product != null)
+
+                                        @if (o.Delivered && line.Product != null && !hideReview)
                                         {
                                             <div class="mt-2">
-                                                <a asp-controller="Review" asp-action="Create" asp-route-productId="@line.Product.ProductId" asp-route-orderId="@o.OrderId" class="btn btn-sm btn-outline-warning">
+                                                <a asp-controller="Review" asp-action="Create"
+                                                   asp-route-productId="@line.Product.ProductId"
+                                                   asp-route-orderId="@o.OrderId"
+                                                   class="btn btn-sm btn-warning">
                                                     <i class="fa fa-star me-1"></i> Değerlendir
                                                 </a>
                                             </div>
@@ -106,17 +165,38 @@
                             }
                         </div>
                     </div>
+
                     <div class="order-footer">
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <span class="text-muted small">Toplam Tutar:</span>
                                 <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
                             </div>
-                            <div class="d-flex gap-2">
-                                
-                                <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm">
                                     <i class="fa fa-eye me-1"></i> Detay Gör
                                 </a>
+
+                                @if (rrAll.Any())
+                                {
+                                    <a asp-action="MyReturns" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fa fa-list me-1"></i> İade Taleplerim
+                                    </a>
+                                }
+
+                                @if (canReturn)
+                                {
+                                    <a asp-action="Return" asp-route-id="@o.OrderId" class="btn btn-warning btn-sm">
+                                        <i class="fa fa-undo me-1"></i> İade Et
+                                    </a>
+                                }
+
+                                @if (canCancel)
+                                {
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="showCancelModal(@o.OrderId)">
+                                        <i class="fa fa-times me-1"></i> İptal Et
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>
@@ -125,3 +205,86 @@
         </div>
     }
 </div>
+
+<!-- İptal Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sipariş İptal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cancelForm">
+                    <input type="hidden" id="cancelOrderId" />
+                    <div class="mb-3">
+                        <label class="form-label">İptal Nedeni <span class="text-danger">*</span></label>
+                        <select class="form-select" id="cancelReason" required>
+                            <option value="">Seçiniz...</option>
+                            <option value="Yanlış ürün seçtim">Yanlış ürün seçtim</option>
+                            <option value="Daha ucuz buldum">Daha ucuz buldum</option>
+                            <option value="Teslimat süresi uzun">Teslimat süresi uzun</option>
+                            <option value="Fikrim değişti">Fikrim değişti</option>
+                            <option value="Diğer">Diğer</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        Sipariş hazırlanma aşamasına geçtikten sonra iptal edemezsiniz.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-danger" onclick="confirmCancel()">İptal Et</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let cancelModal;
+document.addEventListener('DOMContentLoaded', function() {
+    cancelModal = new bootstrap.Modal(document.getElementById('cancelModal'));
+});
+function showCancelModal(orderId) {
+    document.getElementById('cancelOrderId').value = orderId;
+    document.getElementById('cancelReason').value = '';
+    cancelModal.show();
+}
+function confirmCancel() {
+    const orderId = document.getElementById('cancelOrderId').value;
+    const reason = document.getElementById('cancelReason').value;
+    if (!reason) {
+        Swal.fire('Hata', 'Lütfen iptal nedenini seçiniz.', 'error');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('id', orderId);
+    formData.append('reason', reason);
+    fetch('@Url.Action("CancelOrder", "MyOrders")', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            cancelModal.hide();
+            Swal.fire({ icon:'success', title:'Başarılı', text:data.message, timer:2000 })
+                .then(() => location.reload());
+        } else {
+            Swal.fire('Hata', data.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        Swal.fire('Hata', 'Bir hata oluştu.', 'error');
+    });
+}
+</script>
+
+@Html.AntiForgeryToken()

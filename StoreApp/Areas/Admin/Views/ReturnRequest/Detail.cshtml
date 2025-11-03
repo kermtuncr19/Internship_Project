@@ -1,0 +1,398 @@
+@model Entities.Models.ReturnRequest
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+@{
+    var statusBadge = Model.Status switch
+    {
+        Entities.Models.ReturnStatus.Pending => "bg-warning text-dark",
+        Entities.Models.ReturnStatus.Approved => "bg-success",
+        Entities.Models.ReturnStatus.Rejected => "bg-danger",
+        Entities.Models.ReturnStatus.Completed => "bg-primary",
+        _ => "bg-secondary"
+    };
+
+    var statusText = Model.Status switch
+    {
+        Entities.Models.ReturnStatus.Pending => "Değerlendiriliyor",
+        Entities.Models.ReturnStatus.Approved => "Onaylandı",
+        Entities.Models.ReturnStatus.Rejected => "Reddedildi",
+        Entities.Models.ReturnStatus.Completed => "Tamamlandı",
+        _ => "Bilinmiyor"
+    };
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fa fa-undo me-2"></i>
+            İade Talebi Detayı #@Model.ReturnRequestId
+        </h5>
+        <div class="d-flex gap-2">
+            <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+                <i class="fa fa-arrow-left me-1"></i> Listeye Dön
+            </a>
+            <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@Model.OrderId" class="btn btn-outline-primary btn-sm">
+                <i class="fa fa-shopping-cart me-1"></i> Siparişi Görüntüle
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Kolon: Talep Bilgileri -->
+        <div class="col-lg-8">
+            <div class="card shadow-soft mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Talep Bilgileri</h6>
+                    <span class="badge @statusBadge">@statusText</span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small mb-1">Talep Tarihi</label>
+                                <div class="fw-semibold">@Model.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="text-muted small mb-1">Sipariş No</label>
+                                <div class="fw-semibold">
+                                    <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@Model.OrderId">
+                                        #@Model.OrderId
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small mb-1">Müşteri Bilgileri</label>
+                        <div class="fw-semibold">@Model.Order?.Name</div>
+                        <div class="text-muted small">@Model.Order?.City / @Model.Order?.District</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small mb-1">İade Nedeni</label>
+                        <div class="alert alert-light mb-0">
+                            <strong>@Model.Reason</strong>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.DetailedReason))
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small mb-1">Detaylı Açıklama</label>
+                            <div class="border rounded p-3 bg-light">
+                                @Model.DetailedReason
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.ProcessedAt.HasValue)
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small mb-1">İşlem Tarihi</label>
+                            <div>@Model.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.AdminNotes))
+                    {
+                        <div class="mb-3">
+                            <label class="text-muted small mb-1">Admin Notu</label>
+                            <div class="alert alert-info mb-0">
+                                @Model.AdminNotes
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- İade Edilen Ürünler -->
+            <div class="card shadow-soft">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">İade Edilen Ürünler</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var line in Model.Lines)
+                    {
+                        var product = line.CartLine?.Product;
+                        var imgSrc = "/images/placeholders/product-thumb.png";
+                        
+                        if (!string.IsNullOrWhiteSpace(product?.ImageUrl))
+                        {
+                            if (product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || product.ImageUrl.StartsWith("/"))
+                            {
+                                imgSrc = product.ImageUrl;
+                            }
+                            else
+                            {
+                                imgSrc = Url.Content($"~/images/{product.ImageUrl}");
+                            }
+                        }
+
+                        var unitPrice = product?.Price ?? line.CartLine?.UnitPrice ?? 0m;
+                        var lineTotal = unitPrice * line.Quantity;
+
+                        <div class="list-group-item py-3">
+                            <div class="d-flex align-items-center">
+                                <img src="@imgSrc" alt="@product?.ProductName" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold mb-1">@product?.ProductName</div>
+                                    @if (!string.IsNullOrWhiteSpace(line.CartLine?.Size))
+                                    {
+                                        <div class="text-muted small mb-1">
+                                            Beden: <strong>@line.CartLine.Size</strong>
+                                        </div>
+                                    }
+                                    <div class="text-muted small">
+                                        Adet: <strong>@line.Quantity</strong>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-muted small">Birim Fiyat</div>
+                                    <div class="fw-semibold">@unitPrice.ToString("C2")</div>
+                                    <div class="text-primary fw-bold">@lineTotal.ToString("C2")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    <div class="list-group-item bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Toplam İade Tutarı</strong>
+                            <strong class="text-primary fs-5">
+                                @Model.Lines.Sum(l => ((l.CartLine?.Product?.Price ?? l.CartLine?.UnitPrice ?? 0m) * l.Quantity)).ToString("C2")
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Kolon: İşlemler -->
+        <div class="col-lg-4">
+            <div class="card shadow-soft mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">İşlem Durumu</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <i class="fa fa-circle text-success"></i>
+                            <div>
+                                <div class="small fw-semibold">Talep Oluşturuldu</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    @Model.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @if (Model.ProcessedAt.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <i class="fa fa-circle @(Model.Status == Entities.Models.ReturnStatus.Rejected ? "text-danger" : "text-success")"></i>
+                                <div>
+                                    <div class="small fw-semibold">@statusText</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        @Model.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Status == Entities.Models.ReturnStatus.Pending)
+            {
+                <div class="card shadow-soft mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">İşlemler</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="approveForm" method="post" asp-action="Approve" class="mb-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.ReturnRequestId" />
+                            <div class="mb-2">
+                                <label class="form-label small">Admin Notu (İsteğe Bağlı)</label>
+                                <textarea name="adminNotes" class="form-control form-control-sm" rows="2" placeholder="Onay ile ilgili not..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fa fa-check me-1"></i> İade Talebini Onayla
+                            </button>
+                        </form>
+
+                        <button type="button" class="btn btn-danger w-100" onclick="showRejectModal()">
+                            <i class="fa fa-times me-1"></i> İade Talebini Reddet
+                        </button>
+                    </div>
+                </div>
+            }
+
+            @if (Model.Status == Entities.Models.ReturnStatus.Approved)
+            {
+                <div class="card shadow-soft mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">İşlemler</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-success small mb-3">
+                            <i class="fa fa-info-circle me-1"></i>
+                            İade talebi onaylandı. Ürün iade alındığında işlemi tamamlayın.
+                        </div>
+                        <form id="completeForm" method="post" asp-action="Complete">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.ReturnRequestId" />
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fa fa-flag-checkered me-1"></i> İade İşlemini Tamamla
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <div class="card shadow-soft border-danger">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0 text-danger">Tehlikeli Bölge</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Bu işlem geri alınamaz!</p>
+                    <form id="deleteForm" method="post" asp-action="Delete">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.ReturnRequestId" />
+                        <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Bu iade talebini silmek istediğinize emin misiniz?')">
+                            <i class="fa fa-trash me-1"></i> İade Talebini Sil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Red Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">İade Talebini Reddet</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm" method="post" asp-action="Reject">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.ReturnRequestId" />
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        İade talebini reddetmek üzeresiniz. Lütfen red nedenini açıklayın.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Red Nedeni <span class="text-danger">*</span></label>
+                        <textarea name="adminNotes" class="form-control" rows="4" required placeholder="Örn: Ürün kullanılmış durumda, İade süresi dolmuş, vb."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa fa-times me-1"></i> Reddet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let rejectModal;
+document.addEventListener('DOMContentLoaded', function() {
+    rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+});
+
+function showRejectModal() {
+    rejectModal.show();
+}
+
+// Form submitlerini AJAX'a çevir
+document.querySelectorAll('#approveForm, #rejectForm, #completeForm, #deleteForm').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = this.querySelector('button[type="submit"]');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...';
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Başarılı',
+                    text: data.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    if (this.id === 'deleteForm') {
+                        window.location.href = '@Url.Action("Index", "ReturnRequest", new { area = "Admin" })';
+                    } else {
+                        location.reload();
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata',
+                    text: data.message
+                });
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Hata',
+                text: 'İşlem sırasında bir hata oluştu.'
+            });
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        });
+    });
+});
+</script>
+
+<style>
+.timeline {
+    position: relative;
+}
+.timeline-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    position: relative;
+}
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 20px;
+    bottom: -15px;
+    width: 2px;
+    background: #dee2e6;
+}
+.timeline-item i {
+    font-size: 0.6rem;
+    margin-top: 4px;
+}
+</style>

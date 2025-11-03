@@ -13,11 +13,12 @@ namespace Repositories
         private readonly IUserAddressRepository _userAddress;
         private readonly IFavoriteRepository _favorite;
         private readonly IProductImageRepository _productImageRepository;
+        private readonly IReturnRequestRepository _returnRequest;
 
 
         public RepositoryManager(IProductRepository productRepository, RepositoryContext context, ICategoryRepository categoryReposiitory, IOrderRepository orderRepository, IUserProfileRepository userProfile,
         IUserAddressRepository userAddress,
-        IFavoriteRepository favorite, IProductImageRepository productImageRepository)
+        IFavoriteRepository favorite, IProductImageRepository productImageRepository, IReturnRequestRepository returnRequest)
         {
             _productRepository = productRepository;
             _context = context;
@@ -27,6 +28,7 @@ namespace Repositories
             _userAddress = userAddress;
             _favorite = favorite;
             _productImageRepository = productImageRepository;
+            _returnRequest = returnRequest;
         }
 
         public IProductRepository Product => _productRepository;
@@ -42,6 +44,8 @@ namespace Repositories
         public IFavoriteRepository Favorite => _favorite;
 
         public IProductImageRepository ProductImage => _productImageRepository;
+
+        public IReturnRequestRepository ReturnRequest => _returnRequest;
 
         public void Save()
         {

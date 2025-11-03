@@ -1,0 +1,254 @@
+@model Order
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+@{
+    decimal subTotal = Model.Lines.Sum(l => (l.Product?.Price ?? 0m) * l.Quantity);
+    decimal shippingThreshold = 2000m;
+    decimal shippingCost = subTotal >= shippingThreshold ? 0m : 39.99m;
+    decimal grandTotal = subTotal + shippingCost;
+    int installment = Model.Installment ?? 1;
+    decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
+}
+
+<div class="row shadow my-3">
+    <div class="col-md-3 border-1 border-dark p-3 bg-light shadow">
+        <h5 class="display-5 text-center">
+            <i class="fa fa-address-book text-primary"></i>
+            <br />
+            @Model?.Name
+        </h5>
+        <p><strong>Şehir:</strong> @Model?.City</p>
+        <p><strong>İlçe:</strong> @Model?.District</p>
+        <p><strong>Mahalle:</strong> @Model?.Neighborhood</p>
+        <p><strong>Adres:</strong> @Model?.Address</p>
+        <div class="mt-3 p-2 bg-white rounded">
+            <h6 class="fw-bold mb-2">Sipariş Durumu</h6>
+            @if (Model.Cancelled)
+            {
+                <div class="text-danger">
+                    <span class="status-indicator status-cancelled"></span>
+                    <strong>İptal Edildi</strong>
+                    @if (Model.CancelledAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.CancelledAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="mb-2">
+                    <span class="status-indicator @(Model.Shipped ? "status-active" : "status-pending")"></span>
+                    <strong>Sipariş Onaylandı</strong>
+                    @if (Model.ShippedAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.ShippedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                </div>
+                <div class="mb-2">
+                    <span class="status-indicator @(Model.Preparing ? "status-active" : "status-pending")"></span>
+                    <strong>Hazırlanıyor</strong>
+                    @if (Model.PreparingAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.PreparingAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                </div>
+                <div class="mb-2">
+                    <span class="status-indicator @(Model.InTransit ? "status-active" : "status-pending")"></span>
+                    <strong>Kargoda</strong>
+                    @if (Model.InTransitAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.InTransitAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                </div>
+                <div class="mb-2">
+                    <span class="status-indicator @(Model.Delivered ? "status-active" : "status-pending")"></span>
+                    <strong>Teslim Edildi</strong>
+                    @if (Model.DeliveredAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.DeliveredAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-9">
+        <h6 class="display-6 mt-3 text-center mb-3">Sipariş Detayları</h6>
+        @if (!Model.Cancelled)
+        {
+            <div class="status-timeline">
+                <h6 class="mb-3">Sipariş Aşaması Güncelle</h6>
+                <div class="d-flex flex-wrap justify-content-center">
+                    <form method="post" asp-action="Complete" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-success status-btn" disabled="@(Model.Shipped || Model.Cancelled ? "disabled" : null)">
+                            <i class="fa fa-check-circle"></i> Siparişi Onayla
+                        </button>
+                    </form>
+                    <form method="post" asp-action="MarkAsPreparing" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-warning status-btn" disabled="@(!Model.Shipped || Model.Preparing || Model.Cancelled ? "disabled" : null)">
+                            <i class="fa fa-box"></i> Hazırlanıyor
+                        </button>
+                    </form>
+                    <form method="post" asp-action="MarkAsInTransit" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-info status-btn" disabled="@(!Model.Preparing || Model.InTransit || Model.Cancelled ? "disabled" : null)">
+                            <i class="fa fa-truck"></i> Kargoya Verildi
+                        </button>
+                    </form>
+                    <form method="post" asp-action="MarkAsDelivered" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-primary status-btn" disabled="@(!Model.InTransit || Model.Delivered || Model.Cancelled ? "disabled" : null)">
+                            <i class="fa fa-home"></i> Teslim Edildi
+                        </button>
+                    </form>
+                </div>
+                <div class="d-flex flex-wrap justify-content-center mt-2">
+                    <form method="post" asp-action="Cancel" class="d-inline" onsubmit="return confirm('Bu siparişi iptal etmek istediğinize emin misiniz?');">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-warning status-btn" disabled="@(Model.Cancelled || Model.Delivered ? "disabled" : null)">
+                            <i class="fa fa-ban"></i> Siparişi İptal Et
+                        </button>
+                    </form>
+                    <form method="post" asp-action="Delete" class="d-inline" onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
+                        <input type="hidden" name="id" value="@Model.OrderId" />
+                        <button type="submit" class="btn btn-danger status-btn">
+                            <i class="fa fa-trash"></i> Siparişi Sil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger text-center">
+                <i class="fa fa-times-circle fa-2x mb-2"></i>
+                <h5>Bu sipariş iptal edilmiştir</h5>
+                <form method="post" asp-action="Delete" class="d-inline js-delete"
+      onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
+  <input type="hidden" name="id" value="@Model.OrderId" />
+  <button type="submit" class="btn btn-danger status-btn">
+    <i class="fa fa-trash"></i> Siparişi Sil
+  </button>
+</form>
+
+
+            </div>
+        }
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Sipariş Özeti</span>
+                <span class="badge text-bg-light">Fiyat</span>
+            </div>
+            <div class="list-group list-group-flush">
+                @foreach (var item in Model.Lines)
+                {
+                    var lineTotal = item.Quantity * item.Product.Price;
+                    <div class="list-group-item py-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
+                            <div>
+                                <div class="fw-semibold">
+                                    @item.Product.ProductName
+                                    @if (!string.IsNullOrWhiteSpace(item.Size))
+                                    {
+                                        <span class="text-muted">(@item.Size Beden)</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">
+                                    @item.Quantity × @item.Product.Price.ToString("C2")
+                                </div>
+                            </div>
+                        </div>
+                        <div class="price-col fw-semibold">@lineTotal.ToString("C2")</div>
+                    </div>
+                }
+                <div class="list-group-item py-3 d-flex justify-content-between">
+                    <div class="text-muted">Ara Toplam</div>
+                    <div class="price-col">@subTotal.ToString("C2")</div>
+                </div>
+                <div class="list-group-item py-3 d-flex justify-content-between">
+                    <div class="text-muted">Kargo</div>
+                    <div class="price-col">
+                        @if (shippingCost == 0m)
+                        {
+                            <span class="text-success fw-semibold">Ücretsiz</span>
+                        }
+                        else
+                        {
+                            @shippingCost.ToString("C2")
+                        }
+                    </div>
+                </div>
+                <div class="list-group-item py-3 d-flex justify-content-between align-items-baseline total-row">
+                    <div class="fw-semibold">Toplam</div>
+                    <div class="price-col fw-bold display-7 text-end">
+                        @grandTotal.ToString("C2")
+                        @if (installment > 1)
+                        {
+                            <span class="text-muted"> (@installment taksit)</span>
+                            <div class="small text-muted fw-normal">
+                                @installment × @perInstallment.ToString("C2")
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.querySelectorAll('form[method="post"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formElement = this;
+            const btn = formElement.querySelector('button[type="submit"]');
+            const originalHtml = btn.innerHTML;
+            if (btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...';
+            const formData = new FormData(formElement);
+            fetch(formElement.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata',
+                        text: data.message,
+                        confirmButtonText: 'Tamam'
+                    });
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Hata',
+                    text: 'İşlem sırasında bir hata oluştu.',
+                    confirmButtonText: 'Tamam'
+                });
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
+        });
+    });
+</script>

@@ -1,17 +1,71 @@
 @model IEnumerable<Order>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-@if(Model.Count() > 0)
-{
-    @foreach (Order order in Model)
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fa fa-shopping-cart me-2"></i>
+            Tüm Siparişler
+        </h5>
+        <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index" class="btn btn-warning btn-sm">
+            <i class="fa fa-undo me-1"></i> İade Talepleri
+        </a>
+    </div>
+
+    @if(Model.Count() > 0)
     {
-        <div class="my-3">
-            <partial name="_OrderDetails" model="@order" />
+        @foreach (Order order in Model)
+        {
+            // İade durumu kontrolü
+            var hasReturnRequests = order.ReturnRequests?.Any() ?? false;
+            var pendingReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Pending) ?? 0;
+            var approvedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Approved) ?? 0;
+            var completedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Completed) ?? 0;
+            
+            <div class="my-3 position-relative">
+                @* İade Rozeti - Sağ Üst Köşe *@
+                @if (hasReturnRequests)
+                {
+                    <div class="position-absolute top-0 end-0 mt-2 me-2" style="z-index: 10;">
+                        <div class="d-flex flex-column gap-1 align-items-end">
+                            @if (pendingReturns > 0)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fa fa-clock me-1"></i>İade Bekliyor: @pendingReturns
+                                </span>
+                            }
+                            @if (approvedReturns > 0)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fa fa-check me-1"></i>İade Onaylı: @approvedReturns
+                                </span>
+                            }
+                            @if (completedReturns > 0)
+                            {
+                                <span class="badge bg-primary">
+                                    <i class="fa fa-undo me-1"></i>İade Tamamlandı: @completedReturns
+                                </span>
+                            }
+                            <a asp-area="Admin" 
+                               asp-controller="ReturnRequest" 
+                               asp-action="ListByOrder" 
+                               asp-route-orderId="@order.OrderId"
+                               class="btn btn-warning btn-sm">
+                                <i class="fa fa-eye me-1"></i> İade Taleplerini Gör
+                            </a>
+                        </div>
+                    </div>
+                }
+                
+                <partial name="_OrderDetails" model="@order" />
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-light text-center py-5">
+            <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+            <h6>Henüz Bir Sipariş Yok.</h6>
         </div>
     }
-}
-else
-{
-    <div class="alert alert-info">
-        <p class="lead">Henüz Bir Sipariş Yok.</p>
-    </div>
-}
+</div>

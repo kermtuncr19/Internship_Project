@@ -9,6 +9,7 @@ namespace Repositories.Contracts
         IUserAddressRepository UserAddress { get; }
         IFavoriteRepository Favorite { get; }
         IProductImageRepository ProductImage { get; } 
+        IReturnRequestRepository ReturnRequest { get; }
         void Save();
     }
 }

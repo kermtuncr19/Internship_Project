@@ -7,6 +7,47 @@
     decimal grandTotal = total + shippingCost;
     int installment = Model.Installment ?? 1;
     decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
+
+    // İade özetleri
+    var rrAll = Model.ReturnRequests ?? new List<Entities.Models.ReturnRequest>();
+    var rrPending   = rrAll.Where(r => r.Status == Entities.Models.ReturnStatus.Pending).ToList();
+    var rrApproved  = rrAll.Where(r => r.Status == Entities.Models.ReturnStatus.Approved).ToList();
+    var rrRejected  = rrAll.Where(r => r.Status == Entities.Models.ReturnStatus.Rejected).ToList();
+    var rrCompleted = rrAll.Where(r => r.Status == Entities.Models.ReturnStatus.Completed).ToList();
+    var rrTotal     = rrAll.Count;
+
+    string RrBadgeClass(Entities.Models.ReturnStatus s) => s switch {
+        Entities.Models.ReturnStatus.Pending   => "bg-warning text-dark",
+        Entities.Models.ReturnStatus.Approved  => "bg-success",
+        Entities.Models.ReturnStatus.Rejected  => "bg-danger",
+        Entities.Models.ReturnStatus.Completed => "bg-primary",
+        _ => "bg-secondary"
+    };
+
+    // CartLineId -> en güncel iade statüsü (satır rozetleri)
+    var lineReturnStatus = new Dictionary<int, Entities.Models.ReturnStatus>();
+    foreach (var rr in rrAll.OrderBy(r => r.RequestedAt))
+    {
+        foreach (var rl in rr.Lines ?? Enumerable.Empty<Entities.Models.ReturnRequestLine>())
+        {
+            if (rl.CartLineId != 0)
+                lineReturnStatus[rl.CartLineId] = rr.Status;
+        }
+    }
+    string StatusText(Entities.Models.ReturnStatus s) => s switch {
+        Entities.Models.ReturnStatus.Pending   => "İade Talebinde",
+        Entities.Models.ReturnStatus.Approved  => "İade Onaylandı",
+        Entities.Models.ReturnStatus.Rejected  => "İade Reddedildi",
+        Entities.Models.ReturnStatus.Completed => "İade Tamamlandı",
+        _ => "İade"
+    };
+    string StatusClass(Entities.Models.ReturnStatus s) => s switch {
+        Entities.Models.ReturnStatus.Pending   => "bg-warning text-dark",
+        Entities.Models.ReturnStatus.Approved  => "bg-success",
+        Entities.Models.ReturnStatus.Rejected  => "bg-danger",
+        Entities.Models.ReturnStatus.Completed => "bg-primary",
+        _ => "bg-secondary"
+    };
 }
 
 <div class="container my-4">
@@ -28,7 +69,7 @@
                 }
                 else if (Model.Preparing)
                 {
-                    <span class="badge bg-warning">Hazırlanıyor</span>
+                    <span class="badge bg-warning text-dark">Hazırlanıyor</span>
                 }
                 else if (Model.Shipped)
                 {
@@ -40,6 +81,101 @@
                 }
             </div>
         </div>
+
+        
+        @if (rrTotal > 0)
+        {
+            <div class="px-3 pt-3">
+                <div class="alert alert-light d-flex align-items-center justify-content-between">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="badge text-bg-light">
+                            <i class="fa fa-undo me-1"></i> İade Talebi: @rrTotal
+                        </span>
+                        @if (rrPending.Count  > 0) { <span class="badge bg-warning text-dark">Bekleyen: @rrPending.Count</span> }
+                        @if (rrApproved.Count > 0) { <span class="badge bg-success">Onaylı: @rrApproved.Count</span> }
+                        @if (rrRejected.Count > 0) { <span class="badge bg-danger">Red: @rrRejected.Count</span> }
+                        @if (rrCompleted.Count> 0) { <span class="badge bg-primary">Tamamlanan: @rrCompleted.Count</span> }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a asp-action="MyReturns" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa fa-list me-1"></i> İade Taleplerim
+                        </a>
+                        @{
+    bool canReturn = Model.Delivered 
+                     && !Model.Cancelled 
+                     && Model.DeliveredAt.HasValue 
+                     && DateTime.UtcNow <= Model.DeliveredAt.Value.AddDays(15);
+}
+
+@if (canReturn)
+{
+    <a asp-action="Return" asp-route-id="@Model.OrderId" class="btn btn-warning btn-sm">
+        <i class="fa fa-undo me-1"></i> Yeni İade Talebi
+    </a>
+}
+else
+{
+    <a class="btn btnwarning btn-sm disabled" tabindex="-1" aria-disabled="true">
+        <i class="fa fa-undo me-1"></i> Yeni İade Talebi
+    </a>
+}
+
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="px-3">
+                @foreach (var rr in rrAll.OrderByDescending(r => r.RequestedAt))
+                {
+                    var badge = RrBadgeClass(rr.Status);
+                    <div class="card mb-2">
+                        <div class="card-body py-2 d-flex justify-content-between align-items-center">
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <span class="badge @badge">@rr.Status</span>
+                                    <span class="text-muted small ms-2">Talep #@rr.ReturnRequestId • @rr.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                </div>
+                                @if (rr.Status == Entities.Models.ReturnStatus.Approved)
+                                {
+                                    <div class="small mt-1">
+                                        <strong>Onaylandı.</strong> Lütfen ürünleri iade adresine gönderiniz.
+                                        @if (!string.IsNullOrWhiteSpace(rr.AdminNotes))
+                                        {
+                                            <span class="text-muted"> • Not: @rr.AdminNotes</span>
+                                        }
+                                    </div>
+                                }
+                                else if (rr.Status == Entities.Models.ReturnStatus.Rejected)
+                                {
+                                    <div class="small mt-1 text-danger">
+                                        <strong>Reddedildi.</strong>
+                                        @if (!string.IsNullOrWhiteSpace(rr.AdminNotes))
+                                        {
+                                            <span class="text-muted"> • Gerekçe: @rr.AdminNotes</span>
+                                        }
+                                    </div>
+                                }
+                                else if (rr.Status == Entities.Models.ReturnStatus.Completed)
+                                {
+                                    <div class="small mt-1 text-primary">
+                                        <strong>Tamamlandı.</strong> İade tutarı hesabınıza yansıtılmıştır.
+                                    </div>
+                                }
+                            </div>
+                            <div class="text-end small text-muted">
+                                @if (rr.ProcessedAt.HasValue)
+                                {
+                                    <div>İşlem: @rr.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
         @if (!Model.Cancelled)
         {
             <div class="card-body">
@@ -101,11 +237,13 @@
                     <div class="fw-semibold">@Model.Name</div>
                     <div class="text-muted small">@Model.City • @Model.District / @Model.Neighborhood / @Model.Address</div>
                 </div>
+
                 <ul class="list-group list-group-flush">
                     @foreach (var line in Model.Lines)
                     {
                         var unit = line.Product?.Price ?? line.UnitPrice;
                         var lineTotal = unit * line.Quantity;
+
                         string imgSrc;
                         if (string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
                         {
@@ -119,31 +257,51 @@
                         {
                             imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
                         }
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex align-items-center flex-grow-1">
-                                    <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3" loading="lazy" width="48" height="48" />
-                                    <div>
-                                        <div class="fw-semibold">
-                                            @line.Product?.ProductName
-                                            @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
-                                        </div>
-                                        <div class="text-muted small">
-                                            @line.Quantity × @unit.ToString("C2")
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="fw-semibold">@lineTotal.ToString("C2")</div>
-                            </div>
-                            @if (Model.Delivered && line.Product != null)
-                            {
-                                <div class="mt-2">
-                                    <a asp-controller="Review" asp-action="Create" asp-route-productId="@line.Product.ProductId" asp-route-orderId="@Model.OrderId" class="btn btn-sm btn-outline-warning">
-                                        <i class="fa fa-star me-1"></i> Değerlendir
-                                    </a>
-                                </div>
-                            }
-                        </li>
+
+                       // ...
+Entities.Models.ReturnStatus st;
+var hasReturn = lineReturnStatus.TryGetValue(line.CartLineId, out st);
+
+<li class="list-group-item">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex align-items-center flex-grow-1">
+            <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3" loading="lazy" width="48" height="48" />
+            <div>
+                <div class="fw-semibold">
+                    @line.Product?.ProductName
+                    @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
+
+                    @if (hasReturn)
+                    {
+                        <span class="badge @StatusClass(st) ms-2">@StatusText(st)</span>
+                    }
+                </div>
+                <div class="text-muted small">
+                    @line.Quantity × @unit.ToString("C2")
+                </div>
+            </div>
+        </div>
+        <div class="fw-semibold">@lineTotal.ToString("C2")</div>
+    </div>
+
+    @{
+        // İade kaydı olan her durumda "Değerlendir" butonunu gizle
+        // (sadece onaylı/tamamlanmışta gizlemek istersen: var hideReview = hasReturn && (st == Approved || st == Completed);)
+        var hideReview = hasReturn; 
+    }
+    @if (Model.Delivered && line.Product != null && !hideReview)
+    {
+        <div class="mt-2">
+            <a asp-controller="Review" asp-action="Create"
+               asp-route-productId="@line.Product.ProductId"
+               asp-route-orderId="@Model.OrderId"
+               class="btn btn-sm btn-warning">
+                <i class="fa fa-star me-1"></i> Değerlendir
+            </a>
+        </div>
+    }
+</li>
+
                     }
                     <li class="list-group-item d-flex justify-content-between">
                         <span>Ara Toplam</span><span>@total.ToString("C2")</span>

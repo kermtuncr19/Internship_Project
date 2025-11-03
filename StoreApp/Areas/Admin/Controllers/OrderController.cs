@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Contracts;
+using Microsoft.EntityFrameworkCore;
 
 namespace StoreApp.Areas.Admin.Controllers
 {
@@ -17,8 +18,34 @@ namespace StoreApp.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            var orders = _manager.OrderService.Orders;
+            // ReturnRequests'i de Include et
+            var orders = _manager.OrderService.Orders
+                .Include(o => o.ReturnRequests)
+                    .ThenInclude(r => r.Lines)
+                        .ThenInclude(l => l.CartLine)
+                .OrderByDescending(o => o.OrderedAt)
+                .ToList();
+                
             return View(orders);
+        }
+
+        // Detail action - ReturnRequests ile birlikte getir
+        public IActionResult Detail(int id)
+        {
+            var order = _manager.OrderService.Orders
+                .Include(o => o.ReturnRequests)
+                    .ThenInclude(r => r.Lines)
+                        .ThenInclude(l => l.CartLine)
+                            .ThenInclude(c => c.Product)
+                .FirstOrDefault(o => o.OrderId == id);
+            
+            if (order == null)
+            {
+                TempData["error"] = "Sipariş bulunamadı.";
+                return RedirectToAction("Index");
+            }
+            
+            return View("_OrderDetails", order);
         }
 
         [HttpPost]
@@ -177,29 +204,27 @@ namespace StoreApp.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
-       [HttpPost]
-public IActionResult Delete([FromForm] int id)
-{
-    try
-    {
-        _manager.OrderService.Delete(id);
+        [HttpPost]
+        public IActionResult Delete([FromForm] int id)
+        {
+            try
+            {
+                _manager.OrderService.Delete(id);
 
-        // AJAX ise JSON dön
-        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            return Json(new { success = true, message = "Sipariş silindi." });
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = true, message = "Sipariş silindi." });
 
-        TempData["success"] = "Sipariş silindi.";
-        return RedirectToAction("Index");
-    }
-    catch (Exception ex)
-    {
-        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            return Json(new { success = false, message = "Silme sırasında hata: " + ex.Message });
+                TempData["success"] = "Sipariş silindi.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = "Silme sırasında hata: " + ex.Message });
 
-        TempData["error"] = "Silme sırasında bir hata oluştu.";
-        return RedirectToAction("Index");
-    }
-}
-
+                TempData["error"] = "Silme sırasında bir hata oluştu.";
+                return RedirectToAction("Index");
+            }
+        }
     }
 }

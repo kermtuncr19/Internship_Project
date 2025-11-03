@@ -1,0 +1,269 @@
+@model StoreApp.Components.ReturnRequestViewModel
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+@{
+    // Rejected dışındaki tüm iade taleplerini “aktif” sayıyoruz (Pending/Approved/Completed)
+    var activeRequests = Model.Order.ReturnRequests?
+    .Where(r => r.Status != Entities.Models.ReturnStatus.Rejected)
+    .ToList() ?? new List<Entities.Models.ReturnRequest>();
+
+    // Hangi CartLineId için aktif iade var? (satır -> statü)
+    var lineStatus = activeRequests
+    .SelectMany(r => r.Lines.Select(l => new { l.CartLineId, r.Status }))
+    .GroupBy(x => x.CartLineId)
+    .ToDictionary(g => g.Key, g => g.Select(x => x.Status).First());
+
+    string StatusText(Entities.Models.ReturnStatus s) => s switch
+    {
+        Entities.Models.ReturnStatus.Pending => "İade talebi (Değerlendiriliyor)",
+        Entities.Models.ReturnStatus.Approved => "İade talebi (Onaylandı)",
+        Entities.Models.ReturnStatus.Completed => "İade işlemi tamamlandı",
+        _ => "İade talebi var"
+    };
+
+    string StatusBadge(Entities.Models.ReturnStatus s) => s switch
+    {
+        Entities.Models.ReturnStatus.Pending => "badge bg-warning text-dark",
+        Entities.Models.ReturnStatus.Approved => "badge bg-success",
+        Entities.Models.ReturnStatus.Completed => "badge bg-primary",
+        _ => "badge bg-secondary"
+    };
+}
+
+<div class="container my-4">
+    <div class="card shadow-soft">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fa fa-undo me-2"></i>
+                İade Talebi Oluştur
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fa fa-info-circle me-2"></i>
+                <strong>Sipariş #@Model.Order.OrderId</strong> için iade talebi oluşturuyorsunuz.
+                <br>
+                <small>İade süresi: @Model.DaysRemaining gün kaldı
+                    (@Model.ReturnDeadline.ToLocalTime().ToString("dd.MM.yyyy") tarihine kadar)</small>
+            </div>
+
+            <h6 class="mb-3">1. İade Etmek İstediğiniz Ürünleri Seçin</h6>
+            <div class="row g-3 mb-4">
+               @foreach (var line in Model.Order.Lines)
+{
+    var imgSrc = "/images/placeholders/product-thumb.png";
+    if (!string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+    {
+        if (line.Product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || line.Product.ImageUrl.StartsWith("/"))
+            imgSrc = line.Product.ImageUrl;
+        else
+            imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+    }
+
+    var isLocked = Model.LockedLineIds.Contains(line.CartLineId);
+    Entities.Models.ReturnStatus? st = null;
+    DateTime? processedAt = null;
+    string? adminNotes = null;
+
+    if (isLocked)
+    {
+        st = Model.LineStatus.TryGetValue(line.CartLineId, out var s) ? s : null;
+        processedAt = Model.LineProcessedAt.TryGetValue(line.CartLineId, out var dt) ? dt : null;
+        adminNotes = Model.LineAdminNotes.TryGetValue(line.CartLineId, out var notes) ? notes : null;
+    }
+
+    string badgeClass = "bg-secondary";
+    string titleText = "Bu ürün için iade talebi oluşturulmuş.";
+    string subText = "Tekrardan talep oluşturulamaz.";
+    if (st.HasValue)
+    {
+        switch (st.Value)
+        {
+            case Entities.Models.ReturnStatus.Pending:
+                badgeClass = "bg-warning text-dark";
+                titleText = "İade talebi beklemede.";
+                subText = "Değerlendirme sürüyor. Yeni talep oluşturulamaz.";
+                break;
+            case Entities.Models.ReturnStatus.Approved:
+                badgeClass = "bg-success";
+                titleText = "İade talebi onaylandı.";
+                subText = "Kargo/iadeye ilişkin talimatlara uyunuz. Yeni talep oluşturulamaz.";
+                break;
+            case Entities.Models.ReturnStatus.Rejected:
+                badgeClass = "bg-danger";
+                titleText = "İade talebi reddedildi.";
+                subText = string.IsNullOrWhiteSpace(adminNotes)
+                    ? "Bu ürün için tekrar talep oluşturulamaz."
+                    : $"Red nedeni: {adminNotes}";
+                break;
+            case Entities.Models.ReturnStatus.Completed:
+                badgeClass = "bg-primary";
+                titleText = "İade işlemi tamamlandı.";
+                subText = "Bu ürün için süreç tamamlandı. Yeni talep oluşturulamaz.";
+                break;
+        }
+    }
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="form-check mb-2">
+                    <input class="form-check-input product-checkbox"
+                           type="checkbox"
+                           value="@line.CartLineId"
+                           id="line_@line.CartLineId"
+                           @(isLocked ? "disabled" : null) />
+                    <label class="form-check-label fw-semibold" for="line_@line.CartLineId">
+                        Bu ürünü iade et
+                    </label>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <img src="@imgSrc" alt="@line.Product?.ProductName" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
+                    <div>
+                        <div class="fw-semibold">@line.Product?.ProductName</div>
+                        @if (!string.IsNullOrWhiteSpace(line.Size))
+                        {
+                            <div class="text-muted small">Beden: @line.Size</div>
+                        }
+                        <div class="text-muted small">Adet: @line.Quantity</div>
+                        <div class="text-primary fw-semibold mt-1">
+                            @((line.Product?.Price ?? 0 * line.Quantity).ToString("C2"))
+                        </div>
+                    </div>
+                </div>
+
+                @* --- KİLİT MESAJ BLOĞU --- *@
+                @if (isLocked)
+                {
+                    <div class="alert mt-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                        <span class="badge @badgeClass me-2">@(st?.ToString() ?? "Locked")</span>
+                        <strong>@titleText</strong>
+                        <div class="small text-muted mt-1">
+                            @subText
+                            @if (processedAt.HasValue)
+                            {
+                                <div>İşlem Zamanı: @processedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+            </div>
+
+            <hr />
+
+            <h6 class="mb-3">2. İade Nedenini Belirtin</h6>
+            <form id="returnForm">
+                <div class="mb-3">
+                    <label class="form-label">İade Nedeni <span class="text-danger">*</span></label>
+                    <select class="form-select" id="returnReason" required>
+                        <option value="">Seçiniz...</option>
+                        <option value="Ürün hasarlı/kusurlu geldi">Ürün hasarlı/kusurlu geldi</option>
+                        <option value="Yanlış ürün gönderildi">Yanlış ürün gönderildi</option>
+                        <option value="Beden/renk uygun değil">Beden/renk uygun değil</option>
+                        <option value="Beklentimi karşılamadı">Beklentimi karşılamadı</option>
+                        <option value="Fikrim değişti">Fikrim değişti</option>
+                        <option value="Diğer">Diğer</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Detaylı Açıklama (İsteğe Bağlı)</label>
+                    <textarea class="form-control" id="detailedReason" rows="4"
+                        placeholder="İade nedeninizi detaylı olarak açıklayabilirsiniz..."></textarea>
+                    <small class="text-muted">Bu bilgi iade işleminizin daha hızlı değerlendirilmesine yardımcı
+                        olacaktır.</small>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6><i class="fa fa-exclamation-triangle me-2"></i>Önemli Bilgiler:</h6>
+                    <ul class="mb-0 small">
+                        <li>İade talebiniz 2-3 iş günü içinde değerlendirilecektir.</li>
+                        <li>Onaylanan iadeler için size kargo bilgileri gönderilecektir.</li>
+                        <li>Ürünlerin orijinal ambalajında ve kullanılmamış olması gerekmektedir.</li>
+                        <li>Ürün tarafımıza ulaştıktan sonra 5-7 iş günü içinde iade işleminiz tamamlanacaktır.</li>
+                    </ul>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end">
+                    <a asp-action="Detail" asp-route-id="@Model.Order.OrderId" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left me-1"></i> Geri Dön
+                    </a>
+                    <button type="submit" class="btn btn-warning" id="submitBtn">
+                        <i class="fa fa-paper-plane me-1"></i> İade Talebini Gönder
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('returnForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Sadece seçilebilir (disabled olmayan) checkbox’ları al
+        const selectedProducts = Array.from(document.querySelectorAll('.product-checkbox:checked:not([disabled])')).map(cb => cb.value);
+        const reason = document.getElementById('returnReason').value;
+        const detailedReason = document.getElementById('detailedReason').value;
+
+        if (selectedProducts.length === 0) {
+            Swal.fire('Uyarı', 'Lütfen iade edilebilir en az bir ürün seçiniz.', 'warning');
+            return;
+        }
+
+        if (!reason) {
+            Swal.fire('Uyarı', 'Lütfen iade nedenini seçiniz.', 'warning');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Gönderiliyor...';
+
+        const formData = new FormData();
+        formData.append('orderId', @Model.Order.OrderId);
+        selectedProducts.forEach(id => formData.append('selectedLines', id));
+        formData.append('reason', reason);
+        formData.append('detailedReason', detailedReason);
+
+        fetch('@Url.Action("ProcessReturn", "MyOrders")', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Başarılı!',
+                        text: data.message,
+                        confirmButtonText: 'Tamam'
+                    }).then(() => {
+                        window.location.href = '@Url.Action("Detail", "MyOrders", new { id = Model.Order.OrderId })';
+                    });
+                } else {
+                    Swal.fire('Hata', data.message, 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa fa-paper-plane me-1"></i> İade Talebini Gönder';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Hata', 'Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane me-1"></i> İade Talebini Gönder';
+            });
+    });
+</script>
+
+@Html.AntiForgeryToken()

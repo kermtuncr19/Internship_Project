@@ -60,6 +60,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcT3JkZXJcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/Order/OrderDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcT3JkZXJcT3JkZXJEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/Order/_OrderDetails.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcT3JkZXJcX09yZGVyRGV0YWlscy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -74,6 +78,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/Product/Update.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcUHJvZHVjdFxVcGRhdGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/ReturnRequest/Detail.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcUmV0dXJuUmVxdWVzdFxEZXRhaWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/ReturnRequest/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cVmlld3NcUmV0dXJuUmVxdWVzdFxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Areas/Admin/Views/Role/Index.cshtml]
@@ -190,6 +202,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Views/MyOrders/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTXlPcmRlcnNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Views/MyOrders/MyReturns.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTXlPcmRlcnNcTXlSZXR1cm5zLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Views/MyOrders/Return.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTXlPcmRlcnNcUmV0dXJuLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/kermtuncr/Desktop/Internship_Project/StoreApp/Views/Order/Checkout.cshtml]

@@ -104,10 +104,19 @@ namespace StoreApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text");
+
                     b.Property<bool>("Cancelled")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("CancelledByUser")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CancelledByUserAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("City")
@@ -420,6 +429,77 @@ namespace StoreApp.Migrations
                             IsMain = true,
                             ProductId = 9
                         });
+                });
+
+            modelBuilder.Entity("Entities.Models.ReturnRequest", b =>
+                {
+                    b.Property<int>("ReturnRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReturnRequestId"));
+
+                    b.Property<string>("AdminNotes")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DetailedReason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProcessedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ReturnRequestId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("ReturnRequests", (string)null);
+                });
+
+            modelBuilder.Entity("Entities.Models.ReturnRequestLine", b =>
+                {
+                    b.Property<int>("ReturnRequestLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReturnRequestLineId"));
+
+                    b.Property<int>("CartLineId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReturnRequestId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ReturnRequestLineId");
+
+                    b.HasIndex("CartLineId");
+
+                    b.HasIndex("ReturnRequestId");
+
+                    b.ToTable("ReturnRequestLines", (string)null);
                 });
 
             modelBuilder.Entity("Entities.Models.Review", b =>
@@ -860,6 +940,36 @@ namespace StoreApp.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Entities.Models.ReturnRequest", b =>
+                {
+                    b.HasOne("Entities.Models.Order", "Order")
+                        .WithMany("ReturnRequests")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("Entities.Models.ReturnRequestLine", b =>
+                {
+                    b.HasOne("Entities.Models.CartLine", "CartLine")
+                        .WithMany()
+                        .HasForeignKey("CartLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.ReturnRequest", "ReturnRequest")
+                        .WithMany("Lines")
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CartLine");
+
+                    b.Navigation("ReturnRequest");
+                });
+
             modelBuilder.Entity("Entities.Models.Review", b =>
                 {
                     b.HasOne("Entities.Models.Order", "Order")
@@ -987,6 +1097,8 @@ namespace StoreApp.Migrations
             modelBuilder.Entity("Entities.Models.Order", b =>
                 {
                     b.Navigation("Lines");
+
+                    b.Navigation("ReturnRequests");
                 });
 
             modelBuilder.Entity("Entities.Models.Product", b =>
@@ -994,6 +1106,11 @@ namespace StoreApp.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Entities.Models.ReturnRequest", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

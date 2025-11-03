@@ -34,17 +34,17 @@ namespace Entities.Models
         public bool GiftWrap { get; set; }
         public bool Shipped { get; set; }
         public DateTime? ShippedAt { get; set; }
-        
+
         public bool Cancelled { get; set; } = false;
         public DateTime? CancelledAt { get; set; }
 
         // Kargo takip alanları
         public bool Preparing { get; set; }
         public DateTime? PreparingAt { get; set; }
-        
+
         public bool InTransit { get; set; }
         public DateTime? InTransitAt { get; set; }
-        
+
         public bool Delivered { get; set; }
         public DateTime? DeliveredAt { get; set; }
 
@@ -54,5 +54,11 @@ namespace Entities.Models
 
         public string? UserId { get; set; }
         public IdentityUser? User { get; set; }
+
+        public bool CancelledByUser { get; set; }
+        public DateTime? CancelledByUserAt { get; set; }
+        public string? CancellationReason { get; set; }
+
+        public List<ReturnRequest> ReturnRequests { get; set; } = new();
     }
 }

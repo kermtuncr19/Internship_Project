@@ -1,0 +1,193 @@
+@model List<Entities.Models.ReturnRequest>
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fa fa-undo me-2"></i>
+            İade Taleplerim
+        </h5>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="fa fa-arrow-left me-1"></i> Siparişlere Dön
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-light text-center py-5">
+            <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+            <h6>Henüz iade talebiniz bulunmuyor.</h6>
+        </div>
+    }
+    else
+    {
+        <div class="return-requests-list">
+            @foreach (var request in Model)
+            {
+                string statusBadge = request.Status switch
+                {
+                    Entities.Models.ReturnStatus.Pending => "bg-warning text-dark",
+                    Entities.Models.ReturnStatus.Approved => "bg-success",
+                    Entities.Models.ReturnStatus.Rejected => "bg-danger",
+                    Entities.Models.ReturnStatus.Completed => "bg-primary",
+                    _ => "bg-secondary"
+                };
+
+                string statusText = request.Status switch
+                {
+                    Entities.Models.ReturnStatus.Pending => "Değerlendiriliyor",
+                    Entities.Models.ReturnStatus.Approved => "Onaylandı",
+                    Entities.Models.ReturnStatus.Rejected => "Reddedildi",
+                    Entities.Models.ReturnStatus.Completed => "Tamamlandı",
+                    _ => "Bilinmiyor"
+                };
+
+                <div class="card mb-3 shadow-soft">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-semibold">İade Talebi #@request.ReturnRequestId</span>
+                            <span class="text-muted ms-3 small">@request.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                        </div>
+                        <span class="badge @statusBadge">@statusText</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <strong>Sipariş:</strong> 
+                                    <a asp-action="Detail" asp-route-id="@request.OrderId">#@request.OrderId</a>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <strong>İade Nedeni:</strong> @request.Reason
+                                </div>
+                                
+                                @if (!string.IsNullOrWhiteSpace(request.DetailedReason))
+                                {
+                                    <div class="mb-3">
+                                        <strong>Detaylı Açıklama:</strong>
+                                        <p class="text-muted mb-0">@request.DetailedReason</p>
+                                    </div>
+                                }
+
+                                <div class="mb-3">
+                                    <strong>İade Edilen Ürünler:</strong>
+                                    <ul class="list-unstyled mt-2">
+                                        @foreach (var line in request.Lines)
+                                        {
+                                            <li class="d-flex align-items-center mb-2">
+                                                @{
+                                                    var imgSrc = "/images/placeholders/product-thumb.png";
+                                                    if (!string.IsNullOrWhiteSpace(line.CartLine?.Product?.ImageUrl))
+                                                    {
+                                                        if (line.CartLine.Product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || line.CartLine.Product.ImageUrl.StartsWith("/"))
+                                                        {
+                                                            imgSrc = line.CartLine.Product.ImageUrl;
+                                                        }
+                                                        else
+                                                        {
+                                                            imgSrc = Url.Content($"~/images/{line.CartLine.Product.ImageUrl}");
+                                                        }
+                                                    }
+                                                }
+                                                <img src="@imgSrc" alt="@line.CartLine?.Product?.ProductName" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;" />
+                                                <span>@line.CartLine?.Product?.ProductName (@line.Quantity adet)</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+
+                                @if (request.Status == Entities.Models.ReturnStatus.Approved)
+                                {
+                                    <div class="alert alert-success">
+                                        <i class="fa fa-check-circle me-2"></i>
+                                        <strong>İade talebiniz onaylandı!</strong>
+                                        <p class="mb-0 mt-2 small">
+                                            Lütfen ürünleri aşağıdaki adrese gönderin:<br>
+                                            <strong>İade Adresi:</strong> [Şirket Adı], [Adres Detayları]
+                                        </p>
+                                    </div>
+                                }
+
+                                @if (request.Status == Entities.Models.ReturnStatus.Rejected && !string.IsNullOrWhiteSpace(request.AdminNotes))
+                                {
+                                    <div class="alert alert-danger">
+                                        <i class="fa fa-times-circle me-2"></i>
+                                        <strong>İade talebiniz reddedildi.</strong>
+                                        <p class="mb-0 mt-2 small">
+                                            <strong>Red Nedeni:</strong> @request.AdminNotes
+                                        </p>
+                                    </div>
+                                }
+
+                                @if (request.Status == Entities.Models.ReturnStatus.Completed)
+                                {
+                                    <div class="alert alert-primary">
+                                        <i class="fa fa-check-circle me-2"></i>
+                                        <strong>İade işleminiz tamamlandı!</strong>
+                                        <p class="mb-0 mt-2 small">
+                                            İade tutarı hesabınıza yansıtılmıştır.
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-md-4">
+                                <div class="bg-light p-3 rounded">
+                                    <h6 class="mb-3">İşlem Takibi</h6>
+                                    <div class="timeline">
+                                        <div class="timeline-item">
+                                            <i class="fa fa-circle text-success"></i>
+                                            <div>
+                                                <div class="small fw-semibold">Talep Oluşturuldu</div>
+                                                <div class="text-muted" style="font-size: 0.75rem;">
+                                                    @request.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if (request.ProcessedAt.HasValue)
+                                        {
+                                            <div class="timeline-item">
+                                                <i class="fa fa-circle @(request.Status == Entities.Models.ReturnStatus.Rejected ? "text-danger" : "text-success")"></i>
+                                                <div>
+                                                    <div class="small fw-semibold">@statusText</div>
+                                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                                        @request.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+.timeline {
+    position: relative;
+}
+.timeline-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    position: relative;
+}
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 20px;
+    bottom: -15px;
+    width: 2px;
+    background: #dee2e6;
+}
+.timeline-item i {
+    font-size: 0.6rem;
+    margin-top: 4px;
+}
+</style>

@@ -7,6 +7,16 @@
     decimal grandTotal = subTotal + shippingCost;
     int installment = Model.Installment ?? 1;
     decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
+
+    // İade bilgileri - Her CartLineId için iade taleplerini tut
+    var lineReturnRequests = Model.ReturnRequests?
+        .SelectMany(r => r.Lines.Select(l => new { ReturnRequest = r, Line = l }))
+        .GroupBy(x => x.Line.CartLineId)
+        .ToDictionary(g => g.Key, g => g.Select(x => x.ReturnRequest).ToList())
+        ?? new Dictionary<int, List<Entities.Models.ReturnRequest>>();
+
+    var totalReturns = Model.ReturnRequests?.Count ?? 0;
+    var pendingReturns = Model.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Pending) ?? 0;
 }
 
 <div class="row shadow my-3">
@@ -20,9 +30,27 @@
         <p><strong>İlçe:</strong> @Model?.District</p>
         <p><strong>Mahalle:</strong> @Model?.Neighborhood</p>
         <p><strong>Adres:</strong> @Model?.Address</p>
+
         <div class="mt-3 p-2 bg-white rounded">
             <h6 class="fw-bold mb-2">Sipariş Durumu</h6>
-            @if (Model.Cancelled)
+            @if (Model.CancelledByUser)
+            {
+                <div class="text-danger">
+                    <span class="status-indicator status-cancelled"></span>
+                    <strong>Müşteri İptal Etti</strong>
+                    @if (Model.CancelledByUserAt.HasValue)
+                    {
+                        <small class="d-block text-muted ms-4">@Model.CancelledByUserAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                    {
+                        <div class="alert alert-light mt-2 small mb-0">
+                            <strong>Neden:</strong> @Model.CancellationReason
+                        </div>
+                    }
+                </div>
+            }
+            else if (Model.Cancelled)
             {
                 <div class="text-danger">
                     <span class="status-indicator status-cancelled"></span>
@@ -69,9 +97,33 @@
                 </div>
             }
         </div>
+
+        @if (totalReturns > 0)
+        {
+            <div class="alert alert-warning mt-3 mb-0">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div>
+                        <i class="fa fa-undo me-1"></i>
+                        <strong>İade Talepleri: @totalReturns</strong>
+                    </div>
+                </div>
+                @if (pendingReturns > 0)
+                {
+                    <div class="badge bg-warning text-dark w-100 mb-2">
+                        <i class="fa fa-clock me-1"></i> Bekleyen: @pendingReturns
+                    </div>
+                }
+                <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="ListByOrder" asp-route-orderId="@Model.OrderId"
+                   class="btn btn-warning btn-sm w-100">
+                    <i class="fa fa-eye me-1"></i> Tüm İade Taleplerini Gör
+                </a>
+            </div>
+        }
     </div>
+
     <div class="col-md-9">
-        <h6 class="display-6 mt-3 text-center mb-3">Sipariş Detayları</h6>
+        <h6 class="display-6 mt-3 text-center mb-3">Sipariş Detayları (#@Model.OrderId)</h6>
+        
         @if (!Model.Cancelled)
         {
             <div class="status-timeline">
@@ -123,17 +175,26 @@
             <div class="alert alert-danger text-center">
                 <i class="fa fa-times-circle fa-2x mb-2"></i>
                 <h5>Bu sipariş iptal edilmiştir</h5>
-                <form method="post" asp-action="Delete" class="d-inline js-delete"
-      onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
-  <input type="hidden" name="id" value="@Model.OrderId" />
-  <button type="submit" class="btn btn-danger status-btn">
-    <i class="fa fa-trash"></i> Siparişi Sil
-  </button>
-</form>
-
-
+                @if (Model.CancelledByUser)
+                {
+                    <p class="mb-2">Müşteri tarafından iptal edildi.</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.CancellationReason))
+                    {
+                        <div class="alert alert-light">
+                            <strong>İptal Nedeni:</strong> @Model.CancellationReason
+                        </div>
+                    }
+                }
+                <form method="post" asp-action="Delete" class="d-inline"
+                      onsubmit="return confirm('Bu siparişi tamamen silmek istediğinize emin misiniz?');">
+                    <input type="hidden" name="id" value="@Model.OrderId" />
+                    <button type="submit" class="btn btn-danger status-btn">
+                        <i class="fa fa-trash"></i> Siparişi Sil
+                    </button>
+                </form>
             </div>
         }
+
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <span class="fw-semibold">Sipariş Özeti</span>
@@ -142,26 +203,106 @@
             <div class="list-group list-group-flush">
                 @foreach (var item in Model.Lines)
                 {
-                    var lineTotal = item.Quantity * item.Product.Price;
-                    <div class="list-group-item py-3 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center">
-                            <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
-                            <div>
-                                <div class="fw-semibold">
-                                    @item.Product.ProductName
-                                    @if (!string.IsNullOrWhiteSpace(item.Size))
-                                    {
-                                        <span class="text-muted">(@item.Size Beden)</span>
-                                    }
-                                </div>
-                                <div class="text-muted small">
-                                    @item.Quantity × @item.Product.Price.ToString("C2")
+                    var lineTotal = (item.Product?.Price ?? 0m) * item.Quantity;
+                    var hasReturnRequest = lineReturnRequests.ContainsKey(item.CartLineId);
+                    var returnRequests = hasReturnRequest ? lineReturnRequests[item.CartLineId] : new List<Entities.Models.ReturnRequest>();
+                    
+                    // Bu ürünün tamamlanmış iadesi var mı kontrol et
+                    var hasCompletedReturn = returnRequests.Any(r => r.Status == Entities.Models.ReturnStatus.Completed);
+                    
+                    <div class="list-group-item py-3 @(hasCompletedReturn ? "bg-light" : "")">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">
+                                        @item.Product.ProductName
+                                        @if (!string.IsNullOrWhiteSpace(item.Size))
+                                        {
+                                            <span class="text-muted">(@item.Size Beden)</span>
+                                        }
+                                        
+                                        @* İade Edildi Rozeti *@
+                                        @if (hasCompletedReturn)
+                                        {
+                                            <span class="badge bg-primary ms-2">
+                                                <i class="fa fa-undo me-1"></i>İade Edildi
+                                            </span>
+                                        }
+                                    </div>
+                                    <div class="text-muted small">
+                                        @item.Quantity × @((item.Product?.Price ?? 0m).ToString("C2"))
+                                    </div>
                                 </div>
                             </div>
+                            <div class="price-col fw-semibold text-end @(hasCompletedReturn ? "text-decoration-line-through text-muted" : "")">
+                                @lineTotal.ToString("C2")
+                            </div>
                         </div>
-                        <div class="price-col fw-semibold">@lineTotal.ToString("C2")</div>
+                        
+                        @if (hasReturnRequest && returnRequests.Any())
+                        {
+                            <div class="mt-2 pt-2 border-top">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    @foreach (var returnReq in returnRequests)
+                                    {
+                                        var returnStatusBadge = returnReq.Status switch
+                                        {
+                                            Entities.Models.ReturnStatus.Pending => "bg-warning text-dark",
+                                            Entities.Models.ReturnStatus.Approved => "bg-success",
+                                            Entities.Models.ReturnStatus.Rejected => "bg-danger",
+                                            Entities.Models.ReturnStatus.Completed => "bg-primary",
+                                            _ => "bg-secondary"
+                                        };
+                                        
+                                        var returnStatusText = returnReq.Status switch
+                                        {
+                                            Entities.Models.ReturnStatus.Pending => "İade Bekliyor",
+                                            Entities.Models.ReturnStatus.Approved => "İade Onaylandı",
+                                            Entities.Models.ReturnStatus.Rejected => "İade Reddedildi",
+                                            Entities.Models.ReturnStatus.Completed => "İade Tamamlandı",
+                                            _ => "Bilinmiyor"
+                                        };
+                                        
+                                        var returnStatusIcon = returnReq.Status switch
+                                        {
+                                            Entities.Models.ReturnStatus.Pending => "fa-clock",
+                                            Entities.Models.ReturnStatus.Approved => "fa-check",
+                                            Entities.Models.ReturnStatus.Rejected => "fa-times",
+                                            Entities.Models.ReturnStatus.Completed => "fa-undo",
+                                            _ => "fa-question"
+                                        };
+                                        
+                                        <div class="d-flex align-items-center gap-2 w-100">
+                                            <span class="badge @returnStatusBadge">
+                                                <i class="fa @returnStatusIcon me-1"></i>
+                                                @returnStatusText
+                                            </span>
+                                            <span class="badge bg-light text-dark">
+                                                Talep #@returnReq.ReturnRequestId
+                                            </span>
+                                            <a asp-area="Admin" 
+                                               asp-controller="ReturnRequest" 
+                                               asp-action="Detail" 
+                                               asp-route-id="@returnReq.ReturnRequestId"
+                                               class="btn btn-warning btn-sm ms-auto">
+                                                <i class="fa fa-eye"></i> İade Detayı
+                                            </a>
+                                        </div>
+                                        
+                                        @if (!string.IsNullOrWhiteSpace(returnReq.Reason))
+                                        {
+                                            <div class="alert alert-light small mb-0 mt-2">
+                                                <strong>İade Nedeni:</strong> @returnReq.Reason
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
+                
                 <div class="list-group-item py-3 d-flex justify-content-between">
                     <div class="text-muted">Ara Toplam</div>
                     <div class="price-col">@subTotal.ToString("C2")</div>
@@ -196,6 +337,7 @@
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.querySelectorAll('form[method="post"]').forEach(form => {
