@@ -3,14 +3,14 @@
 @{
     var total = Model.Order.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
     string statusText = Model.Order.Cancelled ? "İptal"
-    : (Model.Order.Shipped ? "Onaylandı" : "Onay Aşamasında");
+        : (Model.Order.Shipped ? "Onaylandı" : "Onay Aşamasında");
 
     // Kargo hesapları
     decimal shippingThreshold = 2000m;
     decimal shippingCost = total >= shippingThreshold ? 0m : 39.99m;
     decimal grandTotal = total + shippingCost;
 
-     int installment = Model.Installment; // 👈 buradan
+    int installment = Model.Installment;
     decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
 }
 
@@ -18,7 +18,7 @@
 
 <div class="container my-5">
 
-    <!-- ✅ Yeşil tik -->
+    <!-- ✅ Yeşil tik ve başlık -->
     <div class="text-center mb-4">
         <div class="success-icon mx-auto mb-2">
             <i class="fa-solid fa-circle-check"></i>
@@ -29,99 +29,131 @@
         </div>
     </div>
 
-    <!-- ✅ Sipariş Özeti -->
-    <div class="card shadow-soft">
-        <div class="card-header bg-white d-flex justify-content-between">
-            <div>#@Model.Order.OrderId • @Model.Order.OrderedAt.ToLocalTime().ToString("g")</div>
-            <div>@statusText</div>
-        </div>
+    <div class="row">
+        <!-- SOL: Sipariş detayları (ürünler, adres, durum) -->
+        <div class="col-lg-8">
+            <div class="card shadow-soft mb-3">
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <div>#@Model.Order.OrderId • @Model.Order.OrderedAt.ToLocalTime().ToString("g")</div>
+                    <div>@statusText</div>
+                </div>
 
-        <div class="card-body">
-            <div class="mb-3">
-                <div class="fw-semibold">@Model.Order.Name</div>
-                <div class="text-muted small">
-                    @Model.Order.City • @Model.Order.District / @Model.Order.Neighborhood / @Model.Order.Address
+                <div class="card-body">
+                    <!-- Adres / alıcı bilgisi -->
+                    <div class="mb-3">
+                        <div class="fw-semibold">@Model.Order.Name</div>
+                        <div class="text-muted small">
+                            @Model.Order.City /
+                            @Model.Order.District /
+                            @Model.Order.Neighborhood /
+                            @Model.Order.Address
+                        </div>
+                    </div>
+
+                    <!-- Ürün satırları -->
+                    <ul class="list-group list-group-flush">
+                        @foreach (var line in Model.Order.Lines)
+                        {
+                            var unit = line.Product?.Price ?? line.UnitPrice;
+                            var lineTotal = unit * line.Quantity;
+
+                            string imgSrc;
+                            if (string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+                            {
+                                imgSrc = Url.Content("~/images/placeholders/product-thumb.png");
+                            }
+                            else if (line.Product!.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                                     || line.Product.ImageUrl.StartsWith("/"))
+                            {
+                                imgSrc = line.Product.ImageUrl;
+                            }
+                            else
+                            {
+                                imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+                            }
+
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="@imgSrc"
+                                         alt="@(line.Product?.ProductName ?? "Ürün")"
+                                         class="order-thumb me-3"
+                                         loading="lazy"
+                                         width="48" height="48" />
+                                    <div>
+                                        <div class="fw-semibold">
+                                            @line.Product?.ProductName
+                                            @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
+                                        </div>
+                                        <div class="text-muted small">
+                                            @line.Quantity × @unit.ToString("C2")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fw-semibold">@lineTotal.ToString("C2")</div>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
-
-            <ul class="list-group list-group-flush">
-                @foreach (var line in Model.Order.Lines)
-                {
-                    var unit = line.Product?.Price ?? line.UnitPrice;
-                    var lineTotal = unit * line.Quantity;
-
-                    string imgSrc;
-                    if (string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
-                    {
-                        imgSrc = Url.Content("~/images/placeholders/product-thumb.png");
-                    }
-                    else if (line.Product!.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                    || line.Product.ImageUrl.StartsWith("/"))
-                    {
-                        imgSrc = line.Product.ImageUrl;
-                    }
-                    else
-                    {
-                        imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
-                    }
-
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <img src="@imgSrc" alt="@(line.Product?.ProductName ?? "Ürün")" class="order-thumb me-3"
-                                loading="lazy" width="48" height="48" />
-                            <div>
-                                <div class="fw-semibold">
-                                    @line.Product?.ProductName
-                                    @((!string.IsNullOrEmpty(line.Size) ? $" ({line.Size})" : ""))
-                                </div>
-                                <div class="text-muted small">
-                                    @line.Quantity × @unit.ToString("C2")
-                                </div>
-                            </div>
-                        </div>
-                        <div class="fw-semibold">@lineTotal.ToString("C2")</div>
-                    </li>
-                }
-
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>Ara Toplam</span><span>@total.ToString("C2")</span>
-                </li>
-
-                <li class="list-group-item d-flex justify-content-between">
-                    <span>Kargo</span>
-                    @if (shippingCost == 0m)
-                    {
-                        <span class="text-success fw-semibold">Ücretsiz</span>
-                    }
-                    else
-                    {
-                        <span>@shippingCost.ToString("C2")</span>
-                    }
-                </li>
-
-               <li class="list-group-item d-flex justify-content-between fw-bold align-items-baseline">
-  <span>Toplam</span>
-  <span class="text-primary text-end">
-    @grandTotal.ToString("C2")
-    @if (installment > 1)
-    {
-      <span class="text-muted"> (@installment taksit)</span>
-      <div class="small text-muted">@installment × @perInstallment.ToString("C2")</div>
-    }
-  </span>
-</li>
-
-
-            </ul>
         </div>
-    </div>
 
-    <div class="text-center mt-4">
-        <a asp-controller="MyOrders" asp-action="Index" class="btn btn-outline-navy btn-pill me-2">
-            <i class="fa-solid fa-box"></i> Siparişlerim
-        </a>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-navy btn-pill">
-            <i class="fa-solid fa-house"></i> Alışverişe Devam Et
-        </a>
+        <!-- SAĞ: Sipariş Özeti (sepetteki kartla uyumlu) -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card shadow-soft">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Sipariş Özeti</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Ara Toplam</span>
+                        <span class="fw-semibold">@total.ToString("C2")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Kargo</span>
+                        @if (shippingCost == 0m)
+                        {
+                            <span class="text-success fw-semibold">Ücretsiz</span>
+                        }
+                        else
+                        {
+                            <span class="fw-semibold">@shippingCost.ToString("C2")</span>
+                        }
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="fw-bold">Toplam</span>
+                        <span class="text-primary text-end fw-bold">
+                            @grandTotal.ToString("C2")
+                            @if (installment > 1)
+                            {
+                                <span class="text-muted"> (@installment taksit)</span>
+                                <div class="small text-muted">
+                                    @installment × @perInstallment.ToString("C2")
+                                </div>
+                            }
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-controller="MyOrders"
+                           asp-action="Index"
+                           class="btn btn-outline-navy btn-pill">
+                            <i class="fa-solid fa-box"></i> Siparişlerim
+                        </a>
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-navy btn-pill">
+                            <i class="fa-solid fa-house"></i> Alışverişe Devam Et
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 </div>

@@ -3,11 +3,9 @@
 @using Entities.Models
 
 @{
-    // Sepette beden bilgisi olan en az bir satır var mı?
     var anySized = Model.Cart?.Lines?.Any(l => !string.IsNullOrEmpty(l.Size)) == true;
     var hasItems = Model.Cart?.Lines?.Any() == true;
 
-    // 🧮 Kargo hesapları
     decimal total = Model.Cart?.ComputeTotalValue() ?? 0m;
     decimal shippingThreshold = 2000m;
     decimal shippingCost = total <= 0m ? 0m : (total >= shippingThreshold ? 0m : 39.99m);
@@ -16,168 +14,327 @@
     decimal remaining = Math.Max(0m, shippingThreshold - total);
 }
 
-<div>
-    <div class="display-6 text-center">Sepet</div>
+<div class="container my-4 cart-page">
+    <h2 class="text-center mb-3">Sepet</h2>
 
-    <!-- 💛 Ücretsiz kargo bilgilendirme çubuğu -->
-   @if (total == 0)
-{
-    <div class="alert alert-light text-center mt-3">
-        Sepetiniz boş. Alışverişe başlayın!
-    </div>
-}
-else if (total < shippingThreshold)
-{
-    // ✅ Yüzdeyi tam sayıya çevir (74 gibi)
-    var progress = (int)Math.Min(100m, Math.Round((total / shippingThreshold) * 100m, 0));
-
-    <div class="p-3 text-center shadow-sm rounded mb-3" style="background-color:#fffbe6;">
-        <div class="fw-semibold mb-2 text-navy">💛 2000 ₺ üzeri alışverişlerde kargo bedava!</div>
-
-        <div class="progress" style="height:10px; border-radius:8px;">
-            <div class="progress-bar" role="progressbar"
-                 style="width:@progress% ; background-color:#ffea00;"
-                 aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100">
-            </div>
+    <!-- 💛 Ücretsiz kargo bilgilendirme çubuğu / Boş sepet mesajı -->
+    @if (total == 0)
+    {
+        <div id="shipping-info" class="alert alert-light text-center mt-3">
+            <span id="shipping-text">Sepetiniz boş. Alışverişe başlayın!</span>
         </div>
+    }
+    else if (total < shippingThreshold)
+    {
+        var progress = (int)Math.Min(100m, Math.Round((total / shippingThreshold) * 100m, 0));
 
-        <small class="text-muted">
-            Ücretsiz kargo için <strong>@remaining.ToString("C2")</strong> daha alışveriş yapın 🚚
-        </small>
-    </div>
-}
-else
-{
-    <div class="p-3 text-center shadow-sm rounded mb-3" style="background-color:#d1e7dd;">
-        <div class="fw-semibold text-success">🎉 Tebrikler! Siparişiniz ücretsiz kargo sınırını geçti.</div>
-    </div>
-}
+        <div id="shipping-info" class="p-3 text-center shadow-sm rounded mb-4" style="background-color:#fffbe6;">
+            <div class="fw-semibold mb-2 text-navy">
+                💛 2000 ₺ üzeri alışverişlerde kargo bedava!
+            </div>
 
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th></th> <!-- foto -->
-                <th>Ürün</th>
-                @if (anySized)
-                {
-                    <th class="text-center">Beden</th>
-                }
-                <th class="text-center">Adet</th>
-                <th>Fiyat</th>
-                <th>Toplam</th>
-                <th></th> <!-- sil -->
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var line in Model.Cart?.Lines ?? Enumerable.Empty<CartLine>())
+            <div class="progress" style="height:10px; border-radius:8px;">
+                <div class="progress-bar"
+                     id="shipping-progress"
+                     role="progressbar"
+                     style="width:@progress%; background-color:#ffea00;">
+                </div>
+            </div>
+
+            <small id="shipping-text" class="text-muted">
+                Ücretsiz kargo için <strong>@remaining.ToString("C2")</strong> daha alışveriş yapın 🚚
+            </small>
+        </div>
+    }
+    else
+    {
+        <div id="shipping-info" class="p-3 text-center shadow-sm rounded mb-4" style="background-color:#d1e7dd;">
+            <div class="fw-semibold text-success">
+                🎉 Tebrikler! Siparişiniz ücretsiz kargo sınırını geçti.
+            </div>
+            <small id="shipping-text" class="text-muted"></small>
+        </div>
+    }
+
+    <div class="row">
+        <!-- SOL TARAF: Sepetteki ürünler -->
+        <div class="col-lg-8">
+            @if (!hasItems)
             {
-                <tr>
-                    <td class="py-2">
-                        @{
-                            var imgSrc = string.IsNullOrWhiteSpace(line.Product.ImageUrl)
-                                ? Url.Content("~/images/placeholder.png")
-                                : (line.Product.ImageUrl.StartsWith("~/") || line.Product.ImageUrl.StartsWith("/")
-                                    ? Url.Content(line.Product.ImageUrl)
-                                    : Url.Content($"~/images/{line.Product.ImageUrl}"));
-                        }
-                        <img src="@imgSrc" asp-append-version="true" alt="@line.Product.ProductName" class="rounded" width="50" />
-                    </td>
-
-                    <td>@line.Product.ProductName</td>
-
-                    @if (anySized)
-                    {
-                        <td class="text-center fw-semibold">@line.Size</td>
-                    }
-
-                    <td class="text-center">
-                        <div class="d-inline-flex align-items-center gap-2">
-                            <!-- - (1 azalt) -->
-                            <form method="post" asp-page-handler="Decrement" class="d-inline">
-                                <input type="hidden" name="id" value="@line.Product.ProductId" />
-                                <input type="hidden" name="size" value="@line.Size" />
-                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">−</button>
-                            </form>
-
-                            <span class="fw-semibold">@line.Quantity</span>
-
-                            <!-- + (1 artır) -->
-                            <form method="post" asp-page-handler="Increment" class="d-inline">
-                                <input type="hidden" name="id" value="@line.Product.ProductId" />
-                                <input type="hidden" name="size" value="@line.Size" />
-                                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">+</button>
-                            </form>
-                        </div>
-                    </td>
-
-                    <td>@line.Product.Price.ToString("C2")</td>
-                    <td>@((line.Product.Price * line.Quantity).ToString("C2"))</td>
-
-                    <td class="text-end">
-                        <!-- Tamamen sil -->
-                        <form method="post" asp-page-handler="Remove" class="d-inline">
-                            <input type="hidden" name="id" value="@line.Product.ProductId" />
-                            <input type="hidden" name="size" value="@line.Size" />
-                            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fa fa-trash"></i> Sil
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-
-        <tfoot>
-            <tr>
-                <td colspan="@(anySized ? 5 : 4)" class="text-end fw-semibold">Ara Toplam:</td>
-                <td class="text-primary fw-bold">@total.ToString("C2")</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td colspan="@(anySized ? 5 : 4)" class="text-end fw-semibold">Kargo:</td>
-                <td>
-                    @if (shippingCost == 0m)
-                    {
-                        <span class="text-success fw-semibold">Ücretsiz</span>
-                    }
-                    else
-                    {
-                        @shippingCost.ToString("C2")
-                    }
-                </td>
-                <td></td>
-            </tr>
-            <tr class="table-light">
-                <td colspan="@(anySized ? 5 : 4)" class="text-end fw-bold">Genel Toplam:</td>
-                <td class="fw-bold text-primary fs-5">@grandTotal.ToString("C2")</td>
-                <td></td>
-            </tr>
-        </tfoot>
-    </table>
-
-    <div class="text-center my-3">
-        <div class="d-flex justify-content-center">
-            <a class="btn btn-primary me-2" asp-controller="Product" asp-action="Index">
-                Alışverişe Devam Et
-            </a>
-
-            @if (hasItems)
-            {
-                <a class="btn" style="background-color:#ffea00; color:black; border:none;" asp-action="Checkout"
-                    asp-controller="Order">
-                    Ödeme Yap
-                </a>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center py-5">
+                        <p class="mb-3">Sepetinizde ürün bulunmuyor.</p>
+                        <a class="btn btn-primary" asp-controller="Product" asp-action="Index">
+                            Alışverişe Başla
+                        </a>
+                    </div>
+                </div>
             }
             else
             {
-                <button type="button" class="btn" style="background-color:#ffea00; color:black; border:none;" disabled
-                    title="Sepetiniz boş">
-                    Ödeme Yap
-                </button>
+                @foreach (var line in Model.Cart?.Lines ?? Enumerable.Empty<CartLine>())
+                {
+                    var imgSrc = string.IsNullOrWhiteSpace(line.Product.ImageUrl)
+                        ? Url.Content("~/images/placeholder.png")
+                        : (line.Product.ImageUrl.StartsWith("~/") || line.Product.ImageUrl.StartsWith("/")
+                            ? Url.Content(line.Product.ImageUrl)
+                            : Url.Content($"~/images/{line.Product.ImageUrl}"));
+
+                    <div class="card mb-3 shadow-sm border-0 cart-line"
+                         data-cart-line
+                         data-product-id="@line.Product.ProductId"
+                         data-size="@line.Size">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-3 col-md-2">
+                                <img src="@imgSrc"
+                                     asp-append-version="true"
+                                     alt="@line.Product.ProductName"
+                                     class="img-fluid rounded-start" />
+                            </div>
+
+                            <div class="col-9 col-md-10">
+                                <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+
+                                    <!-- Ürün bilgileri -->
+                                    <div>
+                                        <h6 class="card-title mb-1">@line.Product.ProductName</h6>
+
+                                        @if (anySized)
+                                        {
+                                            <div class="small text-muted">
+                                                Beden: <span class="fw-semibold">@line.Size</span>
+                                            </div>
+                                        }
+
+                                        <div class="small text-muted">
+                                            Birim Fiyat: @line.Product.Price.ToString("C2")
+                                        </div>
+                                    </div>
+
+                                    <!-- Adet, toplam, sil -->
+                                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 ms-md-auto">
+
+                                        <!-- 🔢 Adet butonları (AJAX) -->
+                                        <div class="d-inline-flex align-items-center gap-2">
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary js-cart-dec">−</button>
+
+                                            <span class="fw-semibold js-cart-qty">@line.Quantity</span>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary js-cart-inc">+</button>
+                                        </div>
+
+                                        <!-- 💰 Satır toplamı -->
+                                        <div class="fw-semibold js-cart-line-total">
+                                            @((line.Product.Price * line.Quantity).ToString("C2"))
+                                        </div>
+
+                                        <!-- 🗑 Sil -->
+                                        <button type="button" class="btn btn-sm btn-danger js-cart-remove">
+                                            <i class="fa fa-trash"></i> Sil
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
+        </div>
+
+        <!-- SAĞ TARAF: Sipariş Özeti -->
+        <div class="col-lg-4 mt-4 mt-lg-0">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Sipariş Özeti</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Ara Toplam</span>
+                        <span id="cart-subtotal" class="fw-semibold">@total.ToString("C2")</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Kargo</span>
+                        <span id="cart-shipping"
+                              class="@(shippingCost == 0m ? "text-success fw-semibold" : "fw-semibold")">
+                            @if (shippingCost == 0m)
+                            {
+                                @:Ücretsiz
+                            }
+                            else
+                            {
+                                @shippingCost.ToString("C2")
+                            }
+                        </span>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Genel Toplam</span>
+                        <span id="cart-grandtotal" class="fw-bold text-primary fs-5">
+                            @grandTotal.ToString("C2")
+                        </span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        @if (hasItems)
+                        {
+                            <a class="btn border-0"
+                               style="background-color:#ffea00; color:black;"
+                               asp-action="Checkout"
+                               asp-controller="Order">
+                                Ödeme Yap
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="btn border-0"
+                                    style="background-color:#ffea00; color:black;"
+                                    disabled
+                                    title="Sepetiniz boş">
+                                Ödeme Yap
+                            </button>
+                        }
+
+                        <a class="btn btn-outline-dark"
+                           asp-controller="Product"
+                           asp-action="Index">
+                            Alışverişe Devam Et
+                        </a>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- 🔐 Antiforgery token'ı JS'te kullanmak için gizli form -->
+<form id="cart-antiforgery-form" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+
+            async function callCartApi(handler, productId, size) {
+                // gizli formdan antiforgery token'ı al
+                var tokenInput = document.querySelector(
+                    '#cart-antiforgery-form input[name="__RequestVerificationToken"]'
+                );
+                var antiToken = tokenInput ? tokenInput.value : "";
+
+                var body = new URLSearchParams();
+                body.append("id", productId);
+                body.append("size", size || "");
+                body.append("__RequestVerificationToken", antiToken);
+
+                const response = await fetch("/cart?handler=" + handler, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                    },
+                    body: body
+                });
+
+                if (!response.ok) {
+                    console.error("Cart API error", response.status);
+                    return null;
+                }
+
+                return await response.json();
+            }
+
+            function updateTotals(data) {
+                var sub = document.getElementById("cart-subtotal");
+                var ship = document.getElementById("cart-shipping");
+                var grand = document.getElementById("cart-grandtotal");
+
+                if (sub) sub.textContent = data.cartTotalFormatted;
+                if (ship) ship.textContent = data.shippingCostFormatted;
+                if (grand) grand.textContent = data.grandTotalFormatted;
+
+                var shippingInfo = document.getElementById("shipping-info");
+                var progressBar = document.getElementById("shipping-progress");
+                var shippingText = document.getElementById("shipping-text");
+
+                if (!shippingInfo) return;
+
+                if (data.cartTotal <= 0) {
+                    // Sepet tamamen boşsa barı gizle (reload'dan önce)
+                    shippingInfo.style.display = "none";
+                    return;
+                }
+
+                shippingInfo.style.display = "";
+
+                if (progressBar) {
+                    progressBar.style.width = (data.progress || 0) + "%";
+                }
+
+                if (shippingText) {
+                    if (data.freeShipping) {
+                        // Başlık zaten "Tebrikler..." diyor, altta tekrar etmeyelim
+                        shippingText.textContent = "";
+                        shippingInfo.style.backgroundColor = "#d1e7dd";
+                    } else {
+                        shippingText.textContent =
+                            "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
+                        shippingInfo.style.backgroundColor = "#fffbe6";
+                    }
+                }
+            }
+
+            document.addEventListener("click", async function (e) {
+                var incBtn = e.target.closest(".js-cart-inc");
+                var decBtn = e.target.closest(".js-cart-dec");
+                var remBtn = e.target.closest(".js-cart-remove");
+
+                if (!incBtn && !decBtn && !remBtn) return;
+
+                var lineEl = e.target.closest("[data-cart-line]");
+                if (!lineEl) return;
+
+                var productId = lineEl.dataset.productId;
+                var size = lineEl.dataset.size || "";
+
+                var handler;
+                if (incBtn) handler = "IncrementAjax";
+                else if (decBtn) handler = "DecrementAjax";
+                else handler = "RemoveAjax";
+
+                var data = await callCartApi(handler, productId, size);
+                if (!data || !data.success) return;
+
+                if (data.removed) {
+                    // satır komple silindiyse kartı DOM'dan kaldır
+                    lineEl.remove();
+                } else {
+                    var qtySpan = lineEl.querySelector(".js-cart-qty");
+                    var lineTotalEl = lineEl.querySelector(".js-cart-line-total");
+
+                    if (qtySpan) qtySpan.textContent = data.quantity;
+                    if (lineTotalEl) lineTotalEl.textContent = data.lineTotalFormatted;
+                }
+
+                updateTotals(data);
+
+                // 🧹 Eğer sepet tamamen boşaldıysa, tam sayfa yenile:
+                // - boş sepet tasarımı gelsin
+                // - navbar'daki sepet sayacı güncellensin
+                if (data.cartTotal <= 0) {
+                    window.location.reload();
+                }
+            });
+
+        })();
+    </script>
+}
+

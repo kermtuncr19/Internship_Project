@@ -1,81 +1,97 @@
 @model LoginModel
+
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
 <meta charset="utf-8">
 
-<div class="text-center my-5">
-    <h6 class="display-6">
-        <i class="fa-solid text-white fa-right-to-bracket bg-secondary p-3 rounded-5 bg-warning"></i>
-        <br />
-        Giriş Yap
-    </h6>
-</div>
-
-<div class="row">
-    <div class="col-md-3"></div>
-
-    <div class="col-md-6">
-        <div class="text-danger" asp-validation-summary="All"></div>
+<div class="login-container">
+    <div class="login-card">
+        <h2 class="login-title">Giriş</h2>
+        
+        <!-- Validation Summary - Sadece hata varsa göster -->
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div class="validation-summary text-danger" asp-validation-summary="All"></div>
+        }
 
         <form method="post" asp-action="Login">
             <input type="hidden" asp-for="ReturnUrl" />
 
-            <!-- E-posta veya Kullanıcı Adı (TEK ALAN) -->
-            <div class="form-group my-3">
-                <label asp-for="Identifier" class="form-label">E-posta veya Kullanıcı Adı</label>
-                <input asp-for="Identifier" class="form-control" autocomplete="username" />
+            <!-- E-posta veya Kullanıcı Adı -->
+            <div class="form-group">
+                <label asp-for="Identifier" class="form-label">
+                    <i class="fa-regular fa-envelope"></i> E-posta veya Kullanıcı Adı
+                </label>
+                <input asp-for="Identifier" class="form-input" autocomplete="username" placeholder="E-posta veya kullanıcı adınızı girin" />
                 <span class="text-danger" asp-validation-for="Identifier"></span>
             </div>
 
-            <!-- Şifre + göster/gizle -->
-            <div class="form-group my-3">
-                <label asp-for="Password" class="form-label">Şifre</label>
-
-                <div class="pwd-wrap">
-                    <input type="password" asp-for="Password" class="form-control pwd-input"
-                        autocomplete="current-password" />
-                    <span id="togglePwdLogin" class="pwd-toggle-link" role="button" tabindex="0" aria-pressed="false">
-                        Göster
+            <!-- Şifre -->
+            <div class="form-group">
+                <label asp-for="Password" class="form-label">
+                    <i class="fa-solid fa-lock"></i> Şifre
+                </label>
+                <div class="password-wrapper">
+                    <input type="password" asp-for="Password" class="form-input pwd-input"
+                        autocomplete="current-password" placeholder="Şifrenizi girin" />
+                    <span id="togglePwdLogin" class="password-toggle" role="button" tabindex="0" aria-pressed="false">
+                        <i class="fa-regular fa-eye"></i>
                     </span>
                 </div>
-
                 <span class="text-danger" asp-validation-for="Password"></span>
             </div>
 
-
-
-            <div class="form-group my-3 d-flex justify-content-center">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    Giriş Yap
-                </button>
+            <!-- Beni Hatırla & Şifremi Unuttum -->
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="RememberMe" />
+                    <span class="checkmark"></span>
+                    Beni Hatırla
+                </label>
+                <a href="#" class="forgot-password">Şifremi Unuttum?</a>
             </div>
+
+            <!-- Giriş Butonu -->
+            <button type="submit" class="btn-login">
+                Giriş
+            </button>
         </form>
 
-        <div class="text-center">
-            Henüz Üye Değil misin?
-            <a class="text-decoration-none" asp-action="Register"> Şimdi Katıl</a>
+        <!-- Kayıt Ol Linki -->
+        <div class="register-link">
+            Hesabın yok mu? <a asp-action="Register">Kayıt Ol</a>
         </div>
     </div>
-
-    <div class="col-md-3"></div>
 </div>
+
+
 
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const link = document.getElementById('togglePwdLogin');
-            const input = document.getElementById('@Html.IdFor(m => m.Password)');
-            if (!link || !input) return;
+            const toggleBtn = document.getElementById('togglePwdLogin');
+            const passwordInput = document.getElementById('@Html.IdFor(m => m.Password)');
+            
+            if (!toggleBtn || !passwordInput) return;
 
-            function toggle() {
-                const isHidden = input.type === 'password';
-                input.type = isHidden ? 'text' : 'password';
-                link.textContent = isHidden ? 'Gizle' : 'Göster';
-                link.setAttribute('aria-pressed', String(isHidden));
+            function togglePassword() {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                
+                const icon = toggleBtn.querySelector('i');
+                if (icon) {
+                    icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+                }
+                
+                toggleBtn.setAttribute('aria-pressed', String(isPassword));
             }
 
-            link.addEventListener('click', toggle);
-            link.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            toggleBtn.addEventListener('click', togglePassword);
+            toggleBtn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    togglePassword();
+                }
             });
         });
     </script>
