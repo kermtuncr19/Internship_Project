@@ -2,6 +2,8 @@
 @model CartModel
 @using Entities.Models
 
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
 @{
     var anySized = Model.Cart?.Lines?.Any(l => !string.IsNullOrEmpty(l.Size)) == true;
     var hasItems = Model.Cart?.Lines?.Any() == true;
@@ -131,7 +133,7 @@
                                         </div>
 
                                         <!-- 🗑 Sil -->
-                                        <button type="button" class="btn btn-sm btn-danger js-cart-remove">
+                                        <button type="button" class="btn btn-sm btn-danger js-cart-remove btn-pill">
                                             <i class="fa fa-trash"></i> Sil
                                         </button>
                                     </div>
@@ -184,7 +186,7 @@
                     <div class="d-grid gap-2">
                         @if (hasItems)
                         {
-                            <a class="btn border-0"
+                            <a class="btn border-2 btn-pill"
                                style="background-color:#ffea00; color:black;"
                                asp-action="Checkout"
                                asp-controller="Order">
@@ -194,7 +196,7 @@
                         else
                         {
                             <button type="button"
-                                    class="btn border-0"
+                                    class="btn border-0 btn-pill"
                                     style="background-color:#ffea00; color:black;"
                                     disabled
                                     title="Sepetiniz boş">
@@ -202,7 +204,7 @@
                             </button>
                         }
 
-                        <a class="btn btn-outline-dark"
+                        <a class="btn btn-outline-primary btn-pill"
                            asp-controller="Product"
                            asp-action="Index">
                             Alışverişe Devam Et

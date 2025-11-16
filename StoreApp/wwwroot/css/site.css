@@ -2321,3 +2321,26 @@
         .tracking-step { margin-bottom: 2rem; }
         .tracking-steps::before, .tracking-progress { display: none; }
     }
+
+    /* Ana body arka plan gradyanı - yukarıdan aşağıya beyazdan laciverte */
+body {
+  background: linear-gradient(to bottom, #ffffff 0%, #7a9bc4 30%, #162faf 65%, #001f3f 90%, #001f3f 100%);
+  min-height: 100vh;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* Container'ların arka planını şeffaf yap ki gradyan görünsün */
+.container {
+  background-color: transparent;
+}
+
+/* Banner ve kart alanlarının okunabilirliğini korumak için */
+.banner-carousel-wrapper {
+  background-color: transparent;
+}
+
+/* Ürün kartlarına hafif beyaz arka plan (opsiyonel) */
+.card {
+  background-color: rgba(255, 255, 255, 0.95);
+}

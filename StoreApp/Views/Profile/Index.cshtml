@@ -49,7 +49,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="m-0">Son Siparişler</h5>
-                <a asp-controller="MyOrders" asp-action="Index" class="btn btn-outline-navy btn-sm">
+                <a asp-controller="MyOrders" asp-action="Index" class="btn btn-primary btn-pill btn-sm">
                     Tümünü Gör <i class="fa fa-arrow-right ms-1"></i>
                 </a>
             </div>
@@ -111,13 +111,15 @@
                                         {
                                             imgSrc = Url.Content($"~/images/{imgSrc}");
                                         }
-                                        <div class="order-product-mini">
+                                        
+                                        @* ✅ Ürünü tıklanabilir link yaptık *@
+                                        <a href="@Url.Action("Get", "Product", new { id = line.Product?.ProductId })" class="order-product-mini text-decoration-none" style="display: block; transition: background-color 0.2s;">
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="product-thumb-mini">
                                                     <img src="@imgSrc" alt="@line.Product?.ProductName" class="img-fluid" />
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <div class="fw-semibold small">@(line.Product?.ProductName ?? "Ürün")</div>
+                                                    <div class="fw-semibold small text-dark">@(line.Product?.ProductName ?? "Ürün")</div>
                                                     <div class="text-muted" style="font-size: 0.75rem;">
                                                         @if (!string.IsNullOrWhiteSpace(line.Size))
                                                         {
@@ -131,7 +133,7 @@
                                                     @((line.Product?.Price ?? 0).ToString("C2"))
                                                 </div>
                                             </div>
-                                        </div>
+                                        </a>
                                     }
                                     @if (o.Lines.Count > 3)
                                     {
@@ -147,7 +149,7 @@
                                         <span class="text-muted small">Toplam:</span>
                                         <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
                                     </div>
-                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm">
+                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm btn-pill">
                                         <i class="fa fa-eye me-1"></i> Detay
                                     </a>
                                 </div>
@@ -171,3 +173,26 @@
         </div>
     </div>
 </div>
+
+<style>
+/* ✅ Hover efekti - Yavaş ve yumuşak */
+.order-product-mini {
+    transition: all 0.4s ease;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.order-product-mini:hover {
+    background-color: rgba(0, 31, 63, 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 31, 63, 0.1);
+}
+
+.order-product-mini img {
+    transition: transform 0.4s ease;
+}
+
+.order-product-mini:hover img {
+    transform: scale(1.05);
+}
+</style>
