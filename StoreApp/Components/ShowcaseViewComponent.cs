@@ -21,7 +21,12 @@ namespace StoreApp.Components
 
         public async Task<IViewComponentResult> InvokeAsync(string page = "default")
         {
-            var products = _manager.PoductService.GetShowcaseProducts(false).ToList();
+            // ✅ STOK VERİLERİNİ YÜKLE
+            var products = _manager.PoductService
+                .GetAllProducts(false)
+                .Include(p => p.Stocks) // 🔥 STOK EKLENDİ
+                .Where(p => p.ShowCase)
+                .ToList();
 
             // --- Ratings (avg, count) sözlüğü ---
             var ids = products.Select(p => p.ProductId).ToList();

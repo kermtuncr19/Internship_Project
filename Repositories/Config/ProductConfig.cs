@@ -16,6 +16,11 @@ namespace Repositories.Config
             builder.HasMany(p => p.Images)
                 .WithOne(pi => pi.Product)
                 .HasForeignKey(pi => pi.ProductId);
+
+            builder.HasMany(p => p.Stocks)
+                .WithOne(s => s.Product)
+                .HasForeignKey(s => s.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
                 
             builder
             .HasOne(p => p.Category)

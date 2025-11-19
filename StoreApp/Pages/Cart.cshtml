@@ -19,6 +19,23 @@
 <div class="container my-4 cart-page">
     <h2 class="text-center mb-3">Sepet</h2>
 
+     <!-- ✅ STOK UYARILARI -->
+    @if (TempData["StockWarnings"] is List<string> warnings && warnings.Any())
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <h6 class="alert-heading">
+                <i class="fa fa-exclamation-triangle me-2"></i>Stok Uyarısı
+            </h6>
+            <ul class="mb-0">
+                @foreach (var warning in warnings)
+                {
+                    <li>@warning</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <!-- 💛 Ücretsiz kargo bilgilendirme çubuğu / Boş sepet mesajı -->
     @if (total == 0)
     {
@@ -331,6 +348,138 @@
                 // 🧹 Eğer sepet tamamen boşaldıysa, tam sayfa yenile:
                 // - boş sepet tasarımı gelsin
                 // - navbar'daki sepet sayacı güncellensin
+                if (data.cartTotal <= 0) {
+                    window.location.reload();
+                }
+            });
+
+        })();
+    </script>
+
+     <script>
+        (function () {
+
+            async function callCartApi(handler, productId, size) {
+                var tokenInput = document.querySelector(
+                    '#cart-antiforgery-form input[name="__RequestVerificationToken"]'
+                );
+                var antiToken = tokenInput ? tokenInput.value : "";
+
+                var body = new URLSearchParams();
+                body.append("id", productId);
+                body.append("size", size || "");
+                body.append("__RequestVerificationToken", antiToken);
+
+                const response = await fetch("/cart?handler=" + handler, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                    },
+                    body: body
+                });
+
+                if (!response.ok) {
+                    console.error("Cart API error", response.status);
+                    return null;
+                }
+
+                return await response.json();
+            }
+
+            function updateTotals(data) {
+                var sub = document.getElementById("cart-subtotal");
+                var ship = document.getElementById("cart-shipping");
+                var grand = document.getElementById("cart-grandtotal");
+
+                if (sub) sub.textContent = data.cartTotalFormatted;
+                if (ship) ship.textContent = data.shippingCostFormatted;
+                if (grand) grand.textContent = data.grandTotalFormatted;
+
+                var shippingInfo = document.getElementById("shipping-info");
+                var progressBar = document.getElementById("shipping-progress");
+                var shippingText = document.getElementById("shipping-text");
+
+                if (!shippingInfo) return;
+
+                if (data.cartTotal <= 0) {
+                    shippingInfo.style.display = "none";
+                    return;
+                }
+
+                shippingInfo.style.display = "";
+
+                if (progressBar) {
+                    progressBar.style.width = (data.progress || 0) + "%";
+                }
+
+                if (shippingText) {
+                    if (data.freeShipping) {
+                        shippingText.textContent = "";
+                        shippingInfo.style.backgroundColor = "#d1e7dd";
+                    } else {
+                        shippingText.textContent =
+                            "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
+                        shippingInfo.style.backgroundColor = "#fffbe6";
+                    }
+                }
+            }
+
+            // ✅ HATA MESAJI GÖSTERME FONKSİYONU
+            function showError(message) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                alertDiv.innerHTML = `
+                    <i class="fa fa-exclamation-circle me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+
+            document.addEventListener("click", async function (e) {
+                var incBtn = e.target.closest(".js-cart-inc");
+                var decBtn = e.target.closest(".js-cart-dec");
+                var remBtn = e.target.closest(".js-cart-remove");
+
+                if (!incBtn && !decBtn && !remBtn) return;
+
+                var lineEl = e.target.closest("[data-cart-line]");
+                if (!lineEl) return;
+
+                var productId = lineEl.dataset.productId;
+                var size = lineEl.dataset.size || "";
+
+                var handler;
+                if (incBtn) handler = "IncrementAjax";
+                else if (decBtn) handler = "DecrementAjax";
+                else handler = "RemoveAjax";
+
+                var data = await callCartApi(handler, productId, size);
+                
+                // ✅ STOK HATASI KONTROLÜ
+                if (!data || !data.success) {
+                    if (data && data.message) {
+                        showError(data.message);
+                    }
+                    return;
+                }
+
+                if (data.removed) {
+                    lineEl.remove();
+                } else {
+                    var qtySpan = lineEl.querySelector(".js-cart-qty");
+                    var lineTotalEl = lineEl.querySelector(".js-cart-line-total");
+
+                    if (qtySpan) qtySpan.textContent = data.quantity;
+                    if (lineTotalEl) lineTotalEl.textContent = data.lineTotalFormatted;
+                }
+
+                updateTotals(data);
+
                 if (data.cartTotal <= 0) {
                     window.location.reload();
                 }

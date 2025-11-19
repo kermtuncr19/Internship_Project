@@ -431,6 +431,40 @@ namespace StoreApp.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductStock", b =>
+                {
+                    b.Property<int>("ProductStockId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProductStockId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Size")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ProductStockId");
+
+                    b.HasIndex("ProductId", "Size")
+                        .IsUnique();
+
+                    b.ToTable("ProductStocks");
+                });
+
             modelBuilder.Entity("Entities.Models.ReturnRequest", b =>
                 {
                     b.Property<int>("ReturnRequestId")
@@ -940,6 +974,17 @@ namespace StoreApp.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductStock", b =>
+                {
+                    b.HasOne("Entities.Models.Product", "Product")
+                        .WithMany("Stocks")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Entities.Models.ReturnRequest", b =>
                 {
                     b.HasOne("Entities.Models.Order", "Order")
@@ -1106,6 +1151,8 @@ namespace StoreApp.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("Stocks");
                 });
 
             modelBuilder.Entity("Entities.Models.ReturnRequest", b =>

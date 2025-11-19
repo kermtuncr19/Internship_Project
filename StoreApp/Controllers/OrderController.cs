@@ -134,23 +134,49 @@ namespace StoreApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ProcessPayment([FromForm] PaymentInfo paymentInfo)
         {
-
-
-            // Session'dan order bilgilerini al
             var order = HttpContext.Session.GetJson<Order>("PendingOrder");
-
 
             if (order == null || !_cart.Lines.Any())
             {
                 TempData["Error"] = "Sipariş bilgileri bulunamadı. Lütfen tekrar deneyin.";
                 return RedirectToAction(nameof(Checkout));
             }
-            
+
             var instStr = Request.Form["Installment"].ToString();
             if (int.TryParse(instStr, out var taksit) && taksit > 0)
             {
                 TempData["Installment"] = taksit;
                 order.Installment = taksit;
+            }
+
+            // ✅ STOK KONTROLÜ - Ödeme öncesi
+            var stockErrors = new List<string>();
+            foreach (var line in _cart.Lines)
+            {
+                var inStock = _manager.ProductStockService.IsInStock(
+                    line.Product.ProductId,
+                    line.Size,
+                    line.Quantity
+                );
+
+                if (!inStock)
+                {
+                    var stock = _manager.ProductStockService.GetStockByProductAndSize(
+                        line.Product.ProductId,
+                        line.Size
+                    );
+
+                    var availableQty = stock?.Quantity ?? 0;
+                    var sizeText = string.IsNullOrEmpty(line.Size) ? "" : $" (Beden: {line.Size})";
+
+                    stockErrors.Add($"{line.Product.ProductName}{sizeText} - Mevcut stok: {availableQty}, İstenen: {line.Quantity}");
+                }
+            }
+
+            if (stockErrors.Any())
+            {
+                TempData["Error"] = "Bazı ürünlerde yeterli stok yok:\n" + string.Join("\n", stockErrors);
+                return RedirectToPage("/cart");
             }
 
             // Payment validation
@@ -174,7 +200,7 @@ namespace StoreApp.Controllers
                 return View("Payment", viewModel);
             }
 
-            // Yapay ödeme işlemi (gerçek sistemde burada payment gateway'e istek atılır)
+            // Yapay ödeme işlemi
             bool paymentSuccessful = ProcessFakePayment(paymentInfo);
 
             if (!paymentSuccessful)
@@ -199,7 +225,25 @@ namespace StoreApp.Controllers
                 return View("Payment", viewModel);
             }
 
-            // Ödeme başarılı - Siparişi oluştur
+            // ✅ ÖDEME BAŞARILI - STOKLARI AZALT
+            try
+            {
+                foreach (var line in _cart.Lines)
+                {
+                    _manager.ProductStockService.DecreaseStock(
+                        line.Product.ProductId,
+                        line.Size,
+                        line.Quantity
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Stok güncellenirken hata oluştu: " + ex.Message;
+                return RedirectToPage("/cart");
+            }
+
+            // Siparişi oluştur
             order.OrderedAt = DateTime.UtcNow;
             order.Lines = _cart.Lines.Select(l => new CartLine
             {

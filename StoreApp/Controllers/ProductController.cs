@@ -55,6 +55,7 @@ namespace StoreApp.Controllers
 
     // 1) Filtrelenmiş temel sorgu
     var filtered = _manager.PoductService.GetAllProducts(false)
+        .Include(p => p.Stocks)
         .FilteredByCategoryId(p.CategoryId)
         .FilteredBySearchTerm(p.SearchTerm)
         .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
@@ -108,6 +109,7 @@ public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
     var model = _manager.PoductService
         .GetAllProducts(false)
         .Include(p => p.Images)
+        .Include(p => p.Stocks)
         .FirstOrDefault(p => p.ProductId == id);
 
     if (model == null)

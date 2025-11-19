@@ -68,6 +68,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IFavoriteRepository, FavoriteRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
+            services.AddScoped<IProductStockRepository, ProductStockRepository>();
         }
         public static void ConfigureServiceRegistration(this IServiceCollection services)
         {
@@ -82,6 +83,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IFavoriteService, FavoriteManager>();
             services.AddScoped<IProductImageService, ProductImageManager>();
             services.AddScoped<IReturnRequestService, ReturnRequestManager>();
+            services.AddScoped<IProductStockService,ProductStockManager>();
         }
 
         public static void ConfigureApplicationCookie(this IServiceCollection services)

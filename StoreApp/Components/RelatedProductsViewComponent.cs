@@ -24,6 +24,7 @@ namespace StoreApp.Components
         {
             // Aynı kategorideki diğer ürünleri al (mevcut ürün hariç)
             var relatedProducts = _manager.PoductService.GetAllProducts(false)
+                .Include(p => p.Stocks)
                 .Where(p => p.ProductId != productId)
                 .Where(p => categoryId == null || p.CategoryId == categoryId)
                 .OrderByDescending(p => p.ProductId)

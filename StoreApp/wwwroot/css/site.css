@@ -2324,7 +2324,7 @@
 
     /* Ana body arka plan gradyanı - yukarıdan aşağıya beyazdan laciverte */
 body {
-  background: linear-gradient(to bottom, #ffffff 0%, #7a9bc4 30%, #162faf 65%, #001f3f 90%, #001f3f 100%);
+  background: linear-gradient(to bottom, #ffffff 0%, #7a9bc4 30%, #162faf 65%, #001f3f 90%, #0d1b4c 100%);
   min-height: 100vh;
   background-attachment: fixed;
   background-repeat: no-repeat;
@@ -2343,4 +2343,122 @@ body {
 /* Ürün kartlarına hafif beyaz arka plan (opsiyonel) */
 .card {
   background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* 🔍 ARAMA ÇUBUĞU STİLİ - TAM YUVARLAK (SADECE İKON + INPUT) */
+.navbar-search {
+  max-width: 550px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-right: 20px !important;
+}
+
+.navbar-search .input-group {
+  border-radius: 50px !important;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  border: 1px solid #ddd;
+  background: white;
+}
+
+.navbar-search .input-group-text {
+  background: white !important;
+  border: none !important;
+  padding-left: 18px;
+  padding-right: 10px;
+  color: #333;
+  font-size: 16px;
+}
+
+.navbar-search .form-control {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 12px 18px 12px 0;
+  font-size: 14px;
+  background: white !important;
+  border-radius: 0 50px 50px 0 !important;
+}
+
+.navbar-search .form-control:focus {
+  box-shadow: none !important;
+  outline: none !important;
+  border: none !important;
+}
+
+.navbar-search .form-control::placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+/* Ara butonunu gizle */
+.navbar-search .btn-navy {
+  display: none !important;
+}
+
+/* Tüm input-group elemanlarının border'larını kaldır */
+.navbar-search .input-group > * {
+  border: none !important;
+}
+
+/* Mobilde tam yuvarlak görünüm */
+@media (max-width: 768px) {
+  .navbar-search .input-group {
+    border-radius: 50px !important;
+  }
+  
+  .navbar-search .input-group-text {
+    padding-left: 16px;
+    padding-right: 10px;
+  }
+  
+  .navbar-search .form-control {
+    padding: 12px 16px 12px 0;
+    font-size: 14px;
+  }
+}
+
+.tooltip1-btn-stock {
+  position: relative;
+}
+
+/* Tooltip kutusu */
+.tooltip1-btn-stock::after {
+  content: "Stok Yönetimi";
+  position: absolute;
+  bottom: 130%;
+  /* yukarıda gözüksün */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  /* beyazımsı arka plan */
+  color: #0d1b4c;
+  /* lacivert tonlu yazı */
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+/* Tooltip ok işareti */
+.tooltip1-btn-stock::before {
+  content: "";
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.95);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.tooltip1-btn-stock:hover::after,
+.tooltip1-btn-stock:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
 }

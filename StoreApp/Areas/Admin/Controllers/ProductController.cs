@@ -39,6 +39,7 @@ namespace StoreApp.Areas.Admin.Controllers
             ViewBag.ActiveCategoryId = p.CategoryId;
 
             var q = _manager.PoductService.GetAllProducts(false)
+                .Include(p => p.Stocks)
                 .FilteredByCategoryId(p.CategoryId)
                 .FilteredBySearchTerm(p.SearchTerm)
                 .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)

@@ -288,6 +288,7 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compress
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\hohkyebmze-h24ib2njl2.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gbvyhggl61-9onk5ryjz5.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\rbq8j13wk6-m625dpdtmm.gz
-C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-dzc6w6drky.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\6rdfkqg3vg-ku89k2x05h.gz
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\6gwp1q50p6-m4t5bbsnw2.gz
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\w5r9934d8e-oheq9mf4ku.gz
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net9.0\compressed\gjxb23ewit-sk2skpwpgr.gz

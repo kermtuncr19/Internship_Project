@@ -25,6 +25,50 @@ namespace StoreApp.Pages
         public void OnGet(string returnUrl)
         {
             ReturnUrl = returnUrl ?? "/";
+
+            // ✅ Sepetteki ürünlerin stok durumunu kontrol et
+            var stockWarnings = new List<string>();
+            var outOfStockItems = new List<(int productId, string size)>();
+
+            foreach (var line in Cart.Lines.ToList())
+            {
+                var stock = _manager.ProductStockService.GetStockByProductAndSize(
+                    line.Product.ProductId,
+                    line.Size
+                );
+
+                var availableQty = stock?.Quantity ?? 0;
+
+                if (availableQty == 0)
+                {
+                    // Stok tükendi - sepetten çıkar
+                    outOfStockItems.Add((line.Product.ProductId, line.Size));
+                    var sizeText = string.IsNullOrEmpty(line.Size) ? "" : $" (Beden: {line.Size})";
+                    stockWarnings.Add($"{line.Product.ProductName}{sizeText} stokta kalmadığı için sepetten çıkarıldı.");
+                }
+                else if (line.Quantity > availableQty)
+                {
+                    // Sepetteki miktar stoktan fazla - düzelt
+                    line.Quantity = availableQty;
+                    var sizeText = string.IsNullOrEmpty(line.Size) ? "" : $" (Beden: {line.Size})";
+                    stockWarnings.Add($"{line.Product.ProductName}{sizeText} için miktar {availableQty} olarak güncellendi (stok yetersiz).");
+                }
+            }
+
+            // Stok tükenen ürünleri sepetten çıkar
+            foreach (var item in outOfStockItems)
+            {
+                var product = _manager.PoductService.GetOneProduct(item.productId, false);
+                if (product != null)
+                {
+                    Cart.RemoveLine(product, item.size);
+                }
+            }
+
+            if (stockWarnings.Any())
+            {
+                TempData["StockWarnings"] = stockWarnings;
+            }
         }
 
         // 🔹 Normal (full page) POST – istersen Product detaydan ekleme için kullanıyorsun
@@ -37,6 +81,23 @@ namespace StoreApp.Pages
             if (product.RequiresSize && string.IsNullOrWhiteSpace(size))
             {
                 TempData["CartError"] = "Lütfen beden seçin.";
+                return RedirectToAction("Get", "Product", new { id = productId });
+            }
+
+            // ✅ STOK KONTROLÜ
+            var currentLine = Cart.Lines.FirstOrDefault(l =>
+                l.Product.ProductId == productId && l.Size == size);
+            var newQuantity = (currentLine?.Quantity ?? 0) + 1;
+
+            var inStock = _manager.ProductStockService.IsInStock(productId, size, newQuantity);
+
+            if (!inStock)
+            {
+                var stock = _manager.ProductStockService.GetStockByProductAndSize(productId, size);
+                var availableQty = stock?.Quantity ?? 0;
+                var sizeText = string.IsNullOrEmpty(size) ? "" : $" (Beden: {size})";
+
+                TempData["CartError"] = $"Yetersiz stok{sizeText}. Mevcut: {availableQty} adet";
                 return RedirectToAction("Get", "Product", new { id = productId });
             }
 
@@ -131,19 +192,39 @@ namespace StoreApp.Pages
         }
 
         // 🔼 1 artır (AJAX)
-        
+
         public JsonResult OnPostIncrementAjax(int id, string? size)
         {
             var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
             if (product is null)
-                return new JsonResult(new { success = false });
+                return new JsonResult(new { success = false, message = "Ürün bulunamadı" });
+
+            // ✅ STOK KONTROLÜ
+            var currentLine = Cart.Lines.FirstOrDefault(l =>
+                l.Product.ProductId == id && l.Size == size);
+            var newQuantity = (currentLine?.Quantity ?? 0) + 1;
+
+            var inStock = _manager.ProductStockService.IsInStock(id, size, newQuantity);
+
+            if (!inStock)
+            {
+                var stock = _manager.ProductStockService.GetStockByProductAndSize(id, size);
+                var availableQty = stock?.Quantity ?? 0;
+
+                return new JsonResult(new
+                {
+                    success = false,
+                    message = $"Yetersiz stok. Mevcut: {availableQty} adet",
+                    currentStock = availableQty
+                });
+            }
 
             Cart.AddItem(product, 1, size);
             return BuildCartJson(id, size);
         }
 
         // 🔽 1 azalt (AJAX)
-        
+
         public JsonResult OnPostDecrementAjax(int id, string? size)
         {
             var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);
@@ -155,7 +236,7 @@ namespace StoreApp.Pages
         }
 
         // 🗑 Sil (AJAX)
-        
+
         public JsonResult OnPostRemoveAjax(int id, string? size)
         {
             var product = _manager.PoductService.GetOneProduct(id, trackChanges: false);

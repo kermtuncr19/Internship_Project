@@ -44,14 +44,14 @@
 
 @{
     var avgRating = Model.Reviews?.Any(r => r.IsApproved) == true
-        ? Model.Reviews.Where(r => r.IsApproved).Average(r => r.Rating)
-        : 0;
+    ? Model.Reviews.Where(r => r.IsApproved).Average(r => r.Rating)
+    : 0;
 
     var reviewCount = Model.Reviews?.Count(r => r.IsApproved) ?? 0;
     var approvedReviews = Model.Reviews?.Where(r => r.IsApproved)
-                                        .OrderByDescending(r => r.CreatedAt)
-                                        .ToList()
-                         ?? new List<Review>();
+    .OrderByDescending(r => r.CreatedAt)
+    .ToList()
+    ?? new List<Review>();
 
     var starCounts = new Dictionary<int, int>();
     for (int s = 1; s <= 5; s++)
@@ -86,11 +86,9 @@
                     </div>
 
                     <div id="imageWrapper" class="image-zoom-wrapper">
-                        <img id="mainImage"
-                             class="img-fluid rounded shadow-sm w-100"
-                             src="@mainImageUrl"
-                             alt="@Model.ProductName"
-                             style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
+                        <img id="mainImage" class="img-fluid rounded shadow-sm w-100" src="@mainImageUrl"
+                            alt="@Model.ProductName"
+                            style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
                         <div id="zoomLens" class="zoom-lens"></div>
                     </div>
 
@@ -113,12 +111,10 @@
                         @for (int i = 0; i < images.Count; i++)
                         {
                             var img = images[i];
-                            <img src="@img.ImageUrl"
-                                 class="thumbnail @(i == 0 ? "active" : "")"
-                                 alt="@Model.ProductName"
-                                 data-index="@i"
-                                 style="width:80px; height:80px; object-fit:cover; cursor:pointer;
-                                        border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
+                            <img src="@img.ImageUrl" class="thumbnail @(i == 0 ? "active" : "")" alt="@Model.ProductName"
+                                data-index="@i"
+                                style="width:80px; height:80px; object-fit:cover; cursor:pointer;
+                                                                                        border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
                         }
                     </div>
                 }
@@ -141,13 +137,11 @@
                         <form class="m-0 p-0 d-inline js-fav-form" id="favForm-@Model.ProductId">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@Model.ProductId" />
-                            <button type="button"
-                                    class="btn-favorite-modern js-fav-btn"
-                                    data-url="@Url.Action("ToggleAjax","Favorites")"
-                                    data-id="@Model.ProductId"
-                                    aria-pressed="@(isFavorite.ToString().ToLower())">
+                            <button type="button" class="btn-favorite-modern js-fav-btn"
+                                data-url="@Url.Action("ToggleAjax", "Favorites")" data-id="@Model.ProductId"
+                                aria-pressed="@(isFavorite.ToString().ToLower())">
                                 <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart"
-                                   style="@(isFavorite ? "color:#dc3545;" : "color:#001f3f;")"></i>
+                                    style="@(isFavorite ? "color:#dc3545;" : "color:#001f3f;")"></i>
                             </button>
                         </form>
                     }
@@ -200,15 +194,53 @@
                     @{
                         var requires = Model.RequiresSize;
                         List<string> sizeList = new();
+                        Dictionary<string, int> sizeStocks = new();
+                        var totalStock = Model.Stocks?.Sum(s => s.Quantity) ?? 0;
+                        var isCompletelyOutOfStock = totalStock == 0;
+
                         if (requires)
                         {
                             var csv = (Model.SizeOptionsCsv ?? "").Trim();
                             sizeList = string.IsNullOrWhiteSpace(csv)
-                                ? new List<string> { "XS","S","M","L","XL" }
-                                : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                     .ToList();
+                            ? new List<string> { "XS", "S", "M", "L", "XL" }
+                            : csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .ToList();
+
+                            // Her beden için stok miktarını al
+                            foreach (var size in sizeList)
+                            {
+                                var stock = Model.Stocks?.FirstOrDefault(s => s.Size == size);
+                                sizeStocks[size] = stock?.Quantity ?? 0;
+                            }
                         }
+                        else
+                        {
+                            // Bedensiz ürün için genel stok
+                            var stock = Model.Stocks?.FirstOrDefault(s => string.IsNullOrEmpty(s.Size));
+                            sizeStocks[""] = stock?.Quantity ?? 0;
+                        }
+
                         var showSizes = requires && sizeList.Count > 0;
+                    }
+
+                    <!-- ✅ STOK BİTTİ UYARISI (Tüm stok bittiyse) -->
+                    @if (isCompletelyOutOfStock)
+                    {
+                        <div class="alert alert-warning shadow-sm mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-warning" style="font-size: 2.5rem;">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 fw-bold">Bu Ürün Şu Anda Stokta Yok</h5>
+                                    <p class="mb-0 text-muted">
+                                        Üzgünüz, bu ürünün tüm bedenleri tükenmiştir.
+                                        Stoklarımız yakında yenilenecektir.
+                                        Favori listenize ekleyerek stok geldiğinde haberdar olabilirsiniz.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     }
 
                     @if (showSizes)
@@ -219,28 +251,81 @@
                                 @foreach (var s in sizeList)
                                 {
                                     var id = $"size_{s}";
-                                    <div class="size-chip-modern">
-                                        <input type="radio" id="@id" name="size" value="@s" />
-                                        <label for="@id" class="size-btn-modern">@s</label>
+                                    var stock = sizeStocks[s];
+                                    var isOutOfStock = stock == 0;
+                                    var isLowStock = stock > 0 && stock < 10;
+
+                                    <div class="size-chip-modern @(isOutOfStock ? "size-out-of-stock" : "")">
+                                        <input type="radio" id="@id" name="size" value="@s" @(isOutOfStock ? "disabled" : "")
+                                            data-stock="@stock" />
+                                        <label for="@id" class="size-btn-modern">
+                                            @s
+                                            @if (isOutOfStock)
+                                            {
+                                                <span class="size-stock-badge out">Tükendi</span>
+                                            }
+                                            else if (isLowStock)
+                                            {
+                                                <span class="size-stock-badge low">Tükenmek Üzere!</span>
+                                            }
+                                        </label>
                                     </div>
                                 }
                             </fieldset>
+
+                            <!-- ✅ Seçili Beden İçin Stok Uyarısı -->
+                            <div id="sizeStockInfo" class="mt-3" style="display:none;">
+                                <div id="lowStockWarning" class="alert alert-warning p-2 mb-0" style="display:none;">
+                                    <i class="fa fa-exclamation-circle me-2"></i>
+                                    <strong>Tükenmek üzere!</strong>
+                                    Bu bedenden sadece <span id="stockCount">0</span> adet kaldı.
+                                </div>
+                            </div>
                         </div>
+                    }
+                    else if (!isCompletelyOutOfStock)
+                    {
+                        <!-- Bedensiz ürün için stok uyarısı -->
+
+                        var generalStock = sizeStocks[""];
+                        var isLowStock = generalStock > 0 && generalStock < 10;
+
+
+                        @if (isLowStock)
+                        {
+                            <div class="alert alert-warning mb-3">
+                                <i class="fa fa-exclamation-circle me-2"></i>
+                                <strong>Tükenmek üzere!</strong>
+                                Bu üründen sadece @generalStock adet kaldı.
+                            </div>
+                        }
                     }
 
                     <div class="mb-3">
-                        <button id="addToCartBtn"
-                                type="submit"
-                                class="btn-add-cart-modern w-100"
-                                @(Model.RequiresSize ? "disabled" : null)>
-                            <i class="fa fa-cart-plus me-2"></i> Sepete Ekle
+                        <button id="addToCartBtn" type="submit" class="btn-add-cart-modern w-100" @(Model.RequiresSize
+                                                                                                                              || isCompletelyOutOfStock ? "disabled" : null)>
+                            @if (isCompletelyOutOfStock)
+                            {
+                                <i class="fa fa-times-circle me-2"></i>
+
+                                @:Stokta Yok
+                            }
+                            else
+                            {
+                                <i class="fa fa-cart-plus me-2"></i>
+
+                                @:Sepete Ekle
+                            }
                         </button>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 text-muted small">
-                        <i class="fa fa-truck" style="color: #ffc107;"></i>
-                        <span>2000 ₺ üzeri alışverişlerde <strong>kargo ücretsiz</strong></span>
-                    </div>
+                    @if (!isCompletelyOutOfStock)
+                    {
+                        <div class="d-flex align-items-center gap-2 text-muted small">
+                            <i class="fa fa-truck" style="color: #ffc107;"></i>
+                            <span>2000 ₺ üzeri alışverişlerde <strong>kargo ücretsiz</strong></span>
+                        </div>
+                    }
                 </form>
             </div>
         </div>
@@ -255,20 +340,20 @@
             <div class="d-flex justify-content-center mb-5">
                 <ul class="nav product-tabs-modern" id="productTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="details-tab" data-bs-toggle="tab"
-                                data-bs-target="#details" type="button" role="tab">
+                        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details"
+                            type="button" role="tab">
                             <i class="fa fa-info-circle me-2"></i>Detaylar
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab"
-                                data-bs-target="#reviews" type="button" role="tab">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
+                            type="button" role="tab">
                             <i class="fa fa-star me-2"></i>Yorumlar
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="discussion-tab" data-bs-toggle="tab"
-                                data-bs-target="#discussion" type="button" role="tab">
+                        <button class="nav-link" id="discussion-tab" data-bs-toggle="tab" data-bs-target="#discussion"
+                            type="button" role="tab">
                             <i class="fa fa-comments me-2"></i>Tartışma
                         </button>
                     </li>
@@ -338,7 +423,8 @@
                                             <div style="width:2rem;" class="fw-semibold text-muted">@star</div>
                                             <div class="flex-grow-1 mx-3">
                                                 <div class="progress-modern">
-                                                    <div class="progress-bar-modern" role="progressbar" style="width:@percent.ToString("0")%"></div>
+                                                    <div class="progress-bar-modern" role="progressbar"
+                                                        style="width:@percent.ToString("0")%"></div>
                                                 </div>
                                             </div>
                                             <div class="fw-semibold" style="width:2.5rem; text-align:right; color: #001f3f;">
@@ -370,14 +456,16 @@
                                                 <div class="star-rating-modern">
                                                     @for (int i = 1; i <= 5; i++)
                                                     {
-                                                        <i class="fa fa-star" style="color: @(i <= review.Rating ? "#ffc107" : "#ddd");"></i>
+                                                        <i class="fa fa-star"
+                                                            style="color: @(i <= review.Rating ? "#ffc107" : "#ddd");"></i>
                                                     }
                                                 </div>
                                             </div>
 
                                             @if (!string.IsNullOrWhiteSpace(review.Comment))
                                             {
-                                                <p class="mb-0 text-muted" style="white-space: pre-line; line-height: 1.7;">@review.Comment</p>
+                                                <p class="mb-0 text-muted" style="white-space: pre-line; line-height: 1.7;">
+                                                    @review.Comment</p>
                                             }
                                         </div>
                                     </div>
@@ -598,6 +686,41 @@
             } catch (err) {
                 console.error('Favorites toggle failed', err);
             }
+        });
+    </script>
+
+    <script>
+        // ✅ Beden seçildiğinde stok durumunu göster
+        document.addEventListener('DOMContentLoaded', function () {
+            const sizeRadios = document.querySelectorAll('input[name="size"]');
+            const sizeStockInfo = document.getElementById('sizeStockInfo');
+            const lowStockWarning = document.getElementById('lowStockWarning');
+            const stockCountSpan = document.getElementById('stockCount');
+            const addToCartBtn = document.getElementById('addToCartBtn');
+
+            if (sizeRadios.length === 0) return;
+
+            sizeRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const stock = parseInt(this.getAttribute('data-stock') || '0');
+
+                    if (stock > 0 && stock < 10) {
+                        // Az stok uyarısı göster
+                        sizeStockInfo.style.display = 'block';
+                        lowStockWarning.style.display = 'block';
+                        stockCountSpan.textContent = stock;
+                    } else {
+                        // Uyarıyı gizle
+                        sizeStockInfo.style.display = 'none';
+                        lowStockWarning.style.display = 'none';
+                    }
+
+                    // Sepete ekle butonunu aktif et
+                    if (addToCartBtn) {
+                        addToCartBtn.disabled = false;
+                    }
+                });
+            });
         });
     </script>
 }

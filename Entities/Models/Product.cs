@@ -45,4 +45,24 @@ public class Product
             return Reviews.Count(r => r.IsApproved);
         }
     }
+
+    public ICollection<ProductStock> Stocks { get; set; } = new List<ProductStock>();
+
+    // ✅ Helper: Toplam stok hesaplama
+    public int TotalStock
+    {
+        get
+        {
+            if (Stocks == null || !Stocks.Any())
+                return 0;
+            return Stocks.Sum(s => s.Quantity);
+        }
+    }
+
+    // ✅ Helper: Belirli bir bedende stok var mı?
+    public int GetStockForSize(string size)
+    {
+        var stock = Stocks?.FirstOrDefault(s => s.Size == size);
+        return stock?.Quantity ?? 0;
+    }
 }

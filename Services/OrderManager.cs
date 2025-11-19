@@ -39,6 +39,54 @@ namespace Services
 
         public void SaveOrder(Order order)
         {
+            // Eğer sipariş iptal ediliyorsa ve önceden onaylanmışsa stokları geri yükle
+            var existingOrder = _manager.Order.GetOneOrder(order.OrderId);
+
+            if (existingOrder != null &&
+                order.Cancelled &&
+                !existingOrder.Cancelled &&
+                existingOrder.Shipped)
+            {
+                // Sipariş iptal ediliyor ve daha önce onaylanmıştı
+                // Stokları geri yükle
+                foreach (var line in existingOrder.Lines)
+                {
+                    try
+                    {
+                        var stock = _manager.ProductStock.GetStockByProductAndSize(
+                            line.ProductId,
+                            line.Size,
+                            true
+                        );
+
+                        if (stock != null)
+                        {
+                            stock.Quantity += line.Quantity;
+                            stock.UpdatedAt = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            // Stok kaydı yoksa oluştur
+                            var newStock = new ProductStock
+                            {
+                                ProductId = line.ProductId,
+                                Size = line.Size,
+                                Quantity = line.Quantity,
+                                CreatedAt = DateTime.UtcNow
+                            };
+                            _manager.ProductStock.CreateStock(newStock);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but don't fail the cancellation
+                        System.Diagnostics.Debug.WriteLine($"Stok geri yükleme hatası: {ex.Message}");
+                    }
+                }
+
+                _manager.Save();
+            }
+
             _manager.Order.SaveOrder(order);
         }
 

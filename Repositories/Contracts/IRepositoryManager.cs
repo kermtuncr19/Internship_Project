@@ -10,6 +10,7 @@ namespace Repositories.Contracts
         IFavoriteRepository Favorite { get; }
         IProductImageRepository ProductImage { get; } 
         IReturnRequestRepository ReturnRequest { get; }
+        IProductStockRepository ProductStock { get; }
         void Save();
     }
 }

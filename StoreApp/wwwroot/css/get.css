@@ -251,3 +251,34 @@
 .animate-fade-in-up {
     animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.size-out-of-stock {
+    opacity: 0.4;
+    cursor: not-allowed !important;
+}
+
+.size-out-of-stock input[type="radio"] {
+    cursor: not-allowed !important;
+}
+
+.size-out-of-stock .size-btn-modern {
+    cursor: not-allowed !important;
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+}
+
+.size-stock-badge {
+    display: block;
+    font-size: 0.65rem;
+    margin-top: 2px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.size-stock-badge.out {
+    color: #dc3545;
+}
+
+.size-stock-badge.low {
+    color: #ffc107;
+}
