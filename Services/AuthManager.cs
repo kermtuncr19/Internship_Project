@@ -1,6 +1,8 @@
 using AutoMapper;
 using Entities.Dto;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Services.Contracts;
 
@@ -11,12 +13,14 @@ namespace Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IMapper _mapper;
+        private readonly IOrderService _orderService;
 
-        public AuthManager(RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager, IMapper mapper)
+        public AuthManager(RoleManager<IdentityRole> roleManager, UserManager<IdentityUser> userManager, IMapper mapper, IOrderService orderService)
         {
             _roleManager = roleManager;
             _userManager = userManager;
             _mapper = mapper;
+            _orderService = orderService;
         }
 
         public IEnumerable<IdentityRole> Roles =>
@@ -124,5 +128,31 @@ namespace Services
                 }
             }
         }
+
+        public async Task<int> GetTotalUserCountAsync()
+        {
+            return await _userManager.Users.CountAsync();
+        }
+
+        public async Task<IEnumerable<ActivityViewModel>> GetRecentActivitiesAsync(int count)
+        {
+            var activities = new List<ActivityViewModel>();
+
+            // Son siparişlerden aktivite oluştur
+            var recentOrders = await _orderService.GetRecentOrdersAsync(5);
+            
+            activities.AddRange(recentOrders.Select(o => new ActivityViewModel
+            {
+                Type = "Order",
+                Title = "Yeni Sipariş",
+                Description = $"{o.CustomerName} tarafından #{o.OrderNumber} sipariş verildi - ₺{o.TotalAmount:N2}",
+                CreatedAt = o.OrderDate
+            }));
+
+            return activities
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(count);
+        }
+        
     }
 }

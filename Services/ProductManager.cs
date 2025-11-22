@@ -4,6 +4,7 @@ using AutoMapper;
 using Entities.Dto;
 using Entities.Models;
 using Entities.RequestParameters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Repositories.Contracts;
 using Services.Contracts;
@@ -86,6 +87,48 @@ namespace Services
             // 4) Sadece Save
             _manager.Save();
         }
+
+        public async Task<IEnumerable<ProductSalesViewModel>> GetTopSellingProductsAsync(int count)
+        {
+            var monthAgo = DateTime.UtcNow.AddMonths(-1);
+
+            // Order'ları çek ve grupla
+            var topProducts = await _manager.Order.Orders
+                .Where(o => o.OrderedAt >= monthAgo && o.Shipped && !o.Cancelled)
+                .SelectMany(o => o.Lines)
+                .GroupBy(l => l.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    SalesCount = g.Sum(l => l.Quantity),
+                    TotalRevenue = g.Sum(l => l.UnitPrice * l.Quantity)
+                })
+                .OrderByDescending(p => p.TotalRevenue)
+                .Take(count)
+                .ToListAsync();
+
+            var result = new List<ProductSalesViewModel>();
+
+            foreach (var item in topProducts)
+            {
+                var product = _manager.Product.GetOneProduct(item.ProductId, false);
+
+                if (product != null)
+                {
+                    result.Add(new ProductSalesViewModel
+                    {
+                        ProductId = item.ProductId,
+                        Name = product.ProductName ?? "Bilinmeyen Ürün",
+                        ImageUrl = product.ImageUrl ?? "/images/no-image.png",
+                        SalesCount = item.SalesCount,
+                        TotalRevenue = item.TotalRevenue
+                    });
+                }
+            }
+
+            return result;
+        }
+
 
     }
 }

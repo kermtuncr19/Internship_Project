@@ -1,0 +1,62 @@
+@model IEnumerable<Entities.Models.OrderViewModel>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Sipariş No</th>
+                <th>Müşteri</th>
+                <th>Ürün Sayısı</th>
+                <th>Tutar</th>
+                <th>Durum</th>
+                <th>Tarih</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var order in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">#@order.OrderNumber</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm bg-light rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                    <span class="text-primary fw-semibold">@order.CustomerName.Substring(0, 1)</span>
+                                </div>
+                                @order.CustomerName
+                            </div>
+                        </td>
+                        <td>@order.ItemCount</td>
+                        <td class="fw-semibold">₺@order.TotalAmount.ToString("N2")</td>
+                        <td>
+                            @if (order.Status == "Tamamlandı")
+                            {
+                                <span class="badge bg-success rounded-pill px-3">@order.Status</span>
+                            }
+                            else if (order.Status == "Beklemede")
+                            {
+                                <span class="badge bg-warning rounded-pill px-3">@order.Status</span>
+                            }
+                            else if (order.Status == "İptal")
+                            {
+                                <span class="badge bg-danger rounded-pill px-3">@order.Status</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info rounded-pill px-3">@order.Status</span>
+                            }
+                        </td>
+                        <td class="text-muted">@order.OrderDate.ToString("dd MMM yyyy")</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">Henüz sipariş yok.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

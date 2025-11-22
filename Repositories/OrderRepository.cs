@@ -16,7 +16,7 @@ namespace Repositories
             .OrderBy(o => o.Shipped)
             .ThenByDescending(o => o.OrderId);
 
-        public int NumberOfInProcess => _context.Orders.Count(o => !o.Shipped);
+        public int NumberOfInProcess => _context.Orders.Count(o => !o.Shipped && !o.Cancelled);
 
         public void Complete(int id)
         {
@@ -53,7 +53,8 @@ namespace Repositories
                 {
                     ProductId = g.Key.ProductId,
                     Size = g.Key.Size,
-                    Quantity = g.Sum(x => x.Quantity)
+                    Quantity = g.Sum(x => x.Quantity),
+                    UnitPrice = g.First().UnitPrice
                     // OrderId EF tarafından set edilecek (order'a eklendiği için)
                 })
                 .ToList();

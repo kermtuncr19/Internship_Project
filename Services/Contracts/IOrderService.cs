@@ -14,5 +14,13 @@ namespace Services.Contracts
 
         Task<List<Order>> GetMyOrdersAsync(string userId);
         Task<Order?> GetMyOrderAsync(string userId, int id);
+
+        Task<decimal> GetWeeklySalesAsync();
+        Task<decimal> GetMonthlySalesAsync();
+        Task<decimal> GetTotalRevenueAsync();
+        Task<decimal> GetAverageOrderValueAsync();
+        Task<IEnumerable<OrderViewModel>> GetRecentOrdersAsync(int count);
+        Task<IEnumerable<MonthlySalesData>> GetMonthlySalesDataAsync();
+        
     }
 }

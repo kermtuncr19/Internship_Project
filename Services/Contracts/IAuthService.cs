@@ -1,4 +1,5 @@
 using Entities.Dto;
+using Entities.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace Services.Contracts
@@ -13,5 +14,9 @@ namespace Services.Contracts
         Task Update(UserDtoForUpdate userDto);
         Task<IdentityResult> ResetPassword(ResetPasswordDto model);
         Task<IdentityResult> DeleteOneUser(string userName);
+
+        Task<int> GetTotalUserCountAsync();
+        Task<IEnumerable<ActivityViewModel>> GetRecentActivitiesAsync(int count);
+        
     }
 }

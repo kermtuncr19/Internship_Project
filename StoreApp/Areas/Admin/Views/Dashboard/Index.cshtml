@@ -1,9 +1,252 @@
-<div class="text-center my-5 border-bottom">
-    <div class="display-6">Kontrol Paneli</div>
-</div>
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
 
-<div class="my-5">
-    <partial name="_Cards" />
-</div>
+<link rel="stylesheet" href="~/css/modern-dashboard.css" asp-append-version="true" />
 
-@await Component.InvokeAsync("Showcase", new {page="list"})
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Kontrol Paneli</h2>
+            <p class="text-muted mb-0">Tekrardan Hoşgeldiniz, @DateTime.Now.ToString("HH:mm")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="Order" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-download me-2"></i>Rapor Al
+            </a>
+            <a asp-controller="Product" asp-action="Create" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-lg me-2"></i>Yeni Ürün
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row 1 -->
+    <div class="row g-4 mb-4">
+        <!-- Toplam Ürün -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div class="gradient-bg gradient-blue"></div>
+                <div class="card-body position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                            <i class="bi bi-box-seam fs-4"></i>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2">
+                            Ürünler
+                        </span>
+                    </div>
+                    <h6 class="text-muted small mb-2">Toplam Ürün</h6>
+                    <h2 class="fw-bold mb-3">@await Component.InvokeAsync("ProductSummary")</h2>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="Product" asp-action="Index" class="text-decoration-none text-primary small fw-semibold">
+                            Görüntüle <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        <a asp-controller="Product" asp-action="Create" class="text-decoration-none text-muted small">Yeni Ekle</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategoriler -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div class="gradient-bg gradient-purple"></div>
+                <div class="card-body position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-purple bg-opacity-10 text-purple rounded-3 p-3">
+                            <i class="bi bi-grid-3x3-gap fs-4"></i>
+                        </div>
+                        <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3 py-2">Kategori</span>
+                    </div>
+                    <h6 class="text-muted small mb-2">Kategoriler</h6>
+                    <h2 class="fw-bold mb-3">@await Component.InvokeAsync("CategorySummary")</h2>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="Category" asp-action="Index" class="text-decoration-none text-purple small fw-semibold">
+                            Görüntüle <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        <a asp-controller="Category" asp-action="Create" class="text-decoration-none text-muted small">Yeni Ekle</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kullanıcılar -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div class="gradient-bg gradient-orange"></div>
+                <div class="card-body position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                            <i class="bi bi-people fs-4"></i>
+                        </div>
+                        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2">Üyeler</span>
+                    </div>
+                    <h6 class="text-muted small mb-2">Kullanıcılar</h6>
+                    <h2 class="fw-bold mb-3">@await Component.InvokeAsync("UserSummary")</h2>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="User" asp-action="Index" class="text-decoration-none text-warning small fw-semibold">
+                            Görüntüle <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                        <a asp-controller="User" asp-action="Create" class="text-decoration-none text-muted small">Yeni Ekle</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bekleyen Siparişler -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100 position-relative overflow-hidden">
+                <div class="gradient-bg gradient-green"></div>
+                <div class="card-body position-relative">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-success bg-opacity-10 text-success rounded-3 p-3">
+                            <i class="bi bi-cart-check fs-4"></i>
+                        </div>
+                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2">Bekliyor</span>
+                    </div>
+                    <h6 class="text-muted small mb-2">Bekleyen Sipariş</h6>
+                    <h2 class="fw-bold mb-3">@await Component.InvokeAsync("OrderInProgress")</h2>
+                    <div class="d-flex gap-3">
+                        <a asp-controller="Order" asp-action="Index" class="text-decoration-none text-success small fw-semibold">
+                            Görüntüle <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row 2 - Satış İstatistikleri -->
+    <div class="row g-4 mb-4">
+        <!-- Bu Hafta Satış -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-success bg-opacity-10 text-success rounded-3 p-3">
+                            <i class="bi bi-graph-up-arrow fs-4"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-muted small mb-2">Bu Hafta Satış</h6>
+                    <h2 class="fw-bold mb-1">@await Component.InvokeAsync("WeeklySales")</h2>
+                    <p class="text-success small mb-0">
+                        <i class="bi bi-arrow-up me-1"></i>Son 7 gün
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bu Ay Satış -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-info bg-opacity-10 text-info rounded-3 p-3">
+                            <i class="bi bi-calendar-check fs-4"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-muted small mb-2">Bu Ay Satış</h6>
+                    <h2 class="fw-bold mb-1">@await Component.InvokeAsync("MonthlySales")</h2>
+                    <p class="text-info small mb-0">
+                        <i class="bi bi-arrow-up me-1"></i>Son 30 gün
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toplam Gelir -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                            <i class="bi bi-currency-dollar fs-4"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-muted small mb-2">Toplam Gelir</h6>
+                    <h2 class="fw-bold mb-1">@await Component.InvokeAsync("TotalRevenue")</h2>
+                    <p class="text-primary small mb-0">
+                        <i class="bi bi-arrow-up me-1"></i>Tüm zamanlar
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ortalama Sepet -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                            <i class="bi bi-basket fs-4"></i>
+                        </div>
+                    </div>
+                    <h6 class="text-muted small mb-2">Ortalama Sepet Tutarı</h6>
+                    <h2 class="fw-bold mb-1">@await Component.InvokeAsync("AverageOrder")</h2>
+                    <p class="text-warning small mb-0">
+                        <i class="bi bi-arrow-up me-1"></i>Son 30 gün
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grafikler ve Tablolar -->
+    <div class="row g-4 mb-4">
+        <!-- Satış Grafiği -->
+        <div class="col-lg-8">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h5 class="fw-bold mb-1">Satış Grafiği</h5>
+                            <p class="text-muted small mb-0">Son 12 aylık satış performansı</p>
+                        </div>
+                    </div>
+                    <div style="height: 300px;">
+                        @await Component.InvokeAsync("SalesChart")
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- En Çok Satan Ürünler -->
+        <div class="col-lg-4">
+            <div class="card modern-card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-4">En Çok Satan Ürünler</h5>
+                    @await Component.InvokeAsync("TopSellingProducts")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Siparişler ve Aktiviteler -->
+    <div class="row g-4">
+        <!-- Son Siparişler -->
+        <div class="col-lg-8">
+            <div class="card modern-card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">Son Siparişler</h5>
+                        <a asp-controller="Order" asp-action="Index" class="text-decoration-none small fw-semibold">
+                            Tümünü Gör <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    @await Component.InvokeAsync("RecentOrders")
+                </div>
+            </div>
+        </div>
+
+        <!-- Son Aktiviteler -->
+        <div class="col-lg-4">
+            <div class="card modern-card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-4">Son Aktiviteler</h5>
+                    @await Component.InvokeAsync("RecentActivities")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
