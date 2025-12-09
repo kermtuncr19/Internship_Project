@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Entities.Models;
 using StoreApp.Components;
+using Services;
+using Services.Contracts;
 
 namespace StoreApp.Controllers
 {
@@ -13,11 +15,13 @@ namespace StoreApp.Controllers
     {
         private readonly RepositoryContext _db;
         private readonly UserManager<IdentityUser> _um;
+        private readonly IOrderService _orderService;
 
-        public MyOrdersController(RepositoryContext db, UserManager<IdentityUser> um)
+        public MyOrdersController(RepositoryContext db, UserManager<IdentityUser> um, IOrderService orderService)
         {
             _db = db;
             _um = um;
+            _orderService = orderService;
         }
 
         public IActionResult Index()
@@ -90,7 +94,7 @@ namespace StoreApp.Controllers
             order.Cancelled = true;
             order.CancelledAt = DateTime.UtcNow;
 
-            _db.SaveChanges();
+            _orderService.SaveOrder(order);
 
             return Json(new { success = true, message = "Siparişiniz başarıyla iptal edildi." });
         }

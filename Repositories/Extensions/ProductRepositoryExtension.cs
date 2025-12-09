@@ -18,58 +18,38 @@ namespace Repositories.Extensions
             if (string.IsNullOrWhiteSpace(searchTerm))
                 return products;
 
-            // Arama terimini client tarafında normalize edip tokenlara böl
-            var tokens = NormalizeClient(searchTerm)
+            // Boşluklara göre ayır
+            var tokens = searchTerm.Trim()
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Distinct()
-                .ToArray();
+                .Where(t => t.Length >= 2) // "sa", "ka", "form" vs. gibi parçalar
+                .ToList();
 
-            if (tokens.Length == 0)
+            if (tokens.Count == 0)
                 return products;
 
-            // OR mantığı: her token için ayrı Where -> Concat, sonra Distinct
-            IQueryable<Product> q = products.Where(p => false); // boş başlangıç
+            // Her token için hem orijinal hem normalize edilmiş versiyonu üret
+            var allTokens = tokens
+                .SelectMany(t => new[]
+                {
+            t.ToLowerInvariant(),
+            NormalizeClient(t) // örn: "sarı" -> "sari"
+                })
+                .Distinct()
+                .ToList();
 
-            foreach (var tk in tokens)
-            {
-                var like = tk; // capture için local değişken
-                q = q.Concat(
-                    products.Where(p =>
-                        // ProductName
-                        (((p.ProductName ?? "").ToLower())
-                            .Replace("ı", "i").Replace("İ", "i").Replace("I", "i")
-                            .Replace("ğ", "g").Replace("Ğ", "g")
-                            .Replace("ş", "s").Replace("Ş", "s")
-                            .Replace("ö", "o").Replace("Ö", "o")
-                            .Replace("ü", "u").Replace("Ü", "u")
-                            .Replace("ç", "c").Replace("Ç", "c")
-                        ).Contains(like)
-                        ||
-                        // CategoryName (kategori null ise boş metin)
-                        ((((p.Category != null ? p.Category.CategoryName : "")).ToLower())
-                            .Replace("ı", "i").Replace("İ", "i").Replace("I", "i")
-                            .Replace("ğ", "g").Replace("Ğ", "g")
-                            .Replace("ş", "s").Replace("Ş", "s")
-                            .Replace("ö", "o").Replace("Ö", "o")
-                            .Replace("ü", "u").Replace("Ü", "u")
-                            .Replace("ç", "c").Replace("Ç", "c")
-                        ).Contains(like)
-                        ||
-                        // Summary
-                        (((p.Summary ?? "").ToLower())
-                            .Replace("ı", "i").Replace("İ", "i").Replace("I", "i")
-                            .Replace("ğ", "g").Replace("Ğ", "g")
-                            .Replace("ş", "s").Replace("Ş", "s")
-                            .Replace("ö", "o").Replace("Ö", "o")
-                            .Replace("ü", "u").Replace("Ü", "u")
-                            .Replace("ç", "c").Replace("Ç", "c")
-                        ).Contains(like)
-                    )
-                );
-            }
-
-            return q.Distinct();
+            // OR mantığı: ÜRÜN, token'lardan EN AZ BİRİNİ içersin
+            return products.Where(p =>
+                allTokens.Any(token =>
+                    ((p.ProductName ?? "").ToLower().Contains(token)) ||
+                    ((p.Summary ?? "").ToLower().Contains(token))
+                )
+            );
         }
+
+
+
+
+
 
         // Sadece arama terimini client tarafında normalize eder (Expression Tree’nin dışında kaldığı için sorun olmaz)
         private static string NormalizeClient(string input) =>
@@ -87,12 +67,50 @@ namespace Repositories.Extensions
             else
                 return products;
         }
+
+        public static IQueryable<Product> SortBy(this IQueryable<Product> products, string? sortBy)
+        {
+            if (string.IsNullOrWhiteSpace(sortBy))
+                return products.OrderBy(p => p.ProductId); // varsayılan
+
+            switch (sortBy)
+            {
+                case "price_asc":
+                    return products.OrderBy(p => p.Price);
+
+                case "price_desc":
+                    return products.OrderByDescending(p => p.Price);
+
+                case "reviews_desc":
+                    // En çok onaylı yorum alan ürünler
+                    return products.OrderByDescending(p =>
+                        p.Reviews.Where(r => r.IsApproved).Count());
+
+                case "rating_desc":
+                    // En yüksek ortalama puan
+                    return products.OrderByDescending(p =>
+                        p.Reviews
+                         .Where(r => r.IsApproved)
+                         .Average(r => (double?)r.Rating) ?? 0);
+
+                case "rating_asc":
+                    // En düşük ortalama puan
+                    return products.OrderBy(p =>
+                        p.Reviews
+                         .Where(r => r.IsApproved)
+                         .Average(r => (double?)r.Rating) ?? 0);
+
+                default:
+                    return products.OrderBy(p => p.ProductId);
+            }
+        }
+
         public static IQueryable<Product> ToPaginate(this IQueryable<Product> products, int pageNumber, int pageSize)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10; // varsayılan
 
-            var skip = (pageNumber - 1) * pageSize;  
+            var skip = (pageNumber - 1) * pageSize;
             return products.Skip(skip).Take(pageSize);
         }
     }

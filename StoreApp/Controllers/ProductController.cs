@@ -24,7 +24,7 @@ namespace StoreApp.Controllers
             _um = um;
         }
 
-       public async Task<IActionResult> Index(ProductRequestParameters p)
+        public async Task<IActionResult> Index(ProductRequestParameters p)
 {
     ViewData["Title"] = "Ürünler";
     if (!p.IsValidPrice)
@@ -53,21 +53,24 @@ namespace StoreApp.Controllers
         ViewBag.FavoriteIds = new List<int>();
     }
 
-    // 1) Filtrelenmiş temel sorgu
+    // ✅ Filtrelenmiş sorgu (Include YOK)
     var filtered = _manager.PoductService.GetAllProducts(false)
-        .Include(p => p.Stocks)
         .FilteredByCategoryId(p.CategoryId)
         .FilteredBySearchTerm(p.SearchTerm)
         .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
-        .OrderBy(pr => pr.ProductId);
+        .SortBy(p.SortBy);
 
-    // 2) Sayfalık veri -> materialize et (List) ki id'lerini kullanabilelim
-    var products = filtered.ToPaginate(p.PageNumber, p.PageSize).ToList();
+    // ✅ Toplam sayıyı al
+    var total = await filtered.CountAsync();
 
-    // 3) Toplam eleman sayısı (aynı filtrelerle)
-    var total = filtered.Count();
+    // ✅ Manuel sayfalama + Include en sona
+    var products = await filtered
+        .Skip((p.PageNumber - 1) * p.PageSize)
+        .Take(p.PageSize)
+        .Include(p => p.Stocks)
+        .ToListAsync();
 
-    // 4) Bu sayfada görünen ürünlerin onaylı yorum (avg,count) verileri
+    // ✅ Ratings hesaplama
     var ids = products.Select(x => x.ProductId).ToList();
 
     var ratingData = await _db.Reviews
@@ -77,11 +80,10 @@ namespace StoreApp.Controllers
         {
             ProductId = g.Key,
             Count = g.Count(),
-            Avg = g.Average(x => x.Rating)
+            Avg = g.Average(x => (double)x.Rating)
         })
         .ToListAsync();
 
-    // View tarafında hızlı erişim için sözlük
     ViewBag.Ratings = ratingData.ToDictionary(
         x => x.ProductId,
         x => (count: x.Count, avg: x.Avg)
@@ -96,7 +98,7 @@ namespace StoreApp.Controllers
 
     return View(new ProductListViewModel
     {
-        Products = products,         // List<Product> -> IEnumerable olarak sorunsuz
+        Products = products,
         Pagination = pagination
     });
 }
@@ -104,50 +106,50 @@ namespace StoreApp.Controllers
 
         // ProductController.cs - Get metodunu güncelle
 
-public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
-{
-    var model = _manager.PoductService
-        .GetAllProducts(false)
-        .Include(p => p.Images)
-        .Include(p => p.Stocks)
-        .FirstOrDefault(p => p.ProductId == id);
+        public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
+        {
+            var model = _manager.PoductService
+                .GetAllProducts(false)
+                .Include(p => p.Images)
+                .Include(p => p.Stocks)
+                .FirstOrDefault(p => p.ProductId == id);
 
-    if (model == null)
-        return NotFound();
+            if (model == null)
+                return NotFound();
 
-    // Yorumları include et
-    var productWithReviews = _db.Products
-        .Include(p => p.Reviews.Where(r => r.IsApproved))
-        .ThenInclude(r => r.User)
-        .FirstOrDefault(p => p.ProductId == id);
+            // Yorumları include et
+            var productWithReviews = _db.Products
+                .Include(p => p.Reviews.Where(r => r.IsApproved))
+                .ThenInclude(r => r.User)
+                .FirstOrDefault(p => p.ProductId == id);
 
-    if (productWithReviews != null)
-    {
-        model.Reviews = productWithReviews.Reviews;
-        
-        // User profilleri için dictionary oluştur
-        var userIds = model.Reviews.Select(r => r.UserId).Distinct().ToList();
-        var profiles = await _db.UserProfiles
-            .Where(p => userIds.Contains(p.UserId))
-            .ToDictionaryAsync(p => p.UserId, p => p.FullName ?? "Kullanıcı");
-        
-        ViewBag.UserProfiles = profiles;
-    }
+            if (productWithReviews != null)
+            {
+                model.Reviews = productWithReviews.Reviews;
 
-    ViewData["Title"] = model?.ProductName;
+                // User profilleri için dictionary oluştur
+                var userIds = model.Reviews.Select(r => r.UserId).Distinct().ToList();
+                var profiles = await _db.UserProfiles
+                    .Where(p => userIds.Contains(p.UserId))
+                    .ToDictionaryAsync(p => p.UserId, p => p.FullName ?? "Kullanıcı");
 
-    if (User.Identity?.IsAuthenticated == true)
-    {
-        var userId = _um.GetUserId(User)!;
-        ViewBag.IsFavorite = await _db.UserFavoriteProducts
-            .AnyAsync(f => f.UserId == userId && f.ProductId == id);
-    }
-    else
-    {
-        ViewBag.IsFavorite = false;
-    }
+                ViewBag.UserProfiles = profiles;
+            }
 
-    return View(model);
-}
+            ViewData["Title"] = model?.ProductName;
+
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = _um.GetUserId(User)!;
+                ViewBag.IsFavorite = await _db.UserFavoriteProducts
+                    .AnyAsync(f => f.UserId == userId && f.ProductId == id);
+            }
+            else
+            {
+                ViewBag.IsFavorite = false;
+            }
+
+            return View(model);
+        }
     }
 }

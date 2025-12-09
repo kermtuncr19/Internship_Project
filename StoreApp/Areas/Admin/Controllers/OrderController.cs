@@ -25,7 +25,7 @@ namespace StoreApp.Areas.Admin.Controllers
                         .ThenInclude(l => l.CartLine)
                 .OrderByDescending(o => o.OrderedAt)
                 .ToList();
-                
+
             return View(orders);
         }
 
@@ -38,13 +38,13 @@ namespace StoreApp.Areas.Admin.Controllers
                         .ThenInclude(l => l.CartLine)
                             .ThenInclude(c => c.Product)
                 .FirstOrDefault(o => o.OrderId == id);
-            
+
             if (order == null)
             {
                 TempData["error"] = "Sipariş bulunamadı.";
                 return RedirectToAction("Index");
             }
-            
+
             return View("_OrderDetails", order);
         }
 
@@ -180,27 +180,41 @@ namespace StoreApp.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Cancel([FromForm] int id)
         {
-            var order = _manager.OrderService.GetOneOrder(id);
+            var order = _manager.OrderService.Orders
+                .Include(o => o.Lines) // 🔥 BURAYI EKLE
+                .FirstOrDefault(o => o.OrderId == id);
+
             if (order == null)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, message = "Sipariş bulunamadı." });
                 TempData["error"] = "Sipariş bulunamadı.";
                 return RedirectToAction("Index");
             }
+
             if (order.Delivered)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, message = "Teslim edilmiş sipariş iptal edilemez." });
                 TempData["error"] = "Teslim edilmiş sipariş iptal edilemez.";
                 return RedirectToAction("Index");
             }
+
+            // ✅ DEBUG: Sipariş içeriğini logla
+            System.Diagnostics.Debug.WriteLine($"🔍 İptal edilen sipariş: #{order.OrderId}");
+            System.Diagnostics.Debug.WriteLine($"🔍 Sipariş satırları: {order.Lines?.Count ?? 0} adet");
+
+            if (order.Lines != null)
+            {
+                foreach (var line in order.Lines)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  - ProductId: {line.ProductId}, Size: {line.Size}, Qty: {line.Quantity}");
+                }
+            }
+
             order.Cancelled = true;
             order.CancelledAt = DateTime.UtcNow;
+
+            // ✅ SaveOrder çağır
             _manager.OrderService.SaveOrder(order);
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return Json(new { success = true, message = "Sipariş başarıyla iptal edildi." });
-            TempData["success"] = "Sipariş başarıyla iptal edildi.";
+
+            TempData["success"] = "Sipariş iptal edildi.";
             return RedirectToAction("Index");
         }
 

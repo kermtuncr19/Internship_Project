@@ -8,6 +8,7 @@ using Repositories.Contracts;
 using Services;
 using Services.Contracts;
 using StoreApp.Models;
+using StoreApp.Services;
 
 namespace StoreApp.Infrastructure.Extensions
 {
@@ -21,8 +22,7 @@ namespace StoreApp.Infrastructure.Extensions
                 b => b.MigrationsAssembly("StoreApp"));
 
                 options.EnableSensitiveDataLogging(true);
-                // geliştrime aşamasında hassas bilgileri loglara yansıtmak için sonrasında kaldıracağız.
-            });//veritabanı için servis kaydı.
+            });
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
@@ -40,9 +40,14 @@ namespace StoreApp.Infrastructure.Extensions
                 options.Password.RequiredLength = 8;
             })
             .AddPasswordValidator<UnicodePasswordValidator<IdentityUser>>()
-            .AddEntityFrameworkStores<RepositoryContext>();
+            .AddEntityFrameworkStores<RepositoryContext>()
+            .AddDefaultTokenProviders();  // ← 1️⃣ BU SATIRI EKLEYİN!
 
-
+            // ← 2️⃣ Token süresini ayarla
+            services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromHours(1); // Token 1 saat geçerli
+            });
         }
 
         public static void ConfigureSession(this IServiceCollection services)
@@ -52,11 +57,11 @@ namespace StoreApp.Infrastructure.Extensions
             {
                 options.Cookie.Name = "StoreApp.Session";
                 options.IdleTimeout = TimeSpan.FromMinutes(10);
-                //10 dk içinde bir istekte bulunulmazsa o oturum düşürülecek.
             });
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<Cart>(c => SessionCart.GetCart(c));//singleton yerine scoped dediğimiz için kullanıcıların sepetleri artık ayrıldı ve sessiondan gelen cartı bize vermesini istiyoruz.
+            services.AddScoped<Cart>(c => SessionCart.GetCart(c));
         }
+        
         public static void ConfigureRepositoryRegistration(this IServiceCollection services)
         {
             services.AddScoped<IRepositoryManager, RepositoryManager>();
@@ -70,20 +75,21 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
             services.AddScoped<IProductStockRepository, ProductStockRepository>();
         }
+        
         public static void ConfigureServiceRegistration(this IServiceCollection services)
         {
             services.AddScoped<IServiceManager, ServiceManager>();
             services.AddScoped<IProductService, ProductManager>();
             services.AddScoped<ICategoryService, CategoryManager>();
-            services.AddScoped<IOrderService,
-            OrderManager>();
+            services.AddScoped<IOrderService, OrderManager>();
             services.AddScoped<IAuthService, AuthManager>();
             services.AddScoped<IProfileService, ProfileManager>();
             services.AddScoped<IAddressService, AddressManager>();
             services.AddScoped<IFavoriteService, FavoriteManager>();
             services.AddScoped<IProductImageService, ProductImageManager>();
             services.AddScoped<IReturnRequestService, ReturnRequestManager>();
-            services.AddScoped<IProductStockService,ProductStockManager>();
+            services.AddScoped<IProductStockService, ProductStockManager>();
+            services.AddScoped<IEmailService, EmailService>();  // ✅ Bu zaten var, harika!
         }
 
         public static void ConfigureApplicationCookie(this IServiceCollection services)
@@ -96,12 +102,12 @@ namespace StoreApp.Infrastructure.Extensions
                 options.AccessDeniedPath = new PathString("/Account/AccessDenied");
             });
         }
+        
         public static void ConfigureRouting(this IServiceCollection services)
         {
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true;
-                //options.AppendTrailingSlash = true;
             });
         }
     }

@@ -3,14 +3,14 @@
 <!-- 🔵 PROMO ŞERİDİ (NAVBAR ÜSTÜ) -->
 <div class="promo-strip" role="region" aria-label="Kampanya duyuruları">
   <div class="container-fluid d-flex justify-content-center align-items-center gap-2">
-    
+
     <div class="promo-viewport" aria-live="polite">
       <span class="promo-msg active">
-      <i class="fa-solid fa-bullhorn"></i> 
-      2000 TL ve üzeri alışverişlerde kargo bedava! 🚚</span>
+        <i class="fa-solid fa-bullhorn"></i>
+        2000 TL ve üzeri alışverişlerde kargo bedava! 🚚</span>
       <span class="promo-msg">
-      <i class="fa-solid fa-bullhorn"></i> 
-      2000 TL ve üzeri alışverişlerde peşin fiyatına 3 taksit! 💳</span>
+        <i class="fa-solid fa-bullhorn"></i>
+        2000 TL ve üzeri alışverişlerde peşin fiyatına 3 taksit! 💳</span>
     </div>
   </div>
 </div>
@@ -57,11 +57,11 @@
 
         @if (User.Identity?.IsAuthenticated ?? false)
         {
-          
-            // ✅ ViewBag'den profil fotoğrafını al (Layout'ta set edilecek)
-            var avatarUrl = ViewBag.UserAvatarUrl as string ?? "/images/avatar-placeholder.png";
-            var userName = ViewBag.UserFullName as string ?? User.Identity.Name ?? "Kullanıcı";
-          
+
+          // ✅ ViewBag'den profil fotoğrafını al (Layout'ta set edilecek)
+          var avatarUrl = ViewBag.UserAvatarUrl as string ?? "/images/avatar-placeholder.png";
+          var userName = ViewBag.UserFullName as string ?? User.Identity.Name ?? "Kullanıcı";
+
 
           <!-- Kullanıcı Dropdown (Hover ile açılan) -->
           <li class="nav-item dropdown user-dropdown-hover">
@@ -73,15 +73,18 @@
             <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
               <li class="dropdown-header">
                 <div class="d-flex align-items-center gap-2">
-                  <img src="@avatarUrl" alt="@userName" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" />
+                  <img src="@avatarUrl" alt="@userName" class="rounded-circle"
+                    style="width:40px;height:40px;object-fit:cover;" />
                   <div>
                     <div class="fw-semibold">@userName</div>
                     <div class="small text-muted">@User.Identity.Name</div>
                   </div>
                 </div>
               </li>
-              <li><hr class="dropdown-divider" /></li>
-              
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+
               <li>
                 <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
                   <i class="fa fa-user me-2 text-navy"></i> Hesabım
@@ -105,7 +108,9 @@
 
               @if (User.IsInRole("Admin"))
               {
-                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <hr class="dropdown-divider" />
+                </li>
                 <li>
                   <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
                     <i class="fa-solid fa-screwdriver-wrench me-2 text-secondary"></i> Admin Paneli
@@ -113,7 +118,9 @@
                 </li>
               }
 
-              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
               <li class="px-3">
                 <form asp-controller="Account" asp-action="Logout" method="post">
                   @Html.AntiForgeryToken()
@@ -135,50 +142,85 @@
   </div>
 </nav>
 
-<style>
- 
-</style>
+@if (ViewBag.Categories is IEnumerable<Entities.Models.Category> cats)
+{
+  var activeId = ViewBag.ActiveCategoryId as int?;
+  var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
+  var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
+  bool showBar = ctrl == "Home" || ctrl == "Product";
+
+  if (showBar)
+  {
+    <div class="category-strip sticky-top">
+      <div class="container-fluid d-flex gap-3 py-2 overflow-auto">
+
+        <!-- Tüm Ürünler -->
+        <a asp-controller="Product" asp-action="Index" class="category-item @(activeId == null ? "active-cat" : "")">
+          <i class="fa-solid fa-store"></i> Tüm Ürünler
+        </a>
+
+        @foreach (var c in cats)
+        {
+          string icon = c.CategoryName switch
+          {
+            "Futbol" => "fa-solid fa-futbol",
+            "Basketbol" => "fa-solid fa-basketball",
+            "Voleybol" => "fa-solid fa-volleyball",
+            _ => "fa-solid fa-tag"
+          };
+
+          <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
+            class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
+            <i class="@icon"></i> @c.CategoryName
+          </a>
+        }
+      </div>
+    </div>
+  }
+}
+
 
 <script>
-  
-  document.addEventListener('DOMContentLoaded', function(){
-    const msgs = document.querySelectorAll('.promo-viewport .promo-msg');
-    if (!msgs.length) return;
 
-    let i = 0, t;
-    function show(n){
-      msgs.forEach((m,idx)=> m.classList.toggle('active', idx===n));
-    }
-    function next(){
-      i = (i+1) % msgs.length;
-      show(i);
-    }
-    t = setInterval(next, 5500);
-
-    const viewport = document.querySelector('.promo-viewport');
-    viewport.addEventListener('mouseenter', ()=> clearInterval(t));
-    viewport.addEventListener('mouseleave', ()=> t = setInterval(next, 4500));
-  });
-
-  
-  document.addEventListener('DOMContentLoaded', function() {
-    if (window.innerWidth <= 991) {
-      const userDropdown = document.querySelector('.user-dropdown-hover');
-      const userMenu = document.getElementById('userMenu');
+  document.addEventListener('DOMContentLoaded', function () {
+  // Desktop için hover mantığı
+  if (window.innerWidth > 991) {
+    const userDropdown = document.querySelector('.user-dropdown-hover');
+    
+    if (userDropdown) {
+      let closeTimer;
       
-      if (userDropdown && userMenu) {
-        userMenu.addEventListener('click', function(e) {
-          e.preventDefault();
-          userDropdown.classList.toggle('show');
-        });
-
-         
-        document.addEventListener('click', function(e) {
-          if (!userDropdown.contains(e.target)) {
-            userDropdown.classList.remove('show');
-          }
-        });
-      }
+      // Mouse navbar üzerine geldiğinde
+      userDropdown.addEventListener('mouseenter', function() {
+        clearTimeout(closeTimer);
+      });
+      
+      // Mouse navbar'dan ayrıldığında bekle
+      userDropdown.addEventListener('mouseleave', function() {
+        closeTimer = setTimeout(() => {
+          // Kapatma işlemi CSS'de otomatik
+        }, 100);
+      });
     }
-  });
+  } 
+  // Mobil için click mantığı
+  else {
+    const userDropdown = document.querySelector('.user-dropdown-hover');
+    const userMenu = document.getElementById('userMenu');
+
+    if (userDropdown && userMenu) {
+      userMenu.addEventListener('click', function (e) {
+        e.preventDefault();
+        userDropdown.classList.toggle('show');
+      });
+
+      // Dışarı tıklandığında kapat
+      document.addEventListener('click', function (e) {
+        if (!userDropdown.contains(e.target)) {
+          userDropdown.classList.remove('show');
+        }
+      });
+    }
+  }
+});
 </script>

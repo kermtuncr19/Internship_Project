@@ -282,3 +282,22 @@
 .size-stock-badge.low {
     color: #ffc107;
 }
+
+/* Puan dağılımı – arka plan şeridi */
+.progress-modern {
+    width: 100%;
+    height: 0.55rem;
+    border-radius: 999px;
+    background-color: #eef1f7;   /* açık gri track */
+    overflow: hidden;
+    position: relative;
+}
+
+/* Dolu kısım */
+.progress-bar-modern {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #22c55e); /* mavi-yeşil gradient, istersen tek renk yap */
+    border-radius: 999px;
+    transition: width 0.25s ease-out;
+}

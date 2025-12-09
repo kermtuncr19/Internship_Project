@@ -2462,3 +2462,158 @@ body {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
 }
+
+.sort-dropdown-btn {
+    border-radius: 999px;
+    border: 1px solid #d4d7e5;
+    background: #ffffff;
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+    text-align: left;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.1s ease,
+        background-color 0.2s ease;
+}
+
+/* toggle ikonunu sağa sabitle */
+.sort-dropdown-btn::after {
+    position: absolute;
+    right: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.sort-dropdown-btn:hover {
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    border-color: #c1c7dd;
+}
+
+.sort-dropdown-btn.show,
+.sort-dropdown-btn:focus {
+    border-color: #2563eb;
+    background-color: #f9fbff;
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.15),
+        0 6px 18px rgba(15, 23, 42, 0.12);
+    transform: translateY(1px);
+}
+
+/* Menüye ufak animasyon + radius */
+.sort-dropdown-menu {
+    border-radius: 1rem;
+    padding: 0.35rem 0;
+    animation: sortMenuFade .12s ease-out;
+}
+
+.sort-dropdown-menu .dropdown-item {
+    font-size: 0.9rem;
+    padding: 0.35rem 1rem;
+}
+
+.sort-dropdown-menu .dropdown-item:hover {
+    background-color: #e5edff;
+}
+
+@keyframes sortMenuFade {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* === Stickly Category Bar === */
+.category-strip {
+    background: #ffffff;
+    border-bottom: 1px solid #ddd;
+    z-index: 1020; /* Navbar'ın hemen altında */
+}
+
+.category-item {
+    font-weight: 600;
+    color: #002d72; /* Lacivert */
+    font-size: 0.95rem;
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 6px 10px;
+    transition: 0.2s;
+}
+
+.category-item i {
+    margin-right: 6px;
+    color: #002d72;
+}
+
+.category-item:hover {
+    color: #001b47;
+}
+
+.category-item.active-cat {
+    color: #001b47;
+    border-bottom: 2px solid #001b47;
+}
+
+/* Kullanıcı dropdown için özel stiller */
+.user-dropdown-hover {
+  position: relative;
+}
+
+.user-dropdown-hover .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 9999; /* Navbar'ın üstünde görünsün */
+  display: none;
+  margin-top: 0.5rem;
+  min-width: 250px;
+}
+
+/* Hover ile açılma */
+.user-dropdown-hover:hover .dropdown-menu,
+.user-dropdown-hover .dropdown-menu:hover {
+  display: block !important;
+}
+
+/* Hover alanını genişlet - menüye geçiş sırasında kapanmasın */
+.user-dropdown-hover::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 0.5rem; /* Köprü alanı */
+  background: transparent;
+}
+
+/* Profil avatarı stil */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #001f54; /* Navy border */
+}
+
+/* Navbar z-index'ini ayarla */
+.navbar {
+  z-index: 1030;
+}
+
+.category-strip {
+  z-index: 1020;
+}
+
+/* Mobil için */
+@media (max-width: 991px) {
+  .user-dropdown-hover.show .dropdown-menu {
+    display: block !important;
+  }
+}

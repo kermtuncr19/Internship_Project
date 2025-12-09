@@ -42,18 +42,33 @@ namespace Services
 
         public void SaveOrder(Order order)
         {
-            // Eğer sipariş iptal ediliyorsa ve önceden onaylanmışsa stokları geri yükle
-            var existingOrder = _manager.Order.GetOneOrder(order.OrderId);
+            System.Diagnostics.Debug.WriteLine($"═══════════════════════════════════════");
+            System.Diagnostics.Debug.WriteLine($"🔍 SaveOrder çağrıldı: OrderId={order.OrderId}");
+            System.Diagnostics.Debug.WriteLine($"🔍 order.Cancelled={order.Cancelled}");
+            System.Diagnostics.Debug.WriteLine($"🔍 order.Lines?.Count={order.Lines?.Count ?? 0}");
+
+            var existingOrder = _manager.Order.Orders
+                .Include(o => o.Lines)
+                .FirstOrDefault(o => o.OrderId == order.OrderId);
+
+            System.Diagnostics.Debug.WriteLine($"🔍 existingOrder bulundu mu? {existingOrder != null}");
+
+            if (existingOrder != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"🔍 existingOrder.Cancelled={existingOrder.Cancelled}");
+                System.Diagnostics.Debug.WriteLine($"🔍 existingOrder.Lines?.Count={existingOrder.Lines?.Count ?? 0}");
+            }
 
             if (existingOrder != null &&
                 order.Cancelled &&
-                !existingOrder.Cancelled &&
-                existingOrder.Shipped)
+                !existingOrder.Cancelled)
             {
-                // Sipariş iptal ediliyor ve daha önce onaylanmıştı
-                // Stokları geri yükle
+                System.Diagnostics.Debug.WriteLine($"✅ IF BLOĞUNA GİRDİ - Stok iade edilecek!");
+
                 foreach (var line in existingOrder.Lines)
                 {
+                    System.Diagnostics.Debug.WriteLine($"  🔄 İşleniyor: ProductId={line.ProductId}, Size={line.Size}, Qty={line.Quantity}");
+
                     try
                     {
                         var stock = _manager.ProductStock.GetStockByProductAndSize(
@@ -62,14 +77,17 @@ namespace Services
                             true
                         );
 
+                        System.Diagnostics.Debug.WriteLine($"  🔍 Mevcut stok bulundu mu? {stock != null}");
+
                         if (stock != null)
                         {
+                            var oldQty = stock.Quantity;
                             stock.Quantity += line.Quantity;
                             stock.UpdatedAt = DateTime.UtcNow;
+                            System.Diagnostics.Debug.WriteLine($"  ✅ Stok güncellendi: {oldQty} -> {stock.Quantity}");
                         }
                         else
                         {
-                            // Stok kaydı yoksa oluştur
                             var newStock = new ProductStock
                             {
                                 ProductId = line.ProductId,
@@ -78,19 +96,28 @@ namespace Services
                                 CreatedAt = DateTime.UtcNow
                             };
                             _manager.ProductStock.CreateStock(newStock);
+                            System.Diagnostics.Debug.WriteLine($"  ✅ Yeni stok kaydı oluşturuldu: Qty={line.Quantity}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        // Log error but don't fail the cancellation
-                        System.Diagnostics.Debug.WriteLine($"Stok geri yükleme hatası: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"  ❌ HATA: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"  ❌ StackTrace: {ex.StackTrace}");
                     }
                 }
 
                 _manager.Save();
+                System.Diagnostics.Debug.WriteLine($"💾 Stok değişiklikleri kaydedildi!");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ IF BLOĞUNA GİREMEDİ");
             }
 
             _manager.Order.SaveOrder(order);
+            _manager.Save();
+            System.Diagnostics.Debug.WriteLine($"💾 Sipariş kaydedildi!");
+            System.Diagnostics.Debug.WriteLine($"═══════════════════════════════════════");
         }
 
         public Task<List<Order>> GetMyOrdersAsync(string userId)
@@ -100,42 +127,42 @@ namespace Services
             => _manager.Order.GetOneAsync(id, userId);
 
         public async Task<decimal> GetWeeklySalesAsync()
-{
-    var weekAgo = DateTime.UtcNow.AddDays(-7);
-    
-    var allOrders = await _manager.Order.Orders.ToListAsync();
-    Console.WriteLine($"========== DEBUG GetWeeklySalesAsync ==========");
-    Console.WriteLine($"Toplam sipariş: {allOrders.Count}");
-    Console.WriteLine($"Shipped=true: {allOrders.Count(o => o.Shipped)}");
-    
-    // 👇 HER SİPARİŞİN DETAYINI YAZDIR
-    foreach (var o in allOrders.Where(o => o.Shipped).Take(5))
-    {
-        Console.WriteLine($"\nOrder {o.OrderId}:");
-        Console.WriteLine($"  Lines Count: {o.Lines.Count}");
-        
-        foreach (var line in o.Lines)
         {
-            Console.WriteLine($"    Product {line.ProductId}: UnitPrice=₺{line.UnitPrice}, Quantity={line.Quantity}, Total=₺{line.UnitPrice * line.Quantity}");
-        }
-        
-        var orderTotal = o.Lines.Sum(l => l.UnitPrice * l.Quantity);
-        Console.WriteLine($"  Order Total: ₺{orderTotal}");
-    }
-    // 👆
-    
-    var orders = await _manager.Order.Orders
-        .Where(o => o.OrderedAt >= weekAgo && o.Shipped && !o.Cancelled)
-        .Include(o => o.Lines)
-        .ToListAsync();
+            var weekAgo = DateTime.UtcNow.AddDays(-7);
 
-    Console.WriteLine($"\nBu hafta tamamlanan sipariş: {orders.Count}");
-    var weeklyTotal = orders.Sum(o => o.Lines.Sum(l => l.UnitPrice * l.Quantity));
-    Console.WriteLine($"Haftalık toplam: ₺{weeklyTotal}");
-    Console.WriteLine($"==========================================");
-    
-    return weeklyTotal;
-}
+            var allOrders = await _manager.Order.Orders.ToListAsync();
+            Console.WriteLine($"========== DEBUG GetWeeklySalesAsync ==========");
+            Console.WriteLine($"Toplam sipariş: {allOrders.Count}");
+            Console.WriteLine($"Shipped=true: {allOrders.Count(o => o.Shipped)}");
+
+            // 👇 HER SİPARİŞİN DETAYINI YAZDIR
+            foreach (var o in allOrders.Where(o => o.Shipped).Take(5))
+            {
+                Console.WriteLine($"\nOrder {o.OrderId}:");
+                Console.WriteLine($"  Lines Count: {o.Lines.Count}");
+
+                foreach (var line in o.Lines)
+                {
+                    Console.WriteLine($"    Product {line.ProductId}: UnitPrice=₺{line.UnitPrice}, Quantity={line.Quantity}, Total=₺{line.UnitPrice * line.Quantity}");
+                }
+
+                var orderTotal = o.Lines.Sum(l => l.UnitPrice * l.Quantity);
+                Console.WriteLine($"  Order Total: ₺{orderTotal}");
+            }
+            // 👆
+
+            var orders = await _manager.Order.Orders
+                .Where(o => o.OrderedAt >= weekAgo && o.Shipped && !o.Cancelled)
+                .Include(o => o.Lines)
+                .ToListAsync();
+
+            Console.WriteLine($"\nBu hafta tamamlanan sipariş: {orders.Count}");
+            var weeklyTotal = orders.Sum(o => o.Lines.Sum(l => l.UnitPrice * l.Quantity));
+            Console.WriteLine($"Haftalık toplam: ₺{weeklyTotal}");
+            Console.WriteLine($"==========================================");
+
+            return weeklyTotal;
+        }
 
         public async Task<decimal> GetMonthlySalesAsync()
         {

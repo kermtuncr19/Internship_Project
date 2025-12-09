@@ -12,28 +12,6 @@
   && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
 }
 
-<!-- ✅ KATEGORİ ŞERİDİ -->
-<div class="category-bar row g-2 align-items-center mb-3 mt-4">
-  <div class="col-12">
-    <div class="chips d-flex flex-nowrap overflow-auto gap-2 pe-2">
-      <a asp-controller="Product" asp-action="Index"
-        class="btn btn-sm rounded-pill px-3 @((isProductIndex && activeId == null) ? "btn-navy" : "btn-outline-navy")">
-        Tüm Ürünler
-      </a>
-
-      @if (cats != null)
-      {
-        foreach (var c in cats)
-        {
-          <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
-            class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
-            @c.CategoryName
-          </a>
-        }
-      }
-    </div>
-  </div>
-</div>
 
 <!-- 🎨 BANNER CAROUSEL - Container dışına çıkar -->
 </div> <!-- container my-3 kapanıyor -->

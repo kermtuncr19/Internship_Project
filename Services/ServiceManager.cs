@@ -1,4 +1,5 @@
 using Services.Contracts;
+using StoreApp.Services;
 
 namespace Services
 {
@@ -13,9 +14,10 @@ namespace Services
         private readonly IAddressService _addressService;
         private readonly IProductImageService _productImageService;
         private readonly IProductStockService _productStockService;
+        private readonly IEmailService _emailService;
 
 
-        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService, IProductImageService productImageService, IProductStockService productStockService)
+        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService, IProductImageService productImageService, IProductStockService productStockService, IEmailService emailService)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -26,6 +28,7 @@ namespace Services
             _addressService = addressService;
             _productImageService = productImageService;
             _productStockService = productStockService;
+            _emailService = emailService;
         }
 
         public IProductService PoductService => _productService;
@@ -45,5 +48,7 @@ namespace Services
         public IProductImageService ProductImageService => _productImageService;
 
         public IProductStockService ProductStockService => _productStockService;
+
+        public IEmailService EmailService => _emailService;
     }
 }

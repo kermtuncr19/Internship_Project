@@ -1,3 +1,5 @@
+using StoreApp.Services;
+
 namespace Services.Contracts
 {
     public interface IServiceManager
@@ -11,5 +13,6 @@ namespace Services.Contracts
         IFavoriteService FavoriteService { get; }
         IProductImageService ProductImageService { get; }
         IProductStockService ProductStockService { get; }
+        IEmailService EmailService {get;}
     }
 }
