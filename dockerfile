@@ -18,7 +18,7 @@ COPY . .
 WORKDIR "/src/StoreApp"
 RUN dotnet build "StoreApp.csproj" -c Release -o /app/build
 
-# Publish
+# Publish Stage
 FROM build AS publish
 RUN dotnet publish "StoreApp.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
@@ -33,8 +33,8 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Copy published files
+# Copy published files from publish stage
 COPY --from=publish /app/publish .
 
-# Entry point
+# Entry point - dosya ismi doğru olmalı!
 ENTRYPOINT ["dotnet", "StoreApp.dll"]
