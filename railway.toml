@@ -1,0 +1,6 @@
+[build]
+buildCommand = "dotnet publish StoreApp/StoreApp.csproj -c Release -o out"
+
+[deploy]
+startCommand = "dotnet out/StoreApp.dll"
+healthcheckPath = "/"
