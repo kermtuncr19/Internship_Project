@@ -16,13 +16,44 @@ namespace StoreApp.Infrastructure.Extensions
     {
         public static void ConfigureDbContext(this IServiceCollection services, IConfiguration configuration)
         {
+            var connectionString = configuration.GetConnectionString("sqlconnection");
+
+            // Railway DATABASE_URL'i Npgsql formatına çevir
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                if (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://"))
+                {
+                    connectionString = ConvertPostgresUrl(connectionString);
+                }
+            }
+
             services.AddDbContext<RepositoryContext>(options =>
             {
-                options.UseNpgsql(configuration.GetConnectionString("sqlconnection"),
-                b => b.MigrationsAssembly("StoreApp"));
-
+                options.UseNpgsql(connectionString,
+                    b => b.MigrationsAssembly("StoreApp"));
                 options.EnableSensitiveDataLogging(true);
             });
+        }
+
+        private static string ConvertPostgresUrl(string databaseUrl)
+        {
+            try
+            {
+                var uri = new Uri(databaseUrl);
+                var db = uri.LocalPath.TrimStart('/');
+                var userInfo = uri.UserInfo.Split(':');
+
+                var connStr = $"Host={uri.Host};Port={uri.Port};Database={db};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+
+                Console.WriteLine($"Converted connection string: Host={uri.Host};Port={uri.Port};Database={db}"); // Debug için
+
+                return connStr;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error converting DATABASE_URL: {ex.Message}");
+                return databaseUrl;
+            }
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
@@ -61,7 +92,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<Cart>(c => SessionCart.GetCart(c));
         }
-        
+
         public static void ConfigureRepositoryRegistration(this IServiceCollection services)
         {
             services.AddScoped<IRepositoryManager, RepositoryManager>();
@@ -75,7 +106,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
             services.AddScoped<IProductStockRepository, ProductStockRepository>();
         }
-        
+
         public static void ConfigureServiceRegistration(this IServiceCollection services)
         {
             services.AddScoped<IServiceManager, ServiceManager>();
@@ -102,7 +133,7 @@ namespace StoreApp.Infrastructure.Extensions
                 options.AccessDeniedPath = new PathString("/Account/AccessDenied");
             });
         }
-        
+
         public static void ConfigureRouting(this IServiceCollection services)
         {
             services.AddRouting(options =>
