@@ -1,0 +1,13 @@
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\bin\Debug\net8.0\Entities.deps.json
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\bin\Debug\net8.0\Entities.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\bin\Debug\net8.0\Entities.pdb
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.csproj.AssemblyReference.cache
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.AssemblyInfoInputs.cache
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.AssemblyInfo.cs
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.csproj.CoreCompileInputs.cache
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.sourcelink.json
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\refint\Entities.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\Entities.pdb
+C:\Users\kermtuncr\Desktop\Internship_Project\Entities\obj\Debug\net8.0\ref\Entities.dll
