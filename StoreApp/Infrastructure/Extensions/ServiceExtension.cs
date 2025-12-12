@@ -29,8 +29,13 @@ namespace StoreApp.Infrastructure.Extensions
 
             services.AddDbContext<RepositoryContext>(options =>
             {
-                options.UseNpgsql(connectionString,
-                    b => b.MigrationsAssembly("StoreApp"));
+                options.UseNpgsql(connectionString, npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly("StoreApp");
+                    // SSL ayarlarını devre dışı bırak (Railway için gerekli)
+                    npgsqlOptions.RemoteCertificateValidationCallback((sender, certificate, chain, errors) => true);
+                });
+
                 options.EnableSensitiveDataLogging(true);
             });
         }
@@ -43,9 +48,8 @@ namespace StoreApp.Infrastructure.Extensions
                 var db = uri.LocalPath.TrimStart('/');
                 var userInfo = uri.UserInfo.Split(':');
 
-                var connStr = $"Host={uri.Host};Port={uri.Port};Database={db};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
-
-                Console.WriteLine($"Converted connection string: Host={uri.Host};Port={uri.Port};Database={db}"); // Debug için
+                // SSL Mode = Prefer ile bağlan (zorunlu değil ama tercih edilir)
+                var connStr = $"Host={uri.Host};Port={uri.Port};Database={db};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true";
 
                 return connStr;
             }
