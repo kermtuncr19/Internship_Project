@@ -29,50 +29,58 @@ namespace StoreApp.Infrastructure.Extensions
                     .SetDefaultCulture("tr-TR");
             });
         }
-        public static async void ConfigureDefaultAdminUser(this IApplicationBuilder app)
+        public static async Task ConfigureDefaultAdminUser(this IApplicationBuilder app)
         {
-            const string adminUser = "Admin";
-            const string adminPassword = "Admin1907.";
+            using var scope = app.ApplicationServices.CreateScope();
 
-            //UserManager
-            UserManager<IdentityUser> userManager = app
-                .ApplicationServices
-                .CreateScope()
-                .ServiceProvider
-                .GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-            //RoleManager
-            RoleManager<IdentityRole> roleManager = app
-                .ApplicationServices
-                .CreateScope()
-                .ServiceProvider
-                .GetRequiredService<RoleManager<IdentityRole>>();
+            var adminUsername = config["ADMIN:USERNAME"] ?? "Admin";
+            var adminEmail = config["ADMIN:EMAIL"] ?? "admin@local";
+            var adminPassword = config["ADMIN:PASSWORD"];
 
-            IdentityUser user = await userManager.FindByNameAsync(adminUser);
-            if(user is null)
+            // Prod’da şifre ENV'den gelmiyorsa admin oluşturma (güvenlik)
+            if (string.IsNullOrWhiteSpace(adminPassword))
+                return;
+
+            // Önce Admin rolü garanti olsun
+            const string adminRole = "Admin";
+            if (!await roleManager.RoleExistsAsync(adminRole))
             {
-                user = new IdentityUser(adminUser)
+                var roleCreate = await roleManager.CreateAsync(new IdentityRole(adminRole));
+                if (!roleCreate.Succeeded)
+                    throw new Exception("Admin rolü oluşturulamadı: " + string.Join(", ", roleCreate.Errors.Select(e => e.Description)));
+            }
+
+            // UserName veya Email’den yakala
+            var user = await userManager.FindByNameAsync(adminUsername)
+                       ?? await userManager.FindByEmailAsync(adminEmail);
+
+            if (user == null)
+            {
+                user = new IdentityUser
                 {
-                    Email = "kerim.tuncer@ogr.sakarya.edu.tr",
-                    PhoneNumber = "5512311426",
-                    UserName = adminUser,
+                    UserName = adminUsername,
+                    Email = adminEmail,
+                    EmailConfirmed = true,
+                    PhoneNumber = "5512311426"
                 };
 
-                var result = await userManager.CreateAsync(user, adminPassword);
-                if (!result.Succeeded)
-                    throw new Exception("Admin Kullancısı Oluşturulamadı!");
+                var createResult = await userManager.CreateAsync(user, adminPassword);
+                if (!createResult.Succeeded)
+                    throw new Exception("Admin kullanıcı oluşturulamadı: " + string.Join(", ", createResult.Errors.Select(e => e.Description)));
+            }
 
-                var roleResult = await userManager.AddToRolesAsync(user,
-                    roleManager
-                        .Roles
-                        .Where(r => !string.IsNullOrEmpty(r.Name))
-                        .Select(r => r.Name!)
-                        .ToList()
-                );
-
-                if (!roleResult.Succeeded)
-                    throw new Exception("Admin İçin Rol Tanımıyla Alakalı Bir Sorun Oluştu!");
+            // Admin rolünü garanti et
+            if (!await userManager.IsInRoleAsync(user, adminRole))
+            {
+                var addRole = await userManager.AddToRoleAsync(user, adminRole);
+                if (!addRole.Succeeded)
+                    throw new Exception("Admin rolü atanamadı: " + string.Join(", ", addRole.Errors.Select(e => e.Description)));
             }
         }
+
     }
 }

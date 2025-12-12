@@ -20,6 +20,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 
+app.MapGet("/health", () => Results.Ok("OK")); // Run'dan önce
+
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -41,16 +43,10 @@ app.MapControllerRoute(
 app.MapRazorPages();
 app.MapControllers();
 
-// Healthcheck endpoint (Railway için çok iyi)
-app.MapGet("/health", () => Results.Ok("OK"));
-
-// ❗ Production'da otomatik migration/admin oluşturma KAPALI (crash'i engeller)
-if (!app.Environment.IsProduction())
-{
-    app.ConfigureAndCheckMigration();
-    app.ConfigureDefaultAdminUser();
-}
-
 app.ConfigureLocalization();
+app.ConfigureAndCheckMigration();
+
+// async seed -> await
+await app.ConfigureDefaultAdminUser();
 
 app.Run();
