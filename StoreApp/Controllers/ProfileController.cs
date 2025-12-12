@@ -28,6 +28,9 @@ namespace StoreApp.Controllers
         {
             var userId = _userManager.GetUserId(User)!;
 
+            var user = await _userManager.FindByIdAsync(userId);   // ✅ IdentityUser
+
+
             var profile = await _ctx.UserProfiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.UserId == userId);
@@ -57,7 +60,8 @@ namespace StoreApp.Controllers
                 Profile = profile,
                 LastOrders = lastOrders,
                 AddressCount = addressCount,
-                FavoriteCount = favoriteCount
+                FavoriteCount = favoriteCount,
+                Email = user?.Email
             };
 
             return View(viewModel);
