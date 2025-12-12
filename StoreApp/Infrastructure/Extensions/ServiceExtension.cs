@@ -18,47 +18,22 @@ namespace StoreApp.Infrastructure.Extensions
         {
             var connectionString = configuration.GetConnectionString("sqlconnection");
 
-            // Railway DATABASE_URL'i Npgsql formatına çevir
-            if (!string.IsNullOrEmpty(connectionString))
-            {
-                if (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://"))
-                {
-                    connectionString = ConvertPostgresUrl(connectionString);
-                }
-            }
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Connection string 'sqlconnection' bulunamadı. Railway'de ConnectionStrings__sqlconnection ekli olmalı.");
 
             services.AddDbContext<RepositoryContext>(options =>
             {
                 options.UseNpgsql(connectionString, npgsqlOptions =>
                 {
                     npgsqlOptions.MigrationsAssembly("StoreApp");
-                    // SSL ayarlarını devre dışı bırak (Railway için gerekli)
-                    npgsqlOptions.RemoteCertificateValidationCallback((sender, certificate, chain, errors) => true);
                 });
 
-                options.EnableSensitiveDataLogging(true);
+                options.EnableSensitiveDataLogging(true); // istersen prod'da kapatabilirsin
             });
         }
 
-        private static string ConvertPostgresUrl(string databaseUrl)
-        {
-            try
-            {
-                var uri = new Uri(databaseUrl);
-                var db = uri.LocalPath.TrimStart('/');
-                var userInfo = uri.UserInfo.Split(':');
 
-                // SSL Mode = Prefer ile bağlan (zorunlu değil ama tercih edilir)
-                var connStr = $"Host={uri.Host};Port={uri.Port};Database={db};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Prefer;Trust Server Certificate=true";
 
-                return connStr;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error converting DATABASE_URL: {ex.Message}");
-                return databaseUrl;
-            }
-        }
 
         public static void ConfigureIdentity(this IServiceCollection services)
         {
