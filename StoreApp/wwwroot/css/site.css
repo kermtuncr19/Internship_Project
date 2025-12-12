@@ -2620,48 +2620,57 @@ body {
 
 /* ==================== NAVBAR RESPONSIVE ==================== */
 
-/* Ana navbar container */
-.navbar {
+/* Ana navbar container - SADECE main-navbar için */
+.navbar.main-navbar {
   background-color: #ffea00;
   border: none;
 }
 
-.navbar-collapse {
+.navbar.main-navbar .navbar-collapse {
   background-color: #ffea00;
 }
 
-/* Desktop için varsayılan düzen */
+/* Admin navbar korunması */
+.navbar.admin-navbar {
+  background-color: var(--navy) !important;
+}
+
+.navbar.admin-navbar .navbar-collapse {
+  background-color: var(--navy) !important;
+}
+
+/* Desktop için varsayılan düzen - SADECE main-navbar */
 @media (min-width: 992px) {
-  .navbar-search {
+  .navbar.main-navbar .navbar-search {
     order: 2 !important;
   }
   
-  .navbar-nav.actions {
+  .navbar.main-navbar .navbar-nav.actions {
     order: 3 !important;
   }
 }
 
-/* Tablet ve mobil için düzen */
+/* Tablet ve mobil için düzen - SADECE main-navbar */
 @media (max-width: 991px) {
   /* Collapse içeriği */
-  .navbar-collapse {
+  .navbar.main-navbar .navbar-collapse {
     padding: 0;
   }
 
-  /* Search bar her zaman sola yapışık */
-  .navbar-search {
+  /* Search bar her zaman sola yapışık - SADECE main-navbar */
+  .navbar.main-navbar .navbar-search {
     order: 1 !important;
     margin: 0.75rem 0 !important;
     width: 100% !important;
     flex-grow: 1 !important;
   }
 
-  .navbar-search .input-group {
+  .navbar.main-navbar .navbar-search .input-group {
     width: 100% !important;
   }
 
-  /* Sepet ve profil sağda yan yana */
-  .navbar-nav.actions {
+  /* Sepet ve profil sağda yan yana - SADECE main-navbar */
+  .navbar.main-navbar .navbar-nav.actions {
     order: 2 !important;
     flex-direction: row !important;
     margin-left: auto !important;
@@ -2670,36 +2679,36 @@ body {
     margin-bottom: 0 !important;
   }
 
-  /* User dropdown mobilde */
-  .user-dropdown-hover {
+  /* User dropdown mobilde - SADECE main-navbar */
+  .navbar.main-navbar .user-dropdown-hover {
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* User avatar küçük ekranlarda */
-  .user-avatar {
+  /* User avatar küçük ekranlarda - SADECE main-navbar */
+  .navbar.main-navbar .user-avatar {
     width: 36px;
     height: 36px;
   }
 
-  /* Kullanıcı adını gizle */
-  .nav-link span {
+  /* Kullanıcı adını gizle - SADECE main-navbar */
+  .navbar.main-navbar .nav-link span {
     display: none !important;
   }
 }
 
-/* Çok küçük ekranlar için */
+/* Çok küçük ekranlar için - SADECE main-navbar */
 @media (max-width: 576px) {
-  .navbar-brand img {
+  .navbar.main-navbar .navbar-brand img {
     height: 24px !important;
   }
 
-  .user-avatar {
+  .navbar.main-navbar .user-avatar {
     width: 32px;
     height: 32px;
   }
 
-  .promo-strip {
+  .navbar.main-navbar .promo-strip {
     font-size: 0.85rem;
   }
 }
@@ -2719,49 +2728,49 @@ body {
   margin: 0;
 }
 
-/* Dropdown menü mobilde */
+/* Dropdown menü mobilde - SADECE main-navbar */
 @media (max-width: 991px) {
-  .user-dropdown-hover .dropdown-menu {
+  .navbar.main-navbar .user-dropdown-hover .dropdown-menu {
     position: absolute !important;
     right: 0 !important;
     left: auto !important;
     margin-top: 0.5rem;
   }
   
-  .user-dropdown-hover.show .dropdown-menu {
+  .navbar.main-navbar .user-dropdown-hover.show .dropdown-menu {
     display: block;
   }
 }
 
-/* Desktop hover mantığı */
+/* Desktop hover mantığı - SADECE main-navbar */
 @media (min-width: 992px) {
-  .user-dropdown-hover:hover .dropdown-menu {
+  .navbar.main-navbar .user-dropdown-hover:hover .dropdown-menu {
     display: block;
   }
 }
 
-/* Logo ve toggler her zaman üstte */
-.navbar-brand {
+/* Logo ve toggler her zaman üstte - SADECE main-navbar */
+.navbar.main-navbar .navbar-brand {
   margin-right: 0.5rem;
 }
 
-.navbar-toggler {
+.navbar.main-navbar .navbar-toggler {
   border: none;
   padding: 0.25rem 0.5rem;
 }
 
-.navbar-toggler:focus {
+.navbar.main-navbar .navbar-toggler:focus {
   box-shadow: none;
 }
 
-/* Collapsed durumda içerik */
+/* Collapsed durumda içerik - SADECE main-navbar */
 @media (max-width: 991px) {
-  #mainNav {
+  .navbar.main-navbar #mainNav {
     padding-top: 0.5rem;
   }
   
-  /* Search ve actions aynı satırda */
-  #mainNav {
+  /* Search ve actions aynı satırda - SADECE main-navbar */
+  .navbar.main-navbar #mainNav {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;

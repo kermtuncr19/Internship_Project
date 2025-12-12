@@ -47,6 +47,241 @@
             @RenderBody()
         </div>
     </main>
+
+    <!-- 
+    Bu kodu _Layout.cshtml dosyanızın <body> tagının hemen içine ekleyin 
+    (footer'dan önce, en üste)
+-->
+
+<!-- ✅ DISCLAIMER MODAL -->
+<div class="modal fade" id="disclaimerModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Header -->
+            <div class="modal-header bg-navy text-white border-0">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div class="warning-icon">
+                        <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0 fw-bold">Önemli Bilgilendirme</h5>
+                        <small class="opacity-75">Lütfen Okuyunuz</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="modal-body p-4">
+                <div class="disclaimer-content">
+                    <!-- Ana Mesaj -->
+                    <div class="alert alert-warning border-0 shadow-sm mb-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <i class="fa-solid fa-info-circle fa-2x text-warning mt-1"></i>
+                            <div>
+                                <h6 class="fw-bold mb-2">Eğitim ve Proje Amaçlı Web Sitesi</h6>
+                                <p class="mb-0 text-muted">
+                                    Bu web sitesi tamamen eğitim ve proje geliştirme amacıyla oluşturulmuştur.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detaylı Açıklama -->
+                    <div class="disclaimer-text mb-4">
+                        <ul class="list-unstyled">
+                            <li class="mb-3 d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-circle-check text-success mt-1"></i>
+                                <span><strong>Ürün Görselleri ve İçerikler:</strong> Bu sitede yer alan tüm ürün görselleri, açıklamaları ve bilgiler <strong>Fenerium resmi web sitesinden</strong> alınmıştır.</span>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-circle-xmark text-danger mt-1"></i>
+                                <span><strong>Ticari Amaç Yok:</strong> Bu site <strong>herhangi bir ticari amaç taşımamaktadır</strong> ve gerçek ürün satışı yapılmamaktadır.</span>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-graduation-cap text-primary mt-1"></i>
+                                <span><strong>Proje Amacı:</strong> Bu platform, modern web teknolojilerini öğrenmek ve yazılım geliştirme yeteneklerini geliştirmek için oluşturulmuş <strong>bir eğitim projesidir</strong>.</span>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start gap-2">
+                                <i class="fa-solid fa-shield-halved text-info mt-1"></i>
+                                <span><strong>Telif Hakları:</strong> Tüm ürün görselleri, markalar ve ticari isimler <strong>sahiplerinin mülkiyetindedir</strong>.</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Uyarı Notu -->
+                    <div class="alert alert-info border-0 shadow-sm mb-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <small class="mb-0">
+                                <strong>Not:</strong> Gerçek ürün satın almak için lütfen 
+                                <a href="https://www.fenerium.com" target="_blank" class="alert-link">
+                                    Fenerium resmi web sitesini <i class="fa-solid fa-external-link-alt fa-xs"></i>
+                                </a> ziyaret ediniz.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-0 bg-light">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="dontShowAgain">
+                    <label class="form-check-label small text-muted" for="dontShowAgain">
+                        Bir daha gösterme
+                    </label>
+                </div>
+                <button type="button" class="btn btn-navy px-4" id="acceptDisclaimer">
+                    <i class="fa-solid fa-check me-2"></i>Anladım, Devam Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cookie kontrolü
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+        }
+
+        // Eğer cookie yoksa modal'ı göster
+        if (!getCookie('disclaimerAccepted')) {
+            const modal = new bootstrap.Modal(document.getElementById('disclaimerModal'));
+            modal.show();
+        }
+
+        // Devam butonuna tıklandığında
+        document.getElementById('acceptDisclaimer').addEventListener('click', function() {
+            const dontShowAgain = document.getElementById('dontShowAgain').checked;
+            
+            if (dontShowAgain) {
+                // 365 gün geçerli cookie
+                setCookie('disclaimerAccepted', 'true', 365);
+            } else {
+                // Sadece bu oturum için (tarayıcı kapanınca siler)
+                sessionStorage.setItem('disclaimerAccepted', 'true');
+            }
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('disclaimerModal'));
+            modal.hide();
+        });
+    });
+</script>
+
+<style>
+    /* Disclaimer Modal Stilleri */
+    .bg-navy {
+        background-color: #001f5c !important;
+    }
+
+    .btn-navy {
+        background-color: #001f5c;
+        border-color: #001f5c;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-navy:hover {
+        background-color: #00153d;
+        border-color: #00153d;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 31, 92, 0.3);
+    }
+
+    #disclaimerModal .modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    #disclaimerModal .modal-header {
+        padding: 1.5rem;
+    }
+
+    #disclaimerModal .warning-icon {
+        background: rgba(255, 255, 255, 0.2);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    #disclaimerModal .disclaimer-content ul li {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    #disclaimerModal .alert {
+        border-radius: 12px;
+    }
+
+    #disclaimerModal .modal-footer {
+        padding: 1.25rem 1.5rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        #disclaimerModal .modal-dialog {
+            margin: 0.5rem;
+        }
+
+        #disclaimerModal .warning-icon {
+            width: 50px;
+            height: 50px;
+        }
+
+        #disclaimerModal .warning-icon i {
+            font-size: 1.5rem !important;
+        }
+
+        #disclaimerModal .disclaimer-content ul li {
+            font-size: 0.875rem;
+        }
+
+        #disclaimerModal .modal-footer {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        #disclaimerModal .modal-footer .form-check {
+            margin-bottom: 0.5rem !important;
+        }
+
+        #disclaimerModal .modal-footer .btn {
+            width: 100%;
+        }
+    }
+
+    /* Animasyon */
+    #disclaimerModal.show .modal-dialog {
+        animation: slideInDown 0.4s ease-out;
+    }
+
+    @@keyframes slideInDown {
+        from {
+            transform: translateY(-100px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
     <footer>
         @RenderSection("Footer", false)
         @await Html.PartialAsync("_Footer")
