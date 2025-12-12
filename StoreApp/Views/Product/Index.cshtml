@@ -14,6 +14,24 @@
     var qSort = Context.Request.Query["SortBy"].ToString();
 }
 
+@* ✅ ARAMA BİLGİ BANNERI (Sadece SearchTerm varsa göster) *@
+@if (!string.IsNullOrEmpty(ViewBag.SearchInfo) && !string.IsNullOrEmpty(qSearch))
+{
+    <div class="alert alert-info d-flex align-items-center justify-content-between mb-3 mt-3 shadow-sm" 
+         style="border-left: 4px solid #001f5c; border-radius: 8px;">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa fa-info-circle fs-5"></i>
+            <div>
+                <strong class="d-block">@ViewBag.SearchInfo</strong>
+                <small class="text-muted">@Model.Pagination.TotalItems ürün bulundu</small>
+            </div>
+        </div>
+        <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="fa fa-times me-1"></i> Temizle
+        </a>
+    </div>
+}
+
 @if (TempData["PriceError"] is string pe && !string.IsNullOrWhiteSpace(pe))
 {
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -24,10 +42,7 @@
 
 <!-- ✅ KATEGORİ ŞERİDİ + FİLTRE (responsive) -->
 <div class="category-bar row g-2 align-items-center mb-3 mt-4">
-    <!-- Kategori pill’leri: yatay kaydırmalı şerit -->
-    
-
-    <!-- Fiyat düğmesi: xs’de altta full-width, md+’da sağda -->
+    <!-- Fiyat düğmesi: xs'de altta full-width, md+'da sağda -->
     <div class="col-12 col-md-auto text-md-end">
         <button class="btn btn-sm btn-outline-navy rounded-pill px-3 w-100 w-md-auto" type="button"
                 data-bs-toggle="collapse" data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
@@ -37,7 +52,7 @@
 </div>
 
 <!-- 🔽 AÇILIR FİYAT FİLTRESİ (collapse) -->
-<div class="collapse" id="priceFilter">
+<div class="collapse" id="priceFilter" style="position: relative; z-index: 1030;">
     <div class="card card-body shadow-sm border-0 mb-3">
         <form id="priceForm" method="get" asp-controller="Product" asp-action="Index"
               class="row g-2 align-items-end needs-validation" novalidate>
@@ -84,7 +99,8 @@
                 <div class="dropdown">
                     <button class="btn sort-dropdown-btn w-100 dropdown-toggle" type="button"
                             id="sortDropdownBtn"
-                            data-bs-toggle="dropdown" aria-expanded="false">
+                            data-bs-toggle="dropdown" aria-expanded="false"
+                            style="position: relative; z-index: 1040;">
                         @{
                             var label = qSort switch
                             {
@@ -99,7 +115,8 @@
                         @label
                     </button>
 
-                    <ul class="dropdown-menu shadow sort-dropdown-menu" aria-labelledby="sortDropdownBtn">
+                    <ul class="dropdown-menu shadow sort-dropdown-menu" aria-labelledby="sortDropdownBtn" 
+                        style="z-index: 1050;">
                         <li><button type="button" class="dropdown-item sort-option" data-value="">Varsayılan</button></li>
                         <li><button type="button" class="dropdown-item sort-option" data-value="price_asc">Fiyat (Düşükten Yükseğe)</button></li>
                         <li><button type="button" class="dropdown-item sort-option" data-value="price_desc">Fiyat (Yüksekten Düşüğe)</button></li>
@@ -126,29 +143,54 @@
 
 <!-- ✅ ÜRÜN KARTLARI -->
 <div>
-    <div class="row my-3">
-        @foreach (var prd in Model.Products)
-        {
-            <partial name="_ProductCard" model="prd" />
-        }
-    </div>
-
-    <div class="text-center">
-        <div page-model="@Model?.Pagination"
-             page-action="Index"
-             page-classes-enabled="true"
-             page-class="btn"
-             page-class-normal="btn-outline-primary"
-             page-class-selected="btn-warning"
-             class="btn-group"
-             page-url-CategoryId="@(ViewBag.ActiveCategoryId)"
-             page-url-SearchTerm="@(Context.Request.Query["SearchTerm"])"
-             page-url-MinPrice="@(Context.Request.Query["MinPrice"])"
-             page-url-MaxPrice="@(Context.Request.Query["MaxPrice"])"
-             page-url-PageSize="@Model.Pagination.ItemsPerPage"
-             page-url-SortBy="@(Context.Request.Query["SortBy"])">
+    @if (Model.Products.Any())
+    {
+        <div class="row my-3">
+            @foreach (var prd in Model.Products)
+            {
+                <partial name="_ProductCard" model="prd" />
+            }
         </div>
-    </div>
+
+        <div class="text-center">
+            <div page-model="@Model?.Pagination"
+                 page-action="Index"
+                 page-classes-enabled="true"
+                 page-class="btn"
+                 page-class-normal="btn-outline-primary"
+                 page-class-selected="btn-warning"
+                 class="btn-group"
+                 page-url-CategoryId="@(ViewBag.ActiveCategoryId)"
+                 page-url-SearchTerm="@(Context.Request.Query["SearchTerm"])"
+                 page-url-MinPrice="@(Context.Request.Query["MinPrice"])"
+                 page-url-MaxPrice="@(Context.Request.Query["MaxPrice"])"
+                 page-url-PageSize="@Model.Pagination.ItemsPerPage"
+                 page-url-SortBy="@(Context.Request.Query["SortBy"])">
+            </div>
+        </div>
+    }
+    else
+    {
+        @* ✅ ÜRÜN BULUNAMADI EKRANI *@
+        <div class="card shadow-sm border-0 my-4">
+            <div class="card-body text-center py-5">
+                <i class="fa fa-search fa-4x text-muted mb-3 opacity-50"></i>
+                <h5 class="text-muted mb-2">Aradığınız kriterlere uygun ürün bulunamadı</h5>
+                <p class="text-muted mb-4">Farklı bir arama terimi veya filtre deneyin</p>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a asp-action="Index" class="btn btn-navy rounded-pill px-4">
+                        <i class="fa fa-store me-2"></i> Tüm Ürünler
+                    </a>
+                    @if (!string.IsNullOrWhiteSpace(qSearch))
+                    {
+                        <a asp-action="Index" asp-route-CategoryId="@activeId" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="fa fa-times me-2"></i> Aramayı Temizle
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -235,5 +277,109 @@
         row-gap: .5rem;
     }
 
-    
+    /* ✅ Arama Bilgi Banner Stilleri */
+    .alert-info {
+        background-color: #e7f3ff;
+        border-color: #b3d9ff;
+        color: #004085;
+    }
+
+    .alert-info i {
+        color: #001f5c;
+    }
+
+    .alert-info strong {
+        color: #001f5c;
+        font-size: 1rem;
+    }
+
+    .alert-info .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    .alert-info .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* ✅ Ürün Bulunamadı Ekranı */
+    .card {
+        border-radius: 12px;
+    }
+
+    .fa-search.opacity-50 {
+        opacity: 0.3 !important;
+    }
+
+    /* ✅ Responsive */
+    @@media (max-width: 576px) {
+        .alert-info {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .alert-info .d-flex:first-child {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .alert-info .btn {
+            width: 100%;
+        }
+
+        .card-body.py-5 {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
+
+        .fa-search {
+            font-size: 2.5rem !important;
+        }
+    }
+
+    /* ✅ Navy renk */
+    .btn-navy {
+        background-color: #001f5c;
+        border-color: #001f5c;
+        color: white;
+    }
+
+    .btn-navy:hover {
+        background-color: #00153d;
+        border-color: #00153d;
+        color: white;
+    }
+
+    .btn-outline-navy {
+        color: #001f5c;
+        border-color: #001f5c;
+    }
+
+    .btn-outline-navy:hover {
+        background-color: #001f5c;
+        border-color: #001f5c;
+        color: white;
+    }
+
+    .text-navy {
+        color: #001f5c !important;
+    }
+
+    /* ✅ Dropdown z-index düzeltmesi */
+    .dropdown-menu {
+        z-index: 1050 !important;
+    }
+
+    #priceFilter {
+        position: relative;
+        z-index: 1030;
+    }
+
+    .sort-dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+    }
 </style>
