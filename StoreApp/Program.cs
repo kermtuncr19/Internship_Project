@@ -49,3 +49,5 @@ app.ConfigureLocalization();
 app.ConfigureDefaultAdminUser();
 
 app.Run();
+app.MapGet("/health", () => Results.Ok("OK"));
+
