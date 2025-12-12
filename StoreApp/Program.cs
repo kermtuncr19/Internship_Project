@@ -33,7 +33,6 @@ app.MapAreaControllerRoute(
     pattern: "Admin/{controller=Dashboard}/{action=Index}/{id?}"
 );
 
-// Varsayılan route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}"
@@ -42,12 +41,16 @@ app.MapControllerRoute(
 app.MapRazorPages();
 app.MapControllers();
 
-
-
-app.ConfigureAndCheckMigration();
-app.ConfigureLocalization();
-app.ConfigureDefaultAdminUser();
-
-app.Run();
+// Healthcheck endpoint (Railway için çok iyi)
 app.MapGet("/health", () => Results.Ok("OK"));
 
+// ❗ Production'da otomatik migration/admin oluşturma KAPALI (crash'i engeller)
+if (!app.Environment.IsProduction())
+{
+    app.ConfigureAndCheckMigration();
+    app.ConfigureDefaultAdminUser();
+}
+
+app.ConfigureLocalization();
+
+app.Run();

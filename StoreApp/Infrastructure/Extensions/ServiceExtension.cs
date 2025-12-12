@@ -16,10 +16,20 @@ namespace StoreApp.Infrastructure.Extensions
     {
         public static void ConfigureDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            var connectionString = configuration.GetConnectionString("sqlconnection");
+            var connectionString =
+                configuration.GetConnectionString("sqlconnection")
+                ?? configuration["ConnectionStrings:sqlconnection"]
+                ?? configuration["DATABASE_URL"];
 
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new InvalidOperationException("Connection string 'sqlconnection' bulunamadı. Railway'de ConnectionStrings__sqlconnection ekli olmalı.");
+
+            // URL formatı gelirse (postgresql://...) Npgsql formatına çevir
+            if (connectionString.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+                connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+            {
+                connectionString = ConvertPostgresUrlToNpgsql(connectionString);
+            }
 
             services.AddDbContext<RepositoryContext>(options =>
             {
@@ -28,9 +38,23 @@ namespace StoreApp.Infrastructure.Extensions
                     npgsqlOptions.MigrationsAssembly("StoreApp");
                 });
 
-                options.EnableSensitiveDataLogging(true); // istersen prod'da kapatabilirsin
+                options.EnableSensitiveDataLogging(true);
             });
         }
+
+        private static string ConvertPostgresUrlToNpgsql(string databaseUrl)
+        {
+            var uri = new Uri(databaseUrl);
+            var db = uri.AbsolutePath.Trim('/');
+
+            var userInfo = uri.UserInfo.Split(':', 2);
+            var user = userInfo[0];
+            var pass = userInfo.Length > 1 ? userInfo[1] : "";
+
+            // Railway internal genelde SSL istemez; yine de problem olursa Disable yaparsın
+            return $"Host={uri.Host};Port={uri.Port};Database={db};Username={user};Password={pass};SSL Mode=Disable;Trust Server Certificate=true";
+        }
+
 
 
 
