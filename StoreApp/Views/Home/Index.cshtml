@@ -9,34 +9,31 @@
   var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
   var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
   bool isProductIndex = ctrl.Equals("Product", StringComparison.OrdinalIgnoreCase)
-  && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
+                     && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
 }
 
-
-<!-- 🎨 BANNER CAROUSEL - Container dışına çıkar -->
+<!-- ✅ BANNER: Container DIŞINA -->
 </div> <!-- container my-3 kapanıyor -->
 
-<div class="banner-carousel-wrapper">
-  <div class="banner-carousel-container mb-4">
-    <div class="banner-carousel">
-      <div class="banner-track">
-        <!-- Banner 1 - Chobani Forma (Futbol) -->
-        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="1" class="banner-item">
-          <img src="~/images/banners/banner1.jpg" alt="Futbol Ürünleri" class="banner-image" />
-        </a>
-        
-        <!-- Banner 2 - Basketbol İç Saha -->
-        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="2" class="banner-item">
-          <img src="~/images/banners/banner2.jpg" alt="Basketbol Ürünleri" class="banner-image" />
-        </a>
-        
-        <!-- Banner 3 - Voleybol İç Saha -->
-        <a asp-controller="Product" asp-action="Index" asp-route-categoryId="3" class="banner-item">
-          <img src="~/images/banners/banner3.jpg" alt="Voleybol Ürünleri" class="banner-image" />
-        </a>
-      </div>
+<section class="fullwidth-banner">
+  <div class="banner-carousel">
+    <div class="banner-track">
+      <!-- Banner 1 - Futbol -->
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="1" class="banner-item">
+        <img src="~/images/banners/banner1.jpg" alt="Futbol Ürünleri" class="banner-image" />
+      </a>
+
+      <!-- Banner 2 - Basketbol -->
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="2" class="banner-item">
+        <img src="~/images/banners/banner2.jpg" alt="Basketbol Ürünleri" class="banner-image" />
+      </a>
+
+      <!-- Banner 3 - Voleybol -->
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="3" class="banner-item">
+        <img src="~/images/banners/banner3.jpg" alt="Voleybol Ürünleri" class="banner-image" />
+      </a>
     </div>
-    
+
     <!-- Navigation Dots -->
     <div class="banner-dots">
       <span class="dot active" data-index="0"></span>
@@ -44,7 +41,7 @@
       <span class="dot" data-index="2"></span>
     </div>
   </div>
-</div>
+</section>
 
 <div class="container my-3"> <!-- container my-3 tekrar açılıyor -->
 
@@ -53,12 +50,8 @@
   @await Component.InvokeAsync("Showcase")
 </div>
 
-<style>
-  
-</style>
-
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const track = document.querySelector('.banner-track');
     const dots = document.querySelectorAll('.dot');
     const banners = document.querySelectorAll('.banner-item');
@@ -70,8 +63,7 @@
       currentIndex = index;
       const offset = -currentIndex * 100;
       track.style.transform = `translateX(${offset}%)`;
-      
-      // Update dots
+
       dots.forEach((dot, i) => {
         dot.classList.toggle('active', i === currentIndex);
       });
@@ -83,14 +75,13 @@
     }
 
     function startAutoSlide() {
-      autoSlideInterval = setInterval(nextSlide, 4500); // 4.5 saniye
+      autoSlideInterval = setInterval(nextSlide, 4500);
     }
 
     function stopAutoSlide() {
       clearInterval(autoSlideInterval);
     }
 
-    // Dot click events
     dots.forEach((dot, index) => {
       dot.addEventListener('click', () => {
         stopAutoSlide();
@@ -99,11 +90,10 @@
       });
     });
 
-    // Pause on hover
+    // Hover durdur/başlat (desktop)
     track.addEventListener('mouseenter', stopAutoSlide);
     track.addEventListener('mouseleave', startAutoSlide);
 
-    // Start auto sliding
     startAutoSlide();
   });
 </script>

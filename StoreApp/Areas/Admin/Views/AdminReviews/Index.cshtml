@@ -5,72 +5,271 @@
 }
 
 <div class="container my-4">
-    <h3 class="mb-3 text-white">Yorum Yönetimi</h3>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="m-0 text-white">Yorum Yönetimi</h3>
+        <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+            @Model.Count() yorum
+        </span>
+    </div>
 
     @if (TempData["success"] != null)
     {
         <div class="alert alert-success">@TempData["success"]</div>
     }
 
-    <table class="table table-bordered table-striped bg-white align-middle">
-        <thead class="table-dark">
-            <tr>
-                <th>Ürün</th>
-                <th>Kullanıcı</th>
-                <th>Puan</th>
-                <th>Yorum</th>
-                <th>Tarih</th>
-                <th>Durum</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var r in Model)
-        {
-            <tr>
-                <td>
-                    <img src="@r.Product?.ImageUrl" alt="" style="width:50px;height:50px;object-fit:cover;border-radius:6px;margin-right:6px;" />
-                    <span>@r.Product?.ProductName</span>
-                </td>
-                <td>@r.User?.UserName</td>
-                <td>
-                    <span class="text-warning">@string.Concat(Enumerable.Repeat("★", r.Rating))</span>
-                </td>
-                <td style="max-width:350px;white-space:pre-wrap;">@r.Comment</td>
-                <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                <td>
-                    @if (r.IsApproved)
+    <!-- ✅ DESKTOP/TABLET (md ve üstü): Modern tablo -->
+    <div class="d-none d-md-block">
+        <div class="card admin-card">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 admin-table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>Kullanıcı</th>
+                            <th>Puan</th>
+                            <th>Yorum</th>
+                            <th>Tarih</th>
+                            <th>Durum</th>
+                            <th class="text-end">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in Model)
                     {
-                        <span class="badge bg-success">Onaylı</span>
+                        <tr>
+                            <td class="product-cell">
+                                <img src="@r.Product?.ImageUrl" alt="" class="prod-img" />
+                                <div class="prod-info">
+                                    <div class="prod-name">@r.Product?.ProductName</div>
+                                    <div class="text-muted small">#@r.ReviewId</div>
+                                </div>
+                            </td>
+
+                            <td>@r.User?.UserName</td>
+
+                            <td>
+                                <div class="rating">
+                                    <span class="stars">@string.Concat(Enumerable.Repeat("★", r.Rating))</span>
+                                    <span class="muted">(@r.Rating/5)</span>
+                                </div>
+                            </td>
+
+                            <td class="comment-cell">@r.Comment</td>
+
+                            <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+
+                            <td>
+                                @if (r.IsApproved)
+                                {
+                                    <span class="pill pill-ok">Onaylı</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-wait">Bekliyor</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                @if (!r.IsApproved)
+                                {
+                                    <form asp-action="Approve" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@r.ReviewId" />
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                            <i class="fa fa-check me-1"></i> Onayla
+                                        </button>
+                                    </form>
+                                    <form asp-action="Reject" method="post" class="d-inline ms-1">
+                                        <input type="hidden" name="id" value="@r.ReviewId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                            <i class="fa fa-trash me-1"></i> Sil
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">Bekliyor</span>
-                    }
-                </td>
-                <td>
-                    @if (!r.IsApproved)
-                    {
-                        <form asp-action="Approve" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@r.ReviewId" />
-                            <button type="submit" class="btn btn-sm btn-success">
-                                <i class="fa fa-check"></i> Onayla
-                            </button>
-                        </form>
-                        <form asp-action="Reject" method="post" class="d-inline">
-                            <input type="hidden" name="id" value="@r.ReviewId" />
-                            <button type="submit" class="btn btn-sm btn-danger">
-                                <i class="fa fa-trash"></i> Sil
-                            </button>
-                        </form>
-                    }
-                    else
-                    {
-                        <span class="text-muted">—</span>
-                    }
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ MOBİL (sm ve altı): Kart liste -->
+    <div class="d-md-none">
+        <div class="admin-list">
+            @foreach (var r in Model)
+            {
+                <div class="review-card">
+                    <div class="review-top">
+                        <img src="@r.Product?.ImageUrl" alt="" class="prod-img-lg" />
+                        <div class="review-meta">
+                            <div class="prod-name">@r.Product?.ProductName</div>
+                            <div class="muted">@r.User?.UserName • @r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+
+                            <div class="rating mt-1">
+                                <span class="stars">@string.Concat(Enumerable.Repeat("★", r.Rating))</span>
+                                <span class="muted">(@r.Rating/5)</span>
+                            </div>
+
+                            <div class="mt-2">
+                                @if (r.IsApproved)
+                                {
+                                    <span class="pill pill-ok">Onaylı</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-wait">Bekliyor</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-comment">
+                        @r.Comment
+                    </div>
+
+                    <div class="review-actions">
+                        @if (!r.IsApproved)
+                        {
+                            <form asp-action="Approve" method="post" class="flex-fill">
+                                <input type="hidden" name="id" value="@r.ReviewId" />
+                                <button type="submit" class="btn btn-success w-100 rounded-pill">
+                                    <i class="fa fa-check me-1"></i> Onayla
+                                </button>
+                            </form>
+
+                            <form asp-action="Reject" method="post" class="flex-fill">
+                                <input type="hidden" name="id" value="@r.ReviewId" />
+                                <button type="submit" class="btn btn-outline-danger w-100 rounded-pill">
+                                    <i class="fa fa-trash me-1"></i> Sil
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="text-muted small">Bu yorum zaten onaylı.</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 </div>
+
+<style>
+
+    /* Genel kart */
+.admin-card{
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(8px);
+}
+
+/* Modern tablo */
+.admin-table thead{
+  background: #0b2a6f;
+  color: #fff;
+}
+.admin-table th{
+  font-weight: 700;
+  font-size: .9rem;
+  padding: 14px 16px;
+  border: 0;
+}
+.admin-table td{
+  padding: 14px 16px;
+  border-color: rgba(0,0,0,.06);
+  vertical-align: middle;
+}
+
+.product-cell{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.prod-img{
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,.08);
+}
+.prod-info .prod-name{
+  font-weight: 700;
+  color: #0b2a6f;
+}
+
+.comment-cell{
+  max-width: 380px;
+  white-space: normal;
+  word-break: break-word;
+  color: #24324a;
+}
+
+/* Puan */
+.rating .stars{ color: #f6b100; letter-spacing: 1px; }
+.muted{ color: rgba(0,0,0,.55); font-size: .86rem; }
+
+/* Durum pill */
+.pill{
+  display: inline-flex;
+  align-items: center;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: .82rem;
+}
+.pill-ok{ background: rgba(25,135,84,.12); color: #198754; }
+.pill-wait{ background: rgba(255,193,7,.18); color: #8a6d00; }
+
+/* MOBİL kart liste */
+.admin-list{ display: grid; gap: 14px; }
+.review-card{
+  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.10);
+}
+
+.review-top{
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.prod-img-lg{
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,.08);
+}
+.review-meta .prod-name{
+  font-weight: 800;
+  color: #0b2a6f;
+  line-height: 1.2;
+}
+
+.review-comment{
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(11,42,111,.06);
+  color: #1f2a44;
+  white-space: pre-wrap;
+}
+
+.review-actions{
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+</style>

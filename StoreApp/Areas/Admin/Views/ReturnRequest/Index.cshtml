@@ -2,185 +2,337 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="container my-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 class="mb-0"><i class="fa fa-undo me-2"></i> İade Talepleri</h5>
-        <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index" class="btn btn-outline-secondary btn-sm">
-            <i class="fa fa-rotate-left me-1"></i> Sıfırla
-        </a>
+
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="mb-0 text-white"><i class="fa fa-undo me-2"></i> İade Talepleri</h5>
+
+    <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index" class="btn btn-outline-light btn-sm rounded-pill">
+      <i class="fa fa-rotate-left me-1"></i> Sıfırla
+    </a>
+  </div>
+
+  <!-- ✅ Filtreler (aynı, sadece daha modern kart içine aldık) -->
+  <div class="card admin-card mb-3">
+    <div class="card-body">
+      <form method="get" class="row g-2">
+        <div class="col-12 col-md-3">
+          <select class="form-select" asp-for="Status">
+            <option value="">Tüm Durumlar</option>
+            <option value="Pending">Beklemede</option>
+            <option value="Approved">Onaylandı</option>
+            <option value="Rejected">Reddedildi</option>
+            <option value="Completed">Tamamlandı</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-3">
+          <input class="form-control" type="number" name="orderId" value="@(Model.OrderId?.ToString() ?? "")" placeholder="Sipariş No" />
+        </div>
+
+        <div class="col-12 col-md-3">
+          <input class="form-control" type="text" name="email" value="@Model.Email" placeholder="Kullanıcı e-posta" />
+        </div>
+
+        <div class="col-12 col-md-3 d-grid d-md-flex justify-content-md-end">
+          <button class="btn btn-navy rounded-pill px-4">
+            <i class="fa fa-search me-1"></i> Filtrele
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <form method="get" class="row g-2 mb-3">
-        <div class="col-md-3">
-           <select class="form-select" asp-for="Status">
-    <option value="">Tüm Durumlar</option>
-    <option value="Pending">Beklemede</option>
-    <option value="Approved">Onaylandı</option>
-    <option value="Rejected">Reddedildi</option>
-    <option value="Completed">Tamamlandı</option>
-</select>
+  @if (!Model.Items.Any())
+  {
+    <div class="card admin-card">
+      <div class="card-body text-center py-5">
+        <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+        <h6 class="mb-0">Kayıt bulunamadı.</h6>
+      </div>
+    </div>
+  }
+  else
+  {
+    <!-- ✅ DESKTOP/TABLET -->
+    <div class="d-none d-md-block">
+      <div class="card admin-card">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0 admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Sipariş</th>
+                <th>Ürün(ler)</th>
+                <th>Neden</th>
+                <th>Talep Tarihi</th>
+                <th>Durum</th>
+                <th class="text-end">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Items)
+            {
+              var statusBadge = r.Status switch
+              {
+                Entities.Models.ReturnStatus.Pending   => "pill pill-wait",
+                Entities.Models.ReturnStatus.Approved  => "pill pill-ok",
+                Entities.Models.ReturnStatus.Rejected  => "pill pill-bad",
+                Entities.Models.ReturnStatus.Completed => "pill pill-done",
+                _ => "pill pill-muted"
+              };
 
-        </div>
-        <div class="col-md-3">
-            <input class="form-control" type="number" name="orderId" value="@(Model.OrderId?.ToString() ?? "")" placeholder="Sipariş No" />
-        </div>
-        <div class="col-md-3">
-            <input class="form-control" type="text" name="email" value="@Model.Email" placeholder="Kullanıcı e-posta" />
-        </div>
-        <div class="col-md-3 d-grid">
-            <button class="btn btn-primary"><i class="fa fa-search me-1"></i> Filtrele</button>
-        </div>
+              <tr>
+                <td class="fw-semibold">#@r.ReturnRequestId</td>
+
+                <td>
+                  <div class="d-flex flex-column">
+                    <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@r.OrderId"
+                       class="text-decoration-none fw-semibold">
+                      #@r.OrderId
+                    </a>
+                    <small class="text-muted">@r.Order?.Name</small>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    @foreach (var l in r.Lines)
+                    {
+                      var p = l.CartLine?.Product;
+                      var img = string.IsNullOrWhiteSpace(p?.ImageUrl) ? "/images/placeholders/product-thumb.png" : p!.ImageUrl;
+
+                      <div class="rr-line">
+                        <img src="@img" class="rr-line-img" />
+                        <div class="rr-line-text">
+                          <div class="rr-line-name">@(p?.ProductName ?? "Ürün")</div>
+                          <div class="rr-line-qty text-muted small">× @l.Quantity</div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </td>
+
+                <td>
+                  <div class="small">
+                    <div class="fw-semibold">@r.Reason</div>
+                    @if (!string.IsNullOrWhiteSpace(r.DetailedReason))
+                    {
+                      <div class="text-muted">@r.DetailedReason</div>
+                    }
+                  </div>
+                </td>
+
+                <td>
+                  <div class="small">
+                    @r.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                    @if (r.ProcessedAt.HasValue)
+                    {
+                      <div class="text-muted">İşl.: @r.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                    }
+                  </div>
+                </td>
+
+                <td><span class="@statusBadge">@r.Status</span></td>
+
+                <td class="text-end">
+  <div class="actions-inline">
+    <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Detail" asp-route-id="@r.ReturnRequestId"
+       class="btn btn-sm btn-outline-secondary rounded-pill actions-view">
+      <i class="fa fa-eye me-1"></i> Görüntüle
+    </a>
+
+    <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Approve"
+          class="d-inline js-rr-action">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="id" value="@r.ReturnRequestId" />
+      <input type="hidden" name="adminNotes" value="" />
+      <button type="submit" class="btn btn-sm btn-success action-icon-btn"
+              title="Onayla"
+              @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)>
+        <i class="fa fa-check"></i>
+      </button>
     </form>
 
-    @if (!Model.Items.Any())
-    {
-        <div class="alert alert-light text-center py-5">
-            <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
-            <h6>Kayıt bulunamadı.</h6>
+    <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Reject"
+          class="d-inline js-rr-action">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="id" value="@r.ReturnRequestId" />
+      <input type="hidden" name="adminNotes" value="" />
+      <button type="submit" class="btn btn-sm btn-outline-danger action-icon-btn"
+              title="Reddet"
+              @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)
+              onclick="return askRejectReason(this);">
+        <i class="fa fa-times"></i>
+      </button>
+    </form>
+
+    <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Complete"
+          class="d-inline js-rr-action">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="id" value="@r.ReturnRequestId" />
+      <button type="submit" class="btn btn-sm btn-primary action-icon-btn"
+              title="Tamamla"
+              @(r.Status != Entities.Models.ReturnStatus.Approved ? "disabled" : null)>
+        <i class="fa fa-flag-checkered"></i>
+      </button>
+    </form>
+  </div>
+</td>
+
+              </tr>
+            }
+            </tbody>
+          </table>
         </div>
-    }
-    else
-    {
-        <div class="table-responsive shadow-sm">
-            <table class="table align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Sipariş</th>
-                        <th>Ürün(ler)</th>
-                        <th>Neden</th>
-                        <th>Talep Tarihi</th>
-                        <th>Durum</th>
-                        <th class="text-end">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @foreach (var r in Model.Items)
+      </div>
+
+      <!-- Pagination aynı -->
+      <nav class="mt-3">
+        <ul class="pagination justify-content-end mb-0">
+          @{
+            var prevDisabled = Model.Page <= 1 ? "disabled" : "";
+            var nextDisabled = Model.Page >= Model.TotalPages ? "disabled" : "";
+          }
+          <li class="page-item @prevDisabled">
+            <a class="page-link"
+               asp-route-status="@Model.Status"
+               asp-route-orderId="@Model.OrderId"
+               asp-route-email="@Model.Email"
+               asp-route-page="@(Model.Page - 1)"
+               asp-route-pageSize="@Model.PageSize">Önceki</a>
+          </li>
+
+          @for (int i = 1; i <= Model.TotalPages; i++)
+          {
+            <li class="page-item @(i == Model.Page ? "active" : "")">
+              <a class="page-link"
+                 asp-route-status="@Model.Status"
+                 asp-route-orderId="@Model.OrderId"
+                 asp-route-email="@Model.Email"
+                 asp-route-page="@i"
+                 asp-route-pageSize="@Model.PageSize">@i</a>
+            </li>
+          }
+
+          <li class="page-item @nextDisabled">
+            <a class="page-link"
+               asp-route-status="@Model.Status"
+               asp-route-orderId="@Model.OrderId"
+               asp-route-email="@Model.Email"
+               asp-route-page="@(Model.Page + 1)"
+               asp-route-pageSize="@Model.PageSize">Sonraki</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- ✅ MOBİL: Kart liste -->
+    <div class="d-md-none">
+      <div class="admin-list">
+        @foreach (var r in Model.Items)
+        {
+          var statusBadge = r.Status switch
+          {
+            Entities.Models.ReturnStatus.Pending   => "pill pill-wait",
+            Entities.Models.ReturnStatus.Approved  => "pill pill-ok",
+            Entities.Models.ReturnStatus.Rejected  => "pill pill-bad",
+            Entities.Models.ReturnStatus.Completed => "pill pill-done",
+            _ => "pill pill-muted"
+          };
+
+          <div class="review-card">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <div class="fw-bold text-navy">#@r.ReturnRequestId</div>
+                <div class="small">
+                  Sipariş:
+                  <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@r.OrderId"
+                     class="text-decoration-none fw-semibold">#@r.OrderId</a>
+                </div>
+                <div class="text-muted small">@r.Order?.Name</div>
+              </div>
+              <span class="@statusBadge">@r.Status</span>
+            </div>
+
+            <div class="mt-2">
+              <div class="muted">Talep: @r.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+              @if (r.ProcessedAt.HasValue)
+              {
+                <div class="muted">İşl.: @r.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+              }
+            </div>
+
+            <div class="review-comment mt-2">
+              <div class="fw-semibold">Neden:</div>
+              <div>@r.Reason</div>
+              @if (!string.IsNullOrWhiteSpace(r.DetailedReason))
+              {
+                <div class="text-muted mt-1">@r.DetailedReason</div>
+              }
+            </div>
+
+            <div class="mt-2">
+              <div class="fw-semibold mb-1">Ürünler</div>
+              <div class="d-flex flex-column gap-2">
+                @foreach (var l in r.Lines)
                 {
-                    var statusBadge = r.Status switch
-                    {
-                        Entities.Models.ReturnStatus.Pending => "bg-warning text-dark",
-                        Entities.Models.ReturnStatus.Approved => "bg-success",
-                        Entities.Models.ReturnStatus.Rejected => "bg-danger",
-                        Entities.Models.ReturnStatus.Completed => "bg-primary",
-                        _ => "bg-secondary"
-                    };
-                    <tr>
-                        <td class="fw-semibold">#@r.ReturnRequestId</td>
-                        <td>
-                            <div class="d-flex flex-column">
-                                <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@r.OrderId" class="text-decoration-none">#@r.OrderId</a>
-                                <small class="text-muted">@r.Order?.Name</small>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach (var l in r.Lines)
-                                {
-                                    var p = l.CartLine?.Product;
-                                    var img = string.IsNullOrWhiteSpace(p?.ImageUrl) ? "/images/placeholders/product-thumb.png" : p!.ImageUrl;
-                                    <div class="d-flex align-items-center border rounded px-2 py-1">
-                                        <img src="@img" style="width:32px;height:32px;object-fit:cover" class="rounded me-2" />
-                                        <small>@(p?.ProductName ?? "Ürün") × @l.Quantity</small>
-                                    </div>
-                                }
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">
-                                <div class="fw-semibold">@r.Reason</div>
-                                @if (!string.IsNullOrWhiteSpace(r.DetailedReason))
-                                {
-                                    <div class="text-muted">@r.DetailedReason</div>
-                                }
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">
-                                @r.RequestedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
-                                @if (r.ProcessedAt.HasValue)
-                                {
-                                    <div class="text-muted">İşl.: @r.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
-                                }
-                            </div>
-                        </td>
-                        <td><span class="badge @statusBadge">@r.Status</span></td>
-                        <td class="text-end">
-                            <div class="btn-group">
-                                <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Detail" asp-route-id="@r.ReturnRequestId"
-                                   class="btn btn-sm btn-outline-secondary">
-                                    <i class="fa fa-eye"></i> Görüntüle
-                                </a>
+                  var p = l.CartLine?.Product;
+                  var img = string.IsNullOrWhiteSpace(p?.ImageUrl) ? "/images/placeholders/product-thumb.png" : p!.ImageUrl;
 
-                                <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Approve" class="d-inline js-rr-action ms-1">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@r.ReturnRequestId" />
-                                    <input type="hidden" name="adminNotes" value="" />
-                                    <button type="submit" class="btn btn-sm btn-success" @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)>
-                                        <i class="fa fa-check"></i>
-                                    </button>
-                                </form>
-
-                                <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Reject" class="d-inline js-rr-action ms-1">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@r.ReturnRequestId" />
-                                    <input type="hidden" name="adminNotes" value="" />
-                                    <button type="submit" class="btn btn-sm btn-danger" @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)
-                                            onclick="return askRejectReason(this);">
-                                        <i class="fa fa-times"></i>
-                                    </button>
-                                </form>
-
-                                <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Complete" class="d-inline js-rr-action ms-1">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@r.ReturnRequestId" />
-                                    <button type="submit" class="btn btn-sm btn-primary" @(r.Status != Entities.Models.ReturnStatus.Approved ? "disabled" : null)>
-                                        <i class="fa fa-flag-checkered"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                  <div class="rr-line rr-line-mobile">
+                    <img src="@img" class="rr-line-img" />
+                    <div class="rr-line-text">
+                      <div class="rr-line-name">@(p?.ProductName ?? "Ürün")</div>
+                      <div class="rr-line-qty muted">× @l.Quantity</div>
+                    </div>
+                  </div>
                 }
-                </tbody>
-            </table>
-        </div>
+              </div>
+            </div>
 
-        <nav class="mt-3">
-            <ul class="pagination justify-content-end mb-0">
-                @{
-                    var prevDisabled = Model.Page <= 1 ? "disabled" : "";
-                    var nextDisabled = Model.Page >= Model.TotalPages ? "disabled" : "";
-                }
-                <li class="page-item @prevDisabled">
-                    <a class="page-link"
-                       asp-route-status="@Model.Status"
-                       asp-route-orderId="@Model.OrderId"
-                       asp-route-email="@Model.Email"
-                       asp-route-page="@(Model.Page - 1)"
-                       asp-route-pageSize="@Model.PageSize">Önceki</a>
-                </li>
-                @for (int i = 1; i <= Model.TotalPages; i++)
-                {
-                    <li class="page-item @(i == Model.Page ? "active" : "")">
-                        <a class="page-link"
-                           asp-route-status="@Model.Status"
-                           asp-route-orderId="@Model.OrderId"
-                           asp-route-email="@Model.Email"
-                           asp-route-page="@i"
-                           asp-route-pageSize="@Model.PageSize">@i</a>
-                    </li>
-                }
-                <li class="page-item @nextDisabled">
-                    <a class="page-link"
-                       asp-route-status="@Model.Status"
-                       asp-route-orderId="@Model.OrderId"
-                       asp-route-email="@Model.Email"
-                       asp-route-page="@(Model.Page + 1)"
-                       asp-route-pageSize="@Model.PageSize">Sonraki</a>
-                </li>
-            </ul>
-        </nav>
-    }
+            <div class="review-actions">
+              <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Detail" asp-route-id="@r.ReturnRequestId"
+                 class="btn btn-outline-secondary w-100 rounded-pill">
+                <i class="fa fa-eye me-1"></i> Görüntüle
+              </a>
+
+              <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Approve" class="js-rr-action flex-fill">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@r.ReturnRequestId" />
+                <input type="hidden" name="adminNotes" value="" />
+                <button type="submit" class="btn btn-success w-100 rounded-pill"
+                        @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)>
+                  <i class="fa fa-check me-1"></i> Onayla
+                </button>
+              </form>
+
+              <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Reject" class="js-rr-action flex-fill">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@r.ReturnRequestId" />
+                <input type="hidden" name="adminNotes" value="" />
+                <button type="submit" class="btn btn-outline-danger w-100 rounded-pill"
+                        @(r.Status != Entities.Models.ReturnStatus.Pending ? "disabled" : null)
+                        onclick="return askRejectReason(this);">
+                  <i class="fa fa-times me-1"></i> Reddet
+                </button>
+              </form>
+
+              <form method="post" asp-area="Admin" asp-controller="ReturnRequest" asp-action="Complete" class="js-rr-action flex-fill">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@r.ReturnRequestId" />
+                <button type="submit" class="btn btn-primary w-100 rounded-pill"
+                        @(r.Status != Entities.Models.ReturnStatus.Approved ? "disabled" : null)>
+                  <i class="fa fa-flag-checkered me-1"></i> Tamamla
+                </button>
+              </form>
+            </div>
+          </div>
+        }
+      </div>
+
+      
+    </div>
+  }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -229,3 +381,147 @@ document.querySelectorAll('.js-rr-action').forEach(f=>{
   });
 });
 </script>
+
+<style>
+
+    /* Navy buton (yoksa) */
+.btn-navy{
+  background:#001f5c;
+  border-color:#001f5c;
+  color:#fff;
+}
+.btn-navy:hover{ background:#00153d; border-color:#00153d; color:#fff; }
+
+/* Admin kart */
+.admin-card{
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px rgba(0,0,0,.12);
+  background: rgba(255,255,255,.95);
+  backdrop-filter: blur(8px);
+}
+
+/* Modern tablo */
+.admin-table thead{
+  background:#0b2a6f;
+  color:#fff;
+}
+.admin-table th{
+  font-weight:700;
+  font-size:.9rem;
+  padding:14px 16px;
+  border:0;
+}
+.admin-table td{
+  padding:14px 16px;
+  border-color: rgba(0,0,0,.06);
+}
+
+/* Status pill'ler */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  font-weight:800;
+  font-size:.82rem;
+}
+.pill-ok{ background: rgba(25,135,84,.12); color:#198754; }
+.pill-wait{ background: rgba(255,193,7,.18); color:#8a6d00; }
+.pill-bad{ background: rgba(220,53,69,.12); color:#dc3545; }
+.pill-done{ background: rgba(13,110,253,.12); color:#0d6efd; }
+.pill-muted{ background: rgba(108,117,125,.14); color:#6c757d; }
+
+.text-navy{ color:#0b2a6f !important; }
+.muted{ color: rgba(0,0,0,.55); font-size:.86rem; }
+
+/* Mobil kart liste */
+.admin-list{ display:grid; gap:14px; }
+.review-card{
+  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.10);
+}
+.review-comment{
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(11,42,111,.06);
+  color:#1f2a44;
+  white-space: pre-wrap;
+}
+
+/* Ürün satırı chip */
+.rr-line{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(0,0,0,.06);
+  background:#fff;
+}
+.rr-line-img{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  object-fit:cover;
+  border:1px solid rgba(0,0,0,.08);
+}
+.rr-line-name{ font-weight:700; color:#0b2a6f; font-size:.92rem; }
+.rr-line-qty{ font-size:.85rem; }
+
+/* Mobilde aksiyonlar daha iyi dursun */
+.review-actions{
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.review-actions > a{ grid-column: 1 / -1; } /* Görüntüle full */
+@@media (max-width: 380px){
+  .review-actions{ grid-template-columns: 1fr; }
+}
+
+/* Desktop tablo: işlemler hep tek satır */
+.admin-table td.text-end{
+  white-space: nowrap;
+}
+
+/* İşlemler satırı: yan yana hizalama */
+.actions-inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Görüntüle butonu çok uzamasın */
+.actions-view{
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* İkon buton (✅ ❌ 🏁) hepsi aynı boy */
+.action-icon-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.action-icon-btn i{
+  font-size: 16px;
+}
+
+/* disabled iken biraz soluk dursun */
+.action-icon-btn:disabled{
+  opacity: .5;
+}
+
+</style>

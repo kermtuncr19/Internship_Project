@@ -43,12 +43,15 @@
 <!-- ✅ KATEGORİ ŞERİDİ + FİLTRE (responsive) -->
 <div class="category-bar row g-2 align-items-center mb-3 mt-4">
     <!-- Fiyat düğmesi: xs'de altta full-width, md+'da sağda -->
-    <div class="col-12 col-md-auto text-md-end">
-        <button class="btn btn-sm btn-outline-navy rounded-pill px-3 w-100 w-md-auto" type="button"
-                data-bs-toggle="collapse" data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
-            <i class="fa fa-filter me-1"></i> Filtre
-        </button>
-    </div>
+    <div class="col-12 col-md-auto text-start">
+  <button class="filter-chip" type="button"
+          data-bs-toggle="collapse" data-bs-target="#priceFilter"
+          aria-expanded="false" aria-controls="priceFilter">
+    <i class="fa fa-sliders"></i>
+    <span>Filtre</span>
+  </button>
+</div>
+
 </div>
 
 <!-- 🔽 AÇILIR FİYAT FİLTRESİ (collapse) -->
@@ -90,7 +93,7 @@
             </div>
 
             <!-- ✅ Özel SIRALAMA DROPDOWN -->
-            <div class="col-12 col-sm-3">
+            <div class="col-12 col-md-3">
                 <label class="form-label small text-muted mb-1">Sırala</label>
 
                 <!-- Gizli input: form gerçek değeri buradan alacak -->
@@ -127,11 +130,11 @@
                 </div>
             </div>
 
-            <div class="col-12 col-sm-auto">
+            <div class="col-12 col-md-auto">
                 <button type="submit" class="btn btn-navy w-100">Uygula</button>
             </div>
 
-            <div class="col-12 col-sm-auto">
+            <div class="col-12 col-md-auto">
                 <a class="btn btn-outline-secondary w-100" asp-controller="Product" asp-action="Index"
                    asp-route-CategoryId="@(activeId)" asp-route-SearchTerm="@(qSearch)">
                     Temizle

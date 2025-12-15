@@ -1344,13 +1344,14 @@
 }
 
 /* Banner Carousel Wrapper - Tam genişlik */
-.banner-carousel-wrapper {
-  width: 100vw;
+.banner-carousel-wrapper{
+  width: 100%;
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  left: auto;
+  right: auto;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  overflow: hidden; /* güvenlik */
 }
 
 .banner-carousel-container {
@@ -3285,4 +3286,235 @@ button {
 }
 
 
+/* Mobilde kategori barı tek satır, scroll yok */
+@media (max-width: 576px) {
+  .category-strip-inner{
+    flex-wrap: nowrap;          /* tek satır */
+    overflow: hidden;           /* kaydırma yok */
+    gap: .35rem !important;
+  }
 
+  .category-strip .category-item{
+    flex: 1 1 0;                /* hepsi eşit daralsın */
+    min-width: 0;               /* ellipsis çalışsın */
+    justify-content: center;
+    padding: .32rem .45rem;
+    font-size: .78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;    /* sığmazsa ... */
+  }
+
+  .category-strip .category-item i{
+    font-size: .8rem;
+    margin-right: .25rem;
+  }
+}
+
+/* Çok küçük ekranlarda ikonları kapatıp daha çok yer aç */
+@media (max-width: 380px) {
+  .category-strip .category-item i{
+    display: none;
+  }
+  .category-strip .category-item{
+    font-size: .76rem;
+    padding: .3rem .4rem;
+  }
+}
+
+
+/* 1) Tam full-bleed ama scrollbar kaynaklı sağ boşluk/taşma YOK */
+.banner-carousel-wrapper{
+  width: 100%;
+  margin-left: calc(50% - 50dvw);
+  margin-right: calc(50% - 50dvw);
+  overflow: hidden;
+}
+
+/* Bootstrap container padding yüzünden kenarda boşluk olmasın */
+.banner-carousel-container{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 2) Slider matematiği sağlam */
+.banner-track{ display:flex; }
+.banner-item{
+  flex: 0 0 100%;
+  max-width: 100%;
+  display:block;
+}
+
+/* 3) KIRPMA YOK + BOŞLUK YOK için: banner alanının oranını görsellerin oranına eşitle
+   ÖNEMLİ: Aşağıdaki oranı kendi bannerlarının oranına göre ayarla!
+   Örnek: 1920x550 ise 1920/550 yaz. */
+.banner-item{
+  aspect-ratio: 1920 / 700;   /* <-- BUNU kendi banner ölçüne göre değiştir */
+}
+
+.banner-image{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;        /* kırpma yok */
+}
+
+
+
+/* Fullwidth banner: her ekranda tam viewport */
+.fullwidth-banner{
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: 0;
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+/* İçeride padding/margin kalmasın */
+.fullwidth-banner .banner-carousel,
+.fullwidth-banner .banner-track{
+  width: 100%;
+  max-width: 100%;
+}
+
+
+/* Güvenlik: elemanlar sağa sola taşmasın */
+html, body{ overflow-x: clip; } /* clip desteklenmezse hidden da olur */
+
+/* Mobil kategori dropdown butonu */
+.cat-dd-toggle{
+  background: #0b2a6f;          /* lacivert */
+  color: #fff;
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
+}
+
+.cat-dd-toggle:active,
+.cat-dd-toggle:focus{
+  outline: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,.16);
+}
+
+/* ok icon animasyonu */
+.cat-dd-toggle[aria-expanded="true"] .dd-chevron{
+  transform: rotate(180deg);
+}
+.dd-chevron{
+  transition: transform .25s ease;
+}
+
+/* Collapse animasyonunu daha yumuşak hissettirmek için panel */
+.cat-dd-panel{
+  background: #fff;
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+/* Menü item */
+.cat-dd-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #0b2a6f;
+  font-weight: 600;
+}
+
+.cat-dd-item i{
+  width: 18px;
+  text-align: center;
+}
+
+.cat-dd-item:hover{
+  background: rgba(11, 42, 111, .08);
+}
+
+.cat-dd-item.active{
+  background: rgba(11, 42, 111, .12);
+}
+
+
+/* Modern filtre chip butonu */
+.filter-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 31, 92, .25);
+  background: rgba(255,255,255,.85);
+  color: #001f5c;
+  font-weight: 700;
+  font-size: .92rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  backdrop-filter: blur(6px);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.filter-chip i{
+  font-size: .95rem;
+}
+
+.filter-chip:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
+  background: #fff;
+}
+
+.filter-chip:active{
+  transform: translateY(0);
+}
+
+/* Mobilde de küçük kalsın */
+@media (max-width: 576px){
+  .filter-chip{
+    padding: .5rem .8rem;
+    font-size: .9rem;
+  }
+}
+
+
+/* Açılan filtre panelini modernleştir */
+#priceFilter .card{
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+}
+
+#priceFilter .input-group-text{
+  background: rgba(0,31,92,.06);
+  border-color: rgba(0,0,0,.08);
+}
+
+#priceFilter .form-control{
+  border-color: rgba(0,0,0,.08);
+}
+
+
+/* Bootstrap grid içinde dropdown butonunun taşmaması için */
+.dropdown, .sort-dropdown-btn { width: 100%; }
+.sort-dropdown-btn{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;              /* 🔥 en kritik satır */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown caret sağda kalsın, yazı taşarsa ... olsun */
+.sort-dropdown-btn::after{
+  flex: 0 0 auto;
+  margin-left: .5rem;
+}

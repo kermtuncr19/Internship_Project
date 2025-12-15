@@ -151,11 +151,27 @@
 
   if (showBar)
   {
-    <div class="category-strip sticky-top">
-      <div class="container-fluid d-flex gap-3 py-2 overflow-auto">
+   <div class="category-strip sticky-top">
+  <div class="container-fluid py-2">
 
-        <!-- Tüm Ürünler -->
-        <a asp-controller="Product" asp-action="Index" class="category-item @(activeId == null ? "active-cat" : "")">
+    <!-- ✅ MOBİL: Dropdown Toggle -->
+    <button class="btn cat-dd-toggle d-md-none w-100"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mobileCategoryMenu"
+            aria-expanded="false"
+            aria-controls="mobileCategoryMenu">
+      <span class="d-flex align-items-center justify-content-between">
+        <span><i class="fa-solid fa-list me-2"></i>Kategoriler</span>
+        <i class="fa-solid fa-chevron-down dd-chevron"></i>
+      </span>
+    </button>
+
+    <!-- ✅ MOBİL: Dropdown Menü (animasyonlu) -->
+    <div class="collapse cat-dd-collapse d-md-none mt-2" id="mobileCategoryMenu">
+      <div class="cat-dd-panel">
+        <a asp-controller="Product" asp-action="Index"
+           class="cat-dd-item @(activeId == null ? "active" : "")">
           <i class="fa-solid fa-store"></i> Tüm Ürünler
         </a>
 
@@ -169,13 +185,43 @@
             _ => "fa-solid fa-tag"
           };
 
-          <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
-            class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
+          <a asp-controller="Product" asp-action="Index"
+             asp-route-categoryId="@c.CategoryId"
+             class="cat-dd-item @(activeId == c.CategoryId ? "active" : "")">
             <i class="@icon"></i> @c.CategoryName
           </a>
         }
       </div>
     </div>
+
+    <!-- ✅ DESKTOP: Eski yatay şerit -->
+    <div class="d-none d-md-flex gap-3 overflow-auto">
+      <a asp-controller="Product" asp-action="Index"
+         class="category-item @(activeId == null ? "active-cat" : "")">
+        <i class="fa-solid fa-store"></i> Tüm Ürünler
+      </a>
+
+      @foreach (var c in cats)
+      {
+        string icon = c.CategoryName switch
+        {
+          "Futbol" => "fa-solid fa-futbol",
+          "Basketbol" => "fa-solid fa-basketball",
+          "Voleybol" => "fa-solid fa-volleyball",
+          _ => "fa-solid fa-tag"
+        };
+
+        <a asp-controller="Product" asp-action="Index"
+           asp-route-categoryId="@c.CategoryId"
+           class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
+          <i class="@icon"></i> @c.CategoryName
+        </a>
+      }
+    </div>
+
+  </div>
+</div>
+
   }
 }
 
@@ -221,6 +267,23 @@
         }
       });
     }
+  }
+});
+</script>
+
+<script>
+document.addEventListener("click", function (e) {
+  const menu = document.getElementById("mobileCategoryMenu");
+  const btn = document.querySelector('[data-bs-target="#mobileCategoryMenu"]');
+  if (!menu || !btn) return;
+
+  const isOpen = menu.classList.contains("show");
+  if (!isOpen) return;
+
+  // Menü / buton dışında tıklanınca kapat
+  if (!menu.contains(e.target) && !btn.contains(e.target)) {
+    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu);
+    bsCollapse.hide();
   }
 });
 </script>
