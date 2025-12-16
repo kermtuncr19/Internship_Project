@@ -724,3 +724,44 @@
         });
     </script>
 }
+<style>
+    /* ✅ Tablet + Mobil: Detaylar / Yorumlar / Tartışma ASLA alta düşmez */
+@@media (max-width: 991px) { /* lg altı: tablet + telefon + yarım ekran */
+  .product-tabs-modern {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 14px !important;
+    border-radius: 26px;
+  }
+
+  .product-tabs-modern .nav-item {
+    width: 100%;
+  }
+
+  .product-tabs-modern .nav-link {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 10px !important;
+    font-size: 0.95rem !important;
+    white-space: nowrap;
+    border-radius: 16px !important;
+  }
+
+  .product-tabs-modern .nav-link i {
+    margin-right: 6px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Çok dar ekranlar (360px vs) */
+@@media (max-width: 400px) {
+  .product-tabs-modern .nav-link {
+    font-size: 0.9rem !important;
+    padding: 9px 8px !important;
+  }
+}
+
+
+</style>

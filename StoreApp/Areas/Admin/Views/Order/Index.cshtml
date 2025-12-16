@@ -2,70 +2,193 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">
-            <i class="fa fa-shopping-cart me-2"></i>
-            Tüm Siparişler
-        </h5>
-        <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index" class="btn btn-warning btn-sm">
-            <i class="fa fa-undo me-1"></i> İade Talepleri
-        </a>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+      <i class="fa fa-shopping-cart me-2"></i>
+      Tüm Siparişler
+    </h5>
+
+    <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="Index"
+       class="btn btn-warning btn-sm rounded-pill">
+      <i class="fa fa-undo me-1"></i> İade Talepleri
+    </a>
+  </div>
+
+  @if (Model?.Any() == true)
+  {
+    <!-- ✅ DESKTOP / TABLET: Sende nasılsa öyle kalsın -->
+    <div class="d-none d-md-block">
+      @foreach (var order in Model)
+      {
+        var hasReturnRequests = order.ReturnRequests?.Any() ?? false;
+        var pendingReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Pending) ?? 0;
+        var approvedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Approved) ?? 0;
+        var completedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Completed) ?? 0;
+
+        <div class="my-3 position-relative">
+          @if (hasReturnRequests)
+          {
+            <div class="position-absolute top-0 end-0 mt-2 me-2" style="z-index: 10;">
+              <div class="d-flex flex-column gap-1 align-items-end">
+                @if (pendingReturns > 0)
+                {
+                  <span class="badge bg-warning text-dark">
+                    <i class="fa fa-clock me-1"></i>İade Bekliyor: @pendingReturns
+                  </span>
+                }
+                @if (approvedReturns > 0)
+                {
+                  <span class="badge bg-success">
+                    <i class="fa fa-check me-1"></i>İade Onaylı: @approvedReturns
+                  </span>
+                }
+                @if (completedReturns > 0)
+                {
+                  <span class="badge bg-primary">
+                    <i class="fa fa-undo me-1"></i>İade Tamamlandı: @completedReturns
+                  </span>
+                }
+                <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="ListByOrder" asp-route-orderId="@order.OrderId"
+                   class="btn btn-warning btn-sm">
+                  <i class="fa fa-eye me-1"></i> İade Taleplerini Gör
+                </a>
+              </div>
+            </div>
+          }
+
+          <partial name="_OrderDetails" model="order" />
+        </div>
+      }
     </div>
 
-    @if(Model.Count() > 0)
-    {
-        @foreach (Order order in Model)
-        {
-            // İade durumu kontrolü
-            var hasReturnRequests = order.ReturnRequests?.Any() ?? false;
-            var pendingReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Pending) ?? 0;
-            var approvedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Approved) ?? 0;
-            var completedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Completed) ?? 0;
-            
-            <div class="my-3 position-relative">
-                @* İade Rozeti - Sağ Üst Köşe *@
-                @if (hasReturnRequests)
-                {
-                    <div class="position-absolute top-0 end-0 mt-2 me-2" style="z-index: 10;">
-                        <div class="d-flex flex-column gap-1 align-items-end">
-                            @if (pendingReturns > 0)
-                            {
-                                <span class="badge bg-warning text-dark">
-                                    <i class="fa fa-clock me-1"></i>İade Bekliyor: @pendingReturns
-                                </span>
-                            }
-                            @if (approvedReturns > 0)
-                            {
-                                <span class="badge bg-success">
-                                    <i class="fa fa-check me-1"></i>İade Onaylı: @approvedReturns
-                                </span>
-                            }
-                            @if (completedReturns > 0)
-                            {
-                                <span class="badge bg-primary">
-                                    <i class="fa fa-undo me-1"></i>İade Tamamlandı: @completedReturns
-                                </span>
-                            }
-                            <a asp-area="Admin" 
-                               asp-controller="ReturnRequest" 
-                               asp-action="ListByOrder" 
-                               asp-route-orderId="@order.OrderId"
-                               class="btn btn-warning btn-sm">
-                                <i class="fa fa-eye me-1"></i> İade Taleplerini Gör
-                            </a>
-                        </div>
-                    </div>
-                }
-                
-                <partial name="_OrderDetails" model="@order" />
+    <!-- ✅ MOBİL: Kart liste -->
+    <div class="d-md-none admin-order-list">
+      @foreach (var order in Model)
+      {
+        var subTotal = order.Lines?.Sum(l => (l.Product?.Price ?? 0m) * l.Quantity) ?? 0m;
+        var shippingCost = subTotal >= 2000m ? 0m : 39.99m;
+        var grandTotal = subTotal + shippingCost;
+
+        var hasReturnRequests = order.ReturnRequests?.Any() ?? false;
+        var pendingReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Pending) ?? 0;
+        var approvedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Approved) ?? 0;
+        var completedReturns = order.ReturnRequests?.Count(r => r.Status == Entities.Models.ReturnStatus.Completed) ?? 0;
+
+        var statusText =
+          order.CancelledByUser ? "Müşteri İptal Etti" :
+          order.Cancelled ? "İptal Edildi" :
+          order.Delivered ? "Teslim Edildi" :
+          order.InTransit ? "Kargoda" :
+          order.Preparing ? "Hazırlanıyor" :
+          order.Shipped ? "Sipariş Onaylandı" : "Beklemede";
+
+        var statusClass =
+          (order.Cancelled || order.CancelledByUser) ? "pill pill-bad" :
+          order.Delivered ? "pill pill-done" :
+          order.InTransit ? "pill pill-ok" :
+          order.Preparing ? "pill pill-wait" :
+          "pill pill-muted";
+
+        <div class="admin-order-card">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+              <div class="fw-bold text-navy">Sipariş #@order.OrderId</div>
+              <div class="text-muted small">@order?.Name</div>
+              <div class="text-muted small">@order?.City / @order?.District</div>
             </div>
-        }
-    }
-    else
-    {
-        <div class="alert alert-light text-center py-5">
-            <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
-            <h6>Henüz Bir Sipariş Yok.</h6>
+
+            <div class="text-end">
+              <span class="@statusClass">@statusText</span>
+              <div class="fw-bold mt-1">@grandTotal.ToString("C2")</div>
+            </div>
+          </div>
+
+          @if (hasReturnRequests)
+          {
+            <div class="mt-2 d-flex flex-wrap gap-2">
+              @if (pendingReturns > 0)
+              {
+                <span class="badge bg-warning text-dark">
+                  <i class="fa fa-clock me-1"></i>@pendingReturns bekleyen iade
+                </span>
+              }
+              @if (approvedReturns > 0)
+              {
+                <span class="badge bg-success">
+                  <i class="fa fa-check me-1"></i>@approvedReturns onaylı iade
+                </span>
+              }
+              @if (completedReturns > 0)
+              {
+                <span class="badge bg-primary">
+                  <i class="fa fa-undo me-1"></i>@completedReturns tamamlanan iade
+                </span>
+              }
+            </div>
+          }
+
+          <div class="mt-3 d-grid gap-2">
+            <!-- ✅ Detay butonu -->
+            <a asp-area="Admin" asp-controller="Order" asp-action="Detail" asp-route-id="@order.OrderId"
+               class="btn btn-navy rounded-pill">
+              <i class="fa fa-eye me-1"></i> Detay
+            </a>
+
+            <!-- ✅ İadeler varsa hızlı link -->
+            @if (hasReturnRequests)
+            {
+              <a asp-area="Admin" asp-controller="ReturnRequest" asp-action="ListByOrder" asp-route-orderId="@order.OrderId"
+                 class="btn btn-outline-light rounded-pill">
+                <i class="fa fa-undo me-1"></i> İade Talepleri
+              </a>
+            }
+          </div>
         </div>
-    }
+      }
+    </div>
+  }
+  else
+  {
+    <div class="alert alert-light text-center py-5">
+      <i class="fa fa-inbox fa-3x text-muted mb-3"></i>
+      <h6>Henüz Bir Sipariş Yok.</h6>
+    </div>
+  }
 </div>
+
+<style>
+  .text-navy{ color:#0b2a6f !important; }
+
+  .admin-order-list{ display:grid; gap:14px; }
+
+  .admin-order-card{
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: 18px;
+    padding: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,.10);
+  }
+
+  .btn-navy{
+    background:#001f5c;
+    border-color:#001f5c;
+    color:#fff;
+  }
+  .btn-navy:hover{ background:#00153d; border-color:#00153d; color:#fff; }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    padding:.35rem .7rem;
+    border-radius:999px;
+    font-weight:800;
+    font-size:.82rem;
+    white-space: nowrap;
+  }
+  .pill-ok{ background: rgba(25,135,84,.12); color:#198754; }
+  .pill-wait{ background: rgba(255,193,7,.18); color:#8a6d00; }
+  .pill-bad{ background: rgba(220,53,69,.12); color:#dc3545; }
+  .pill-done{ background: rgba(13,110,253,.12); color:#0d6efd; }
+  .pill-muted{ background: rgba(108,117,125,.14); color:#6c757d; }
+</style>

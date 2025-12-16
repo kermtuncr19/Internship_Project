@@ -152,8 +152,9 @@
 </div>
 
 <!-- ✅ ÜRÜN TABLOSU -->
-<div class="table-responsive">
-  <table class="table table-striped table-hover align-middle">
+<!-- ✅ DESKTOP/TABLET: TABLO -->
+<div class="d-none d-md-block table-responsive">
+  <table class="table table-striped table-hover align-middle admin-table">
     <thead>
       <tr>
         <th>Id</th>
@@ -162,28 +163,33 @@
         <th>Vitrin Ürün</th>
         <th>Fiyat</th>
         <th class="text-center">Stok</th>
-        <th class="text-center">İşlemler</th>
+        <th class="text-end">İşlemler</th>
       </tr>
     </thead>
     <tbody>
       @foreach (var prd in Model.Products)
       {
+        var totalStock = prd.Stocks?.Sum(s => s.Quantity) ?? 0;
+
         <tr>
-          <td>@prd.ProductId</td>
+          <td class="fw-semibold">#@prd.ProductId</td>
+
           <td>
-            <img src="@prd?.ImageUrl" alt="@prd?.ProductName" width="50" class="rounded">
+            <img src="@prd?.ImageUrl" alt="@prd?.ProductName" width="52" height="52" class="rounded"
+              style="object-fit:cover;">
           </td>
-          <td>@prd.ProductName</td>
+
+          <td class="fw-semibold">@prd.ProductName</td>
+
           <td>
             <div class="form-check form-switch">
               <input type="checkbox" class="form-check-input" checked="@prd.ShowCase" disabled />
             </div>
           </td>
+
           <td>@prd.Price.ToString("c")</td>
+
           <td class="text-center">
-            @{
-              var totalStock = prd.Stocks?.Sum(s => s.Quantity) ?? 0;
-            }
             @if (totalStock == 0)
             {
               <span class="badge bg-danger">Tükendi</span>
@@ -197,27 +203,28 @@
               <span class="badge bg-success">@totalStock</span>
             }
           </td>
-          <td class="text-center">
-            <div class="d-inline-flex flex-nowrap gap-2 actions">
-              <a class="btn btn-warning tooltip1-btn-admin-edit" asp-area="Admin" asp-action="Update"
+
+          <td class="text-end">
+            <div class="actions-inline">
+              <a class="btn btn-warning action-icon-btn tooltip1-btn-admin-edit" asp-area="Admin" asp-action="Update"
                 asp-route-id="@prd.ProductId" title="Düzenle">
                 <i class="fa fa-edit"></i>
               </a>
 
-              <a class="btn btn-primary tooltip1-btn-admin-detail" target="_blank" asp-area="" asp-controller="Product"
-                asp-action="Get" asp-route-id="@prd.ProductId" title="Detay">
+              <a class="btn btn-primary action-icon-btn tooltip1-btn-admin-detail" target="_blank" asp-area=""
+                asp-controller="Product" asp-action="Get" asp-route-id="@prd.ProductId" title="Detay">
                 <i class="fa fa-search"></i>
               </a>
 
-              <a class="btn btn-info tooltip1-btn-stock" asp-area="Admin" asp-controller="Stock" asp-action="Manage"
-                asp-route-id="@prd.ProductId" >
+              <a class="btn btn-info action-icon-btn tooltip1-btn-stock" asp-area="Admin" asp-controller="Stock"
+                asp-action="Manage" asp-route-id="@prd.ProductId" title="Stok">
                 <i class="fa fa-warehouse"></i>
               </a>
 
               <form asp-area="Admin" asp-action="Delete" asp-route-id="@prd.ProductId" method="post"
                 class="d-inline delete-form tooltip1-btn-admin-delete" title="Sil">
                 @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-danger">
+                <button type="submit" class="btn btn-danger action-icon-btn">
                   <i class="fa fa-trash"></i>
                 </button>
               </form>
@@ -228,6 +235,76 @@
     </tbody>
   </table>
 </div>
+
+<!-- ✅ MOBİL: KART LİSTE -->
+<div class="d-md-none product-mobile-list">
+  @foreach (var prd in Model.Products)
+  {
+    var totalStock = prd.Stocks?.Sum(s => s.Quantity) ?? 0;
+
+    <div class="product-mobile-card">
+      <div class="product-mobile-head">
+        <img src="@prd?.ImageUrl" alt="@prd?.ProductName" class="product-mobile-img" />
+
+        <div class="product-mobile-meta">
+          <div class="product-mobile-title">@prd.ProductName</div>
+          <div class="product-mobile-sub">#@prd.ProductId</div>
+          <div class="product-mobile-price">@prd.Price.ToString("c")</div>
+        </div>
+
+        <div class="product-mobile-right">
+          <div class="product-mobile-badges">
+            @if (totalStock == 0)
+            {
+              <span class="badge bg-danger">Tükendi</span>
+            }
+            else if (totalStock < 10)
+            {
+              <span class="badge bg-warning text-dark">@totalStock</span>
+            }
+            else
+            {
+              <span class="badge bg-success">@totalStock</span>
+            }
+          </div>
+
+          <div class="product-mobile-switch">
+            <div class="form-check form-switch m-0">
+              <input class="form-check-input" type="checkbox" checked="@prd.ShowCase" disabled />
+            </div>
+            <small class="text-muted">Vitrin</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-mobile-actions">
+        <a class="btn btn-warning w-100 rounded-pill"
+           asp-area="Admin" asp-action="Update" asp-route-id="@prd.ProductId">
+          <i class="fa fa-edit me-2"></i> Düzenle
+        </a>
+
+        <a class="btn btn-primary w-100 rounded-pill"
+           target="_blank" asp-area="" asp-controller="Product" asp-action="Get" asp-route-id="@prd.ProductId">
+          <i class="fa fa-search me-2"></i> Detay
+        </a>
+
+        <a class="btn btn-info  w-100 rounded-pill"
+           asp-area="Admin" asp-controller="Stock" asp-action="Manage" asp-route-id="@prd.ProductId">
+          <i class="fa fa-warehouse me-2"></i> Stok
+        </a>
+
+        <form asp-area="Admin" asp-action="Delete" asp-route-id="@prd.ProductId" method="post" class="delete-form m-0">
+          @Html.AntiForgeryToken()
+          <button type="submit" class="btn btn-danger w-100 rounded-pill">
+            <i class="fa fa-trash me-2"></i> Sil
+          </button>
+        </form>
+      </div>
+    </div>
+  }
+</div>
+
+
 
 <!-- ✅ PAGER -->
 <div class="text-center my-3">
@@ -293,3 +370,118 @@
     })();
   </script>
 }
+<style>
+  /* Desktop işlemler: yan yana, taşmadan */
+.actions-inline{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.action-icon-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.action-icon-btn i{ font-size: 16px; }
+
+/* Mobil ürün kart görseli */
+.product-card-img{
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+/* Mobil aksiyonlar: 2 sütun yerine tek sütun daha iyi (istersen 2 yaparız) */
+.product-actions{
+  grid-template-columns: 1fr;
+}
+
+/* Mobil ürün listesi */
+.product-mobile-list{
+  display: grid;
+  gap: 14px;
+}
+
+/* Kart görünümü: çerçeve + gölge + modern arka plan */
+.product-mobile-card{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 14px 40px rgba(0,0,0,.12);
+  overflow: hidden;
+}
+
+/* Üst bölüm: resim + bilgi + sağ taraf */
+.product-mobile-head{
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.product-mobile-img{
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,.10);
+  background: #fff;
+}
+
+.product-mobile-title{
+  font-weight: 800;
+  color: #0b2a6f;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.product-mobile-sub{
+  color: rgba(0,0,0,.55);
+  font-size: .85rem;
+  margin-top: 2px;
+}
+
+.product-mobile-price{
+  font-weight: 800;
+  margin-top: 6px;
+  font-size: 1.05rem;
+}
+
+/* Sağ taraf: stok + vitrin */
+.product-mobile-right{
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.product-mobile-switch{
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+
+/* Aksiyonlar: 2 sütun grid (kart hissi artar) */
+.product-mobile-actions{
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Çok dar ekranlarda tek sütuna düşsün */
+@@media (max-width: 360px){
+  .product-mobile-head{ grid-template-columns: 56px 1fr; }
+  .product-mobile-right{ grid-column: 1 / -1; justify-items: start; }
+  .product-mobile-actions{ grid-template-columns: 1fr; }
+}
+
+</style>

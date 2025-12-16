@@ -140,7 +140,7 @@ namespace Services
 
             // Son siparişlerden aktivite oluştur
             var recentOrders = await _orderService.GetRecentOrdersAsync(5);
-            
+
             activities.AddRange(recentOrders.Select(o => new ActivityViewModel
             {
                 Type = "Order",
@@ -153,6 +153,11 @@ namespace Services
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(count);
         }
-        
+
+        public async Task<IList<string>> GetUserRolesAsync(string userName)
+        {
+            var user = await GetOneUser(userName);
+            return await _userManager.GetRolesAsync(user);
+        }
     }
 }

@@ -17,6 +17,8 @@ namespace Services.Contracts
 
         Task<int> GetTotalUserCountAsync();
         Task<IEnumerable<ActivityViewModel>> GetRecentActivitiesAsync(int count);
+        Task<IList<string>> GetUserRolesAsync(string userName);
+
         
     }
 }

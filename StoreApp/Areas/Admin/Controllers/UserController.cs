@@ -5,11 +5,12 @@ using Entities.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services.Contracts;
+using StoreApp.Areas.Admin.Models;
 
 namespace StoreApp.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles ="Admin")]
+    [Authorize(Roles = "Admin")]
     public class UserController : Controller
     {
         private readonly IServiceManager _manager;
@@ -19,11 +20,24 @@ namespace StoreApp.Areas.Admin.Controllers
             _manager = manager;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var users = _manager.AuthService.GetAllUsers();
-            return View(users);
+            var users = _manager.AuthService.GetAllUsers().ToList();
+
+            // username -> roles
+            var roleMap = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var u in users)
+            {
+                if (string.IsNullOrWhiteSpace(u.UserName)) continue;
+                roleMap[u.UserName] = await _manager.AuthService.GetUserRolesAsync(u.UserName);
+            }
+
+            ViewBag.UserRoles = roleMap;
+
+            return View(users); // 👈 model aynı: IEnumerable<IdentityUser>
         }
+
 
         public IActionResult Create()
         {
@@ -95,5 +109,5 @@ namespace StoreApp.Areas.Admin.Controllers
                 : View();
         }
 
-    }   
+    }
 }
