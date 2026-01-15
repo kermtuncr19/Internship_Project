@@ -28,6 +28,8 @@
     <link rel="stylesheet" asp-append-version="true" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" asp-append-version="true" href="~/css/site.css" />
     <link rel="stylesheet" asp-append-version="true" href="~/lib/font-awesome/css/all.css" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=1" />
+
     @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
 @{ var tokens = Xsrf.GetAndStoreTokens(Context); }
 <meta name="csrf-token" content="@tokens.RequestToken" />
