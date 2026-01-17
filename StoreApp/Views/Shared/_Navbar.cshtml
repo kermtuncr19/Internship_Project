@@ -290,25 +290,32 @@
 
     if (!toggle || !li || !menu) return;
 
+    // ✅ Bootstrap/Popper inline stillerini her seferinde temizle
+    function hardResetMenuStyles() {
+      menu.style.removeProperty("top");
+      menu.style.removeProperty("right");
+      menu.style.removeProperty("left");
+      menu.style.removeProperty("transform");
+      menu.style.removeProperty("inset");
+
+      menu.removeAttribute("data-popper-placement");
+    }
+
     function positionMenuMobile() {
       if (window.innerWidth > 991) return;
 
       const gap = 6;
-
-      // Sarı navbarın (viewport’a göre) altı
       const navRect = yellowNav?.getBoundingClientRect();
       const top = (navRect ? navRect.bottom : 0) + gap;
 
-      // Toggle’ın sağ hizası (sağdan boşluk)
       const toggleRect = toggle.getBoundingClientRect();
       const right = Math.max(12, window.innerWidth - toggleRect.right);
 
-      // CSS’te !important yok, burada direkt set edebiliriz
-      menu.style.top = top + "px";
-      menu.style.right = right + "px";
-      menu.style.left = "auto";
+      // ✅ CSS değişkeniyle ver -> CSS'teki !important her şeyi ezer
+      menu.style.setProperty("--ud-top", top + "px");
+      menu.style.setProperty("--ud-right", right + "px");
 
-      // Taşma olmasın (ekranın altına sığdır)
+      // taşma olmasın
       const maxH = Math.max(180, window.innerHeight - top - 12);
       menu.style.maxHeight = maxH + "px";
       menu.style.overflowY = "auto";
@@ -318,7 +325,11 @@
       li.classList.add("show");
       menu.classList.add("show");
       toggle.setAttribute("aria-expanded", "true");
-      positionMenuMobile();
+
+      hardResetMenuStyles();
+
+      // ✅ layout otursun diye bir frame sonra konumla
+      requestAnimationFrame(() => positionMenuMobile());
     }
 
     function closeMenu() {
@@ -339,7 +350,7 @@
       toggleMenu();
     });
 
-    // ✅ Menü içindeki tıklamalar kapanmayı tetiklemesin
+    // ✅ Menü içindeki tıklamalar dış click'e gitmesin
     menu.addEventListener("click", function (e) {
       e.stopPropagation();
     });
@@ -376,7 +387,6 @@
     window.addEventListener("resize", applyMode);
     applyMode();
 
-    // Menü açıkken scroll/resize olursa tekrar konumla
     window.addEventListener("scroll", () => {
       if (menu.classList.contains("show")) positionMenuMobile();
     }, { passive: true });
@@ -384,6 +394,6 @@
     window.addEventListener("resize", () => {
       if (menu.classList.contains("show")) positionMenuMobile();
     });
-
   });
 </script>
+

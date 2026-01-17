@@ -4430,13 +4430,11 @@ html, body{ overflow-x: clip; } /* clip desteklenmezse hidden da olur */
     background: linear-gradient(180deg, #0a1232 0%, #050a1a 100%);
   }
 }
-/* Dropdown menü her koşulda üstte ve kırpılmasın */
+/* Dropdown menü kırpılmasın */
 .user-dropdown-hover { position: relative; }
-.user-dropdown-hover .dropdown-menu {
-  z-index: 99999 !important;
-}
+.user-dropdown-hover .dropdown-menu { z-index: 99999 !important; }
 
-/* Overlay collapse / fixed header yüzünden kırpılmayı engelle */
+/* fixed header/collapse yüzünden kırpılmayı engelle */
 .header-sticky,
 .main-navbar,
 .navbar,
@@ -4445,22 +4443,26 @@ html, body{ overflow-x: clip; } /* clip desteklenmezse hidden da olur */
   overflow: visible !important;
 }
 
-/* Mobilde menü ekrana sabitlensin (kırpılma/arkada kalma biter) */
+/* ✅ Mobilde: konumu CSS ile kilitle (Bootstrap inline stillerini ez) */
 @media (max-width: 991.98px){
   .user-dropdown-hover .dropdown-menu{
     position: fixed !important;
 
-    /* ❌ top/right’ı burada kilitleme! JS ayarlayacak */
-    top: auto;
-    right: auto;
+    /* ✅ JS bu değişkenleri set edecek */
+    top: var(--ud-top, 0px) !important;
+    right: var(--ud-right, 12px) !important;
 
     left: auto !important;
+
+    /* ✅ Popper/Bootstrap'ın translate3d konumlandırmasını öldür */
     transform: none !important;
+    inset: auto !important;
 
     max-width: calc(100vw - 24px);
     z-index: 99999 !important;
   }
 }
+
 
 
 
