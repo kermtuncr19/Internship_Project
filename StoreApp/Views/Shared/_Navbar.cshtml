@@ -1,289 +1,305 @@
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-<!-- 🔵 PROMO ŞERİDİ (NAVBAR ÜSTÜ) -->
-<div class="promo-strip" role="region" aria-label="Kampanya duyuruları">
-  <div class="container-fluid d-flex justify-content-center align-items-center gap-2">
+<div class="header-sticky">
 
-    <div class="promo-viewport" aria-live="polite">
-      <span class="promo-msg active">
-        <i class="fa-solid fa-bullhorn"></i>
-        2000 TL ve üzeri alışverişlerde kargo bedava! 🚚</span>
-      <span class="promo-msg">
-        <i class="fa-solid fa-bullhorn"></i>
-        2000 TL ve üzeri alışverişlerde peşin fiyatına 3 taksit! 💳</span>
-    </div>
-  </div>
-</div>
-
-<nav class="navbar navbar-expand-lg border-bottom main-navbar" style="background-color:#ffea00; border:none;" data-bs-theme="light">
-  <div class="container-fluid">
-
-    <!-- LOGO -->
-    <a class="navbar-brand d-flex align-items-center me-2" asp-controller="Home" asp-action="Index">
-      <img src="~/images/fenerium-logo.png" asp-append-version="true" alt="Fenerium"
-        class="d-inline-block align-text-top" style="height:28px;width:auto;object-fit:contain;" />
-    </a>
-
-    <!-- Toggler -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
-      aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <!-- İçerik -->
-    <div class="collapse navbar-collapse" id="mainNav">
-      <!-- ORTA: SEARCH -->
-      <form class="navbar-search order-2 order-lg-1 my-2 my-lg-0 mx-lg-3 flex-grow-1" method="get"
-        asp-controller="Product" asp-action="Index" role="search">
-        <div class="input-group nav-search w-100">
-          <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
-          <input type="search" class="form-control border-start-0" name="SearchTerm"
-            value="@(Context.Request.Query["SearchTerm"])" placeholder="Fenerium'da Ara" aria-label="Ara" />
-          <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
-
-          @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
-          {
-            <input type="hidden" name="CategoryId" value="@cid" />
-          }
-        </div>
-      </form>
-
-      <!-- SAĞ: SEPET + GİRİŞ / PROFİL -->
-      <ul class="navbar-nav ms-lg-auto align-items-center gap-2 order-1 order-lg-3 actions">
-        <!-- Sepet -->
-        <li class="nav-item p-0 m-0">
-          @await Component.InvokeAsync("CartSummary")
-        </li>
-
-        @if (User.Identity?.IsAuthenticated ?? false)
-        {
-
-          // ✅ ViewBag'den profil fotoğrafını al (Layout'ta set edilecek)
-          var avatarUrl = ViewBag.UserAvatarUrl as string ?? "/images/avatar-placeholder.png";
-          var userName = ViewBag.UserFullName as string ?? User.Identity.Name ?? "Kullanıcı";
-
-
-          <!-- Kullanıcı Dropdown (Hover ile açılan) -->
-          <li class="nav-item dropdown user-dropdown-hover">
-            <a class="nav-link d-flex align-items-center gap-2" href="#" id="userMenu" role="button">
-              <img src="@avatarUrl" alt="@userName" class="user-avatar" />
-              <span class="d-none d-lg-inline text-navy fw-semibold">@userName</span>
-            </a>
-
-            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
-              <li class="dropdown-header">
-                <div class="d-flex align-items-center gap-2">
-                  <img src="@avatarUrl" alt="@userName" class="rounded-circle"
-                    style="width:40px;height:40px;object-fit:cover;" />
-                  <div>
-                    <div class="fw-semibold">@userName</div>
-                    <div class="small text-muted">@User.Identity.Name</div>
-                  </div>
-                </div>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-
-              <li>
-                <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                  <i class="fa fa-user me-2 text-navy"></i> Hesabım
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" asp-controller="MyOrders" asp-action="Index">
-                  <i class="fa fa-box me-2 text-navy"></i> Siparişlerim
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" asp-controller="Favorites" asp-action="Index">
-                  <i class="fa fa-heart me-2 text-navy"></i> Favorilerim
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" asp-controller="Addresses" asp-action="Index">
-                  <i class="fa fa-location-dot me-2 text-navy"></i> Adreslerim
-                </a>
-              </li>
-
-              @if (User.IsInRole("Admin"))
-              {
-                <li>
-                  <hr class="dropdown-divider" />
-                </li>
-                <li>
-                  <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                    <i class="fa-solid fa-screwdriver-wrench me-2 text-secondary"></i> Admin Paneli
-                  </a>
-                </li>
-              }
-
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li class="px-3">
-                <form asp-controller="Account" asp-action="Logout" method="post">
-                  @Html.AntiForgeryToken()
-                  <button type="submit" class="dropdown-item text-danger p-0">
-                    <i class="fa-solid fa-right-from-bracket me-2"></i> Çıkış Yap
-                  </button>
-                </form>
-              </li>
-            </ul>
-          </li>
-        }
-        else
-        {
-          <!-- Giriş Yap (oturum yoksa) -->
-          <partial name="_LoginMenu" />
-        }
-      </ul>
-    </div>
-  </div>
-</nav>
-
-@if (ViewBag.Categories is IEnumerable<Entities.Models.Category> cats)
-{
-  var activeId = ViewBag.ActiveCategoryId as int?;
-  var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
-  var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
-  bool showBar = ctrl == "Home" || ctrl == "Product";
-
-  if (showBar)
-  {
-   <div class="category-strip sticky-top">
-  <div class="container-fluid py-2">
-
-    <!-- ✅ MOBİL: Dropdown Toggle -->
-    <button class="btn cat-dd-toggle d-md-none w-100"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#mobileCategoryMenu"
-            aria-expanded="false"
-            aria-controls="mobileCategoryMenu">
-      <span class="d-flex align-items-center justify-content-between">
-        <span><i class="fa-solid fa-list me-2"></i>Kategoriler</span>
-        <i class="fa-solid fa-chevron-down dd-chevron"></i>
-      </span>
-    </button>
-
-    <!-- ✅ MOBİL: Dropdown Menü (animasyonlu) -->
-    <div class="collapse cat-dd-collapse d-md-none mt-2" id="mobileCategoryMenu">
-      <div class="cat-dd-panel">
-        <a asp-controller="Product" asp-action="Index"
-           class="cat-dd-item @(activeId == null ? "active" : "")">
-          <i class="fa-solid fa-store"></i> Tüm Ürünler
-        </a>
-
-        @foreach (var c in cats)
-        {
-          string icon = c.CategoryName switch
-          {
-            "Futbol" => "fa-solid fa-futbol",
-            "Basketbol" => "fa-solid fa-basketball",
-            "Voleybol" => "fa-solid fa-volleyball",
-            _ => "fa-solid fa-tag"
-          };
-
-          <a asp-controller="Product" asp-action="Index"
-             asp-route-categoryId="@c.CategoryId"
-             class="cat-dd-item @(activeId == c.CategoryId ? "active" : "")">
-            <i class="@icon"></i> @c.CategoryName
-          </a>
-        }
+  <!-- 🔵 PROMO ŞERİDİ (NAVBAR ÜSTÜ) -->
+  <div class="promo-strip" role="region" aria-label="Kampanya duyuruları">
+    <div class="container-fluid d-flex justify-content-center align-items-center gap-2">
+      <div class="promo-viewport" aria-live="polite">
+        <span class="promo-msg active">
+          <i class="fa-solid fa-bullhorn"></i>
+          2000 TL ve üzeri alışverişlerde kargo bedava! 🚚
+        </span>
+        <span class="promo-msg">
+          <i class="fa-solid fa-bullhorn"></i>
+          2000 TL ve üzeri alışverişlerde peşin fiyatına 3 taksit! 💳
+        </span>
       </div>
     </div>
+  </div>
 
-    <!-- ✅ DESKTOP: Eski yatay şerit -->
-    <div class="d-none d-md-flex gap-3 overflow-auto">
-      <a asp-controller="Product" asp-action="Index"
-         class="category-item @(activeId == null ? "active-cat" : "")">
-        <i class="fa-solid fa-store"></i> Tüm Ürünler
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const msgs = document.querySelectorAll(".promo-viewport .promo-msg");
+      if (!msgs || msgs.length <= 1) return;
+
+      let i = 0;
+      msgs.forEach((m, idx) => m.classList.toggle("active", idx === 0));
+
+      setInterval(() => {
+        msgs[i].classList.remove("active");
+        i = (i + 1) % msgs.length;
+        msgs[i].classList.add("active");
+      }, 4000);
+    });
+  </script>
+
+  <!-- 🟡 NAVBAR -->
+  <nav class="navbar navbar-expand-lg border-bottom main-navbar"
+       style="background-color:#ffea00; border:none;"
+       data-bs-theme="light">
+    <div class="container-fluid">
+
+      <!-- LOGO -->
+      <a class="navbar-brand d-flex align-items-center me-2" asp-controller="Home" asp-action="Index">
+        <img src="~/images/fenerium-logo.png" asp-append-version="true" alt="Fenerium"
+             class="d-inline-block align-text-top" style="height:28px;width:auto;object-fit:contain;" />
       </a>
 
-      @foreach (var c in cats)
-      {
-        string icon = c.CategoryName switch
-        {
-          "Futbol" => "fa-solid fa-futbol",
-          "Basketbol" => "fa-solid fa-basketball",
-          "Voleybol" => "fa-solid fa-volleyball",
-          _ => "fa-solid fa-tag"
-        };
+      <!-- Toggler -->
+      <button id="navCompactBtn" class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#mainNav"
+              aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <a asp-controller="Product" asp-action="Index"
-           asp-route-categoryId="@c.CategoryId"
-           class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
-          <i class="@icon"></i> @c.CategoryName
-        </a>
-      }
+      <!-- İçerik -->
+      <div class="collapse navbar-collapse" id="mainNav">
+
+        <!-- ✅ Mobilde saklanacak her şey -->
+        <div class="nav-hide-on-compact w-100 d-flex flex-column flex-lg-row align-items-lg-center">
+          <div class="nav-row">
+
+          <!-- ORTA: SEARCH -->
+          <form class="navbar-search order-2 order-lg-1 my-2 my-lg-0 mx-lg-3 flex-grow-1"
+                method="get" asp-controller="Product" asp-action="Index" role="search">
+            <div class="input-group nav-search w-100">
+              <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
+              <input type="search" class="form-control border-start-0" name="SearchTerm"
+                     value="@(Context.Request.Query["SearchTerm"])"
+                     placeholder="Fenerium'da Ara" aria-label="Ara" />
+              <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
+
+              @if (int.TryParse(Context.Request.Query["CategoryId"], out var cid))
+              {
+                <input type="hidden" name="CategoryId" value="@cid" />
+              }
+            </div>
+          </form>
+
+          <!-- SAĞ: SEPET + GİRİŞ / PROFİL -->
+          <ul class="navbar-nav ms-lg-auto align-items-center gap-2 order-1 order-lg-3 actions">
+
+            <!-- Sepet -->
+            <li class="nav-item p-0 m-0">
+              @await Component.InvokeAsync("CartSummary")
+            </li>
+
+            @if (User.Identity?.IsAuthenticated ?? false)
+            {
+              var avatarUrl = ViewBag.UserAvatarUrl as string ?? "/images/avatar-placeholder.png";
+              var userName = ViewBag.UserFullName as string ?? User.Identity.Name ?? "Kullanıcı";
+
+              <!-- Kullanıcı Dropdown -->
+              <li class="nav-item dropdown user-dropdown-hover">
+                <a class="nav-link d-flex align-items-center gap-2" href="#" id="userMenu" role="button">
+                  <img src="@avatarUrl" alt="@userName" class="user-avatar" />
+                  <span class="d-none d-lg-inline text-navy fw-semibold">@userName</span>
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenu">
+                  <li class="dropdown-header">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="@avatarUrl" alt="@userName" class="rounded-circle"
+                           style="width:40px;height:40px;object-fit:cover;" />
+                      <div>
+                        <div class="fw-semibold">@userName</div>
+                        <div class="small text-muted">@User.Identity.Name</div>
+                      </div>
+                    </div>
+                  </li>
+
+                  <li><hr class="dropdown-divider" /></li>
+
+                  <li>
+                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                      <i class="fa fa-user me-2 text-navy"></i> Hesabım
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" asp-controller="MyOrders" asp-action="Index">
+                      <i class="fa fa-box me-2 text-navy"></i> Siparişlerim
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" asp-controller="Favorites" asp-action="Index">
+                      <i class="fa fa-heart me-2 text-navy"></i> Favorilerim
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" asp-controller="Addresses" asp-action="Index">
+                      <i class="fa fa-location-dot me-2 text-navy"></i> Adreslerim
+                    </a>
+                  </li>
+
+                  @if (User.IsInRole("Admin"))
+                  {
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                      <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <i class="fa-solid fa-screwdriver-wrench me-2 text-secondary"></i> Admin Paneli
+                      </a>
+                    </li>
+                  }
+
+                  <li><hr class="dropdown-divider" /></li>
+                  <li class="px-3">
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                      @Html.AntiForgeryToken()
+                      <button type="submit" class="dropdown-item text-danger p-0">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i> Çıkış Yap
+                      </button>
+                    </form>
+                  </li>
+                </ul>
+              </li>
+            }
+            else
+            {
+              <partial name="_LoginMenu" />
+            }
+          </ul>
+          </div>
+
+        </div> <!-- nav-hide-on-compact -->
+
+      </div>
     </div>
+  </nav>
 
-  </div>
-</div>
+  <!-- 🧭 CATEGORY STRIP -->
+  @if (ViewBag.Categories is IEnumerable<Entities.Models.Category> cats)
+  {
+    var activeId = ViewBag.ActiveCategoryId as int?;
+    var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
+    var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
+    bool showBar = ctrl == "Home" || ctrl == "Product";
 
+    if (showBar)
+    {
+      <div class="category-strip">
+        <div class="container-fluid py-2">
+
+          <!-- ✅ MOBİL: Dropdown Toggle -->
+          <button class="btn cat-dd-toggle d-md-none w-100"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#mobileCategoryMenu"
+                  aria-expanded="false"
+                  aria-controls="mobileCategoryMenu">
+            <span class="d-flex align-items-center justify-content-between">
+              <span><i class="fa-solid fa-list me-2"></i>Kategoriler</span>
+              <i class="fa-solid fa-chevron-down dd-chevron"></i>
+            </span>
+          </button>
+
+          <!-- ✅ MOBİL: Dropdown Menü -->
+          <div class="collapse cat-dd-collapse d-md-none mt-2" id="mobileCategoryMenu">
+            <div class="cat-dd-panel">
+              <a asp-controller="Product" asp-action="Index"
+                 class="cat-dd-item @(activeId == null ? "active" : "")">
+                <i class="fa-solid fa-store"></i> Tüm Ürünler
+              </a>
+
+              @foreach (var c in cats)
+              {
+                string icon = c.CategoryName switch
+                {
+                  "Futbol" => "fa-solid fa-futbol",
+                  "Basketbol" => "fa-solid fa-basketball",
+                  "Voleybol" => "fa-solid fa-volleyball",
+                  _ => "fa-solid fa-tag"
+                };
+
+                <a asp-controller="Product" asp-action="Index"
+                   asp-route-categoryId="@c.CategoryId"
+                   class="cat-dd-item @(activeId == c.CategoryId ? "active" : "")">
+                  <i class="@icon"></i> @c.CategoryName
+                </a>
+              }
+            </div>
+          </div>
+
+          <!-- ✅ DESKTOP: Yatay şerit -->
+          <div class="d-none d-md-flex gap-3 overflow-auto">
+            <a asp-controller="Product" asp-action="Index"
+               class="category-item @(activeId == null ? "active-cat" : "")">
+              <i class="fa-solid fa-store"></i> Tüm Ürünler
+            </a>
+
+            @foreach (var c in cats)
+            {
+              string icon = c.CategoryName switch
+              {
+                "Futbol" => "fa-solid fa-futbol",
+                "Basketbol" => "fa-solid fa-basketball",
+                "Voleybol" => "fa-solid fa-volleyball",
+                _ => "fa-solid fa-tag"
+              };
+
+              <a asp-controller="Product" asp-action="Index"
+                 asp-route-categoryId="@c.CategoryId"
+                 class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
+                <i class="@icon"></i> @c.CategoryName
+              </a>
+            }
+          </div>
+
+        </div>
+      </div>
+    }
   }
-}
 
+</div> <!-- header-sticky end -->
+
+<div id="header-spacer"></div>
 
 <script>
-
-  document.addEventListener('DOMContentLoaded', function () {
-  // Desktop için hover mantığı
-  if (window.innerWidth > 991) {
-    const userDropdown = document.querySelector('.user-dropdown-hover');
-    
-    if (userDropdown) {
-      let closeTimer;
-      
-      // Mouse navbar üzerine geldiğinde
-      userDropdown.addEventListener('mouseenter', function() {
-        clearTimeout(closeTimer);
-      });
-      
-      // Mouse navbar'dan ayrıldığında bekle
-      userDropdown.addEventListener('mouseleave', function() {
-        closeTimer = setTimeout(() => {
-          // Kapatma işlemi CSS'de otomatik
-        }, 100);
-      });
-    }
-  } 
-  // Mobil için click mantığı
-  else {
-    const userDropdown = document.querySelector('.user-dropdown-hover');
-    const userMenu = document.getElementById('userMenu');
-
-    if (userDropdown && userMenu) {
-      userMenu.addEventListener('click', function (e) {
-        e.preventDefault();
-        userDropdown.classList.toggle('show');
-      });
-
-      // Dışarı tıklandığında kapat
-      document.addEventListener('click', function (e) {
-        if (!userDropdown.contains(e.target)) {
-          userDropdown.classList.remove('show');
-        }
-      });
-    }
+  function syncHeaderSpacer(){
+    const header = document.querySelector('.header-sticky');
+    const spacer = document.getElementById('header-spacer');
+    if (!header || !spacer) return;
+    spacer.style.height = header.offsetHeight + "px";
   }
+
+  window.addEventListener("load", syncHeaderSpacer);
+  window.addEventListener("resize", syncHeaderSpacer);
+</script>
+
+<!-- ✅ Compact Toggle Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("navCompactBtn");
+  const nav = document.querySelector(".main-navbar");
+
+  if (!btn || !nav) return;
+
+  btn.addEventListener("click", function () {
+    if (window.innerWidth <= 991) {
+      nav.classList.toggle("is-compact");
+    }
+  });
+
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 991) {
+      nav.classList.remove("is-compact");
+    }
+  });
 });
 </script>
 
 <script>
-document.addEventListener("click", function (e) {
-  const menu = document.getElementById("mobileCategoryMenu");
-  const btn = document.querySelector('[data-bs-target="#mobileCategoryMenu"]');
-  if (!menu || !btn) return;
+  document.addEventListener("click", function (e) {
+    const menu = document.getElementById("mobileCategoryMenu");
+    const btn = document.querySelector('[data-bs-target="#mobileCategoryMenu"]');
+    if (!menu || !btn) return;
 
-  const isOpen = menu.classList.contains("show");
-  if (!isOpen) return;
+    const isOpen = menu.classList.contains("show");
+    if (!isOpen) return;
 
-  // Menü / buton dışında tıklanınca kapat
-  if (!menu.contains(e.target) && !btn.contains(e.target)) {
-    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu);
-    bsCollapse.hide();
-  }
-});
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      const bsCollapse = bootstrap.Collapse.getOrCreateInstance(menu);
+      bsCollapse.hide();
+    }
+  });
 </script>

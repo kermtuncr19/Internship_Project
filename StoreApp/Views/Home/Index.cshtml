@@ -9,7 +9,7 @@
   var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
   var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
   bool isProductIndex = ctrl.Equals("Product", StringComparison.OrdinalIgnoreCase)
-                     && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
+  && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
 }
 
 <!-- ✅ BANNER: Container DIŞINA -->
@@ -45,55 +45,62 @@
 
 <div class="container my-3"> <!-- container my-3 tekrar açılıyor -->
 
-<!-- 🎯 Ana sayfa vitrin ürünleri -->
-<div class="my-4">
-  @await Component.InvokeAsync("Showcase")
-</div>
+  
 
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const track = document.querySelector('.banner-track');
-    const dots = document.querySelectorAll('.dot');
-    const banners = document.querySelectorAll('.banner-item');
-    let currentIndex = 0;
-    const totalBanners = banners.length;
-    let autoSlideInterval;
+  
 
-    function goToSlide(index) {
-      currentIndex = index;
-      const offset = -currentIndex * 100;
-      track.style.transform = `translateX(${offset}%)`;
+  <!-- 🎯 Ana sayfa vitrin ürünleri -->
+  <div class="my-4">
+    @await Component.InvokeAsync("Showcase")
+  </div>
 
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentIndex);
+  <!-- 🔒 AVANTAJLAR -->
+  <partial name="_HomeBenefits" />
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const track = document.querySelector('.banner-track');
+      const dots = document.querySelectorAll('.dot');
+      const banners = document.querySelectorAll('.banner-item');
+      let currentIndex = 0;
+      const totalBanners = banners.length;
+      let autoSlideInterval;
+
+      function goToSlide(index) {
+        currentIndex = index;
+        const offset = -currentIndex * 100;
+        track.style.transform = `translateX(${offset}%)`;
+
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === currentIndex);
+        });
+      }
+
+      function nextSlide() {
+        currentIndex = (currentIndex + 1) % totalBanners;
+        goToSlide(currentIndex);
+      }
+
+      function startAutoSlide() {
+        autoSlideInterval = setInterval(nextSlide, 4500);
+      }
+
+      function stopAutoSlide() {
+        clearInterval(autoSlideInterval);
+      }
+
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          stopAutoSlide();
+          goToSlide(index);
+          startAutoSlide();
+        });
       });
-    }
 
-    function nextSlide() {
-      currentIndex = (currentIndex + 1) % totalBanners;
-      goToSlide(currentIndex);
-    }
+      // Hover durdur/başlat (desktop)
+      track.addEventListener('mouseenter', stopAutoSlide);
+      track.addEventListener('mouseleave', startAutoSlide);
 
-    function startAutoSlide() {
-      autoSlideInterval = setInterval(nextSlide, 4500);
-    }
-
-    function stopAutoSlide() {
-      clearInterval(autoSlideInterval);
-    }
-
-    dots.forEach((dot, index) => {
-      dot.addEventListener('click', () => {
-        stopAutoSlide();
-        goToSlide(index);
-        startAutoSlide();
-      });
+      startAutoSlide();
     });
-
-    // Hover durdur/başlat (desktop)
-    track.addEventListener('mouseenter', stopAutoSlide);
-    track.addEventListener('mouseleave', startAutoSlide);
-
-    startAutoSlide();
-  });
-</script>
+  </script>

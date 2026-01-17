@@ -1,20 +1,155 @@
-<footer class="site-footer mt-auto border-top">
-  <div class="container py-4">
-    <div class="row g-3 align-items-center text-white">
-      <div class="col-md-4 small">
-      <a  class="text-decoration-none" asp-controller="Home" asp-action="Index">
-      <img src="~/images/amblem.webp" alt="Fenerbahçe Amblemi" class="me-2" style="height:48px; width:auto;" />
-      </a>
-        © @DateTime.Now.Year Fenerium Clone
+<footer class="site-footer mt-auto">
+  <div class="footer-main">
+    <div class="container py-5">
+      <div class="row g-4">
+        
+        <!-- HAKKIMIZDA -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section">
+            <a asp-controller="Home" asp-action="Index" class="footer-logo d-inline-block mb-3">
+              <img src="~/images/amblem.webp" alt="Fenerbahçe" style="height:60px; width:auto;" />
+            </a>
+            <p class="footer-text">
+              Taraftarların buluşma noktası, kaliteli ve özgün ürünler.
+            </p>
+            <div class="footer-social mt-3">
+              <a href="#" class="social-link" aria-label="Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+              </a>
+              <a href="#" class="social-link" aria-label="Twitter">
+                <i class="fa-brands fa-twitter"></i>
+              </a>
+              <a href="#" class="social-link" aria-label="Instagram">
+                <i class="fa-brands fa-instagram"></i>
+              </a>
+              <a href="#" class="social-link" aria-label="YouTube">
+                <i class="fa-brands fa-youtube"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIZLI ERİŞİM -->
+        <div class="col-lg-2 col-md-6">
+          <div class="footer-section">
+            <h5 class="footer-title">Hızlı Erişim</h5>
+            <ul class="footer-links">
+              <li><a asp-controller="Home" asp-action="Index">Ana Sayfa</a></li>
+              <li><a asp-controller="Product" asp-action="Index">Ürünler</a></li>
+              <li><a asp-controller="Product" asp-action="Index" asp-route-categoryId="1">Futbol</a></li>
+              <li><a asp-controller="Product" asp-action="Index" asp-route-categoryId="2">Basketbol</a></li>
+              <li><a asp-controller="Product" asp-action="Index" asp-route-categoryId="3">Voleybol</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- MÜŞTERİ HİZMETLERİ -->
+        <div class="col-lg-2 col-md-6">
+          <div class="footer-section">
+            <h5 class="footer-title">Müşteri Hizmetleri</h5>
+            <ul class="footer-links">
+              <li><a asp-page="/Contact">İletişim</a></li>
+              <li><a href="#">SSS</a></li>
+              <li><a href="#">Sipariş Takibi</a></li>
+              <li><a href="#">İptal & İade</a></li>
+              <li><a href="#">Kargo Bilgileri</a></li>
+              <li><a href="#">Güvenli Alışveriş</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- KURUMSAL -->
+        <div class="col-lg-2 col-md-6">
+          <div class="footer-section">
+            <h5 class="footer-title">Kurumsal</h5>
+            <ul class="footer-links">
+              <li><a href="#">Hakkımızda</a></li>
+              <li><a href="#">Kariyer</a></li>
+              <li><a href="#">Mağazalarımız</a></li>
+              <li><a href="#">Gizlilik Politikası</a></li>
+              <li><a href="#">Kullanım Koşulları</a></li>
+              <li><a href="#">KVKK</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- İLETİŞİM -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section">
+            <h5 class="footer-title">İletişim</h5>
+            <ul class="footer-contact">
+              <li>
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Karabük, Türkiye</span>
+              </li>
+              <li>
+                <i class="fa-solid fa-phone"></i>
+                <span>+90 (555) 123 45 67</span>
+              </li>
+              <li>
+                <i class="fa-solid fa-envelope"></i>
+                <span>support@fenerium.com</span>
+              </li>
+              <li>
+                <i class="fa-solid fa-clock"></i>
+                <span>Pzt-Cmt: 09:00 - 18:00</span>
+              </li>
+            </ul>
+
+            <!-- Newsletter -->
+            <div class="newsletter-box mt-3">
+              <p class="small mb-2">Kampanyalardan haberdar olun</p>
+              <form class="newsletter-form">
+                <div class="input-group">
+                  <input type="email" class="form-control" placeholder="E-posta adresiniz" />
+                  <button class="btn btn-newsletter" type="submit">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
       </div>
-      <div class="col-md-4 text-center">
-        <a class="mx-2 footer-link text-decoration-none" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
-        <a class="mx-2 footer-link text-decoration-none" asp-page="/Contact">İletişim</a>
+    </div>
+  </div>
+
+  <!-- ÖDEME & GÜVEN -->
+  <div class="footer-payment">
+    <div class="container py-3">
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+          <span class="payment-title">Güvenli Ödeme:</span>
+          <div class="payment-icons d-inline-flex gap-2 ms-2">
+            <i class="fa-brands fa-cc-visa fa-2x"></i>
+            <i class="fa-brands fa-cc-mastercard fa-2x"></i>
+            <i class="fa-brands fa-cc-amex fa-2x"></i>
+            <i class="fa-solid fa-credit-card fa-2x"></i>
+          </div>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <span class="payment-title">Kargo:</span>
+          <div class="cargo-icons d-inline-flex gap-3 ms-2">
+            <span class="cargo-badge">MNG Kargo</span>
+            <span class="cargo-badge">Yurtiçi Kargo</span>
+            <span class="cargo-badge">Aras Kargo</span>
+          </div>
+        </div>
       </div>
-      <div class="col-md-4 text-md-end small">
-        <i class="fa-solid fa-location-dot me-1"></i> İstanbul
-        <span class="mx-2">•</span>
-        <i class="fa-solid fa-envelope me-1"></i> support@fenerium.com
+    </div>
+  </div>
+
+  <!-- COPYRIGHT -->
+  <div class="footer-bottom">
+    <div class="container py-3">
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+          <p class="mb-0 small">
+            © @DateTime.Now.Year <strong>Fenerium Clone</strong>
+          </p>
+        </div>
+        
       </div>
     </div>
   </div>

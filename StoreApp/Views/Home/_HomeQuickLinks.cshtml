@@ -1,0 +1,61 @@
+@* Hızlı Erişim *@
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+<section class="home-quicklinks container-fluid my-4">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h5 class="mb-1 fw-bold text-navy">Hızlı Erişim</h5>
+      <div class="text-muted small">Aradığını tek tıkla bul</div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="1" class="ql-card">
+        <i class="fa-solid fa-shirt"></i>
+        <div class="fw-semibold">Formalar</div>
+        <div class="small text-muted">Yeni sezon</div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="2" class="ql-card">
+        <i class="fa-solid fa-basketball"></i>
+        <div class="fw-semibold">Basketbol</div>
+        <div class="small text-muted">Koleksiyon</div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="3" class="ql-card">
+        <i class="fa-solid fa-volleyball"></i>
+        <div class="fw-semibold">Voleybol</div>
+        <div class="small text-muted">Kadın/Erkek</div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" class="ql-card" asp-route-searchTerm="çocuk">
+        <i class="fa-solid fa-child-reaching"></i>
+        <div class="fw-semibold">Çocuk</div>
+        <div class="small text-muted">Minik taraftar</div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" class="ql-card" asp-route-searchTerm="taraftar">
+        <i class="fa-solid fa-flag"></i>
+        <div class="fw-semibold">Taraftar</div>
+        <div class="small text-muted">Aksesuar</div>
+      </a>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+      <a asp-controller="Product" asp-action="Index" class="ql-card ql-card--dark" asp-route-searchTerm="indirim">
+        <i class="fa-solid fa-tags"></i>
+        <div class="fw-semibold">İndirim</div>
+        <div class="small opacity-75">Fırsatlar</div>
+      </a>
+    </div>
+  </div>
+</section>

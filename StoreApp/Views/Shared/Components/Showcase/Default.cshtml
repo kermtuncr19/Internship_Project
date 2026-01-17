@@ -1,21 +1,32 @@
-@model List<Entities.Models.Product>
+@using StoreApp.Models
+@model ShowcaseViewModel
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-@if (Model != null && Model.Any())
+<!-- 🔥 VİTRİN ÜRÜNLERİ -->
+@if (Model.ShowcaseProducts != null && Model.ShowcaseProducts.Any())
 {
     <div class="container py-5">
+        <div class="showcase-header mb-4">
+            <h2 class="showcase-title">
+                <i class="fa-solid fa-star"></i>
+                Vitrin Ürünleri
+            </h2>
+            <a asp-controller="Product" asp-action="Index" class="showcase-view-all">
+                Tümünü Gör <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
         <div class="related-products-wrapper">
             <button class="carousel-btn carousel-btn-prev" id="showcaseScrollLeft">
                 <i class="fa fa-chevron-left"></i>
             </button>
 
             <div class="related-products-container" id="showcaseContainer">
-                @foreach (var product in Model)
+                @foreach (var product in Model.ShowcaseProducts)
                 {
                     <div class="related-product-card">
                         <div class="card h-100 hover-card">
                             
-                            <!-- SADECE GÖRSEL ALANI TIKLANABİLİR -->
                             <a asp-controller="Product"
                                asp-action="Get"
                                asp-route-id="@product.ProductId"
@@ -38,34 +49,31 @@
                                 <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
 
                                 @{
-    var ratings = ViewBag.Ratings as Dictionary<int,(int count,double avg)>
-                  ?? new Dictionary<int,(int,double)>();
-    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
-    var reviewCount = hasR ? rdata.count : 0;
-    var avgRating = hasR ? rdata.avg : 0.0;
-}
+                                    var ratings = ViewBag.Ratings as Dictionary<int,(int count,double avg)>
+                                                  ?? new Dictionary<int,(int,double)>();
+                                    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
+                                    var reviewCount = hasR ? rdata.count : 0;
+                                    var avgRating = hasR ? rdata.avg : 0.0;
+                                }
 
-
-
-<div class="d-flex align-items-center gap-1 mb-2">
-    @for (int i = 1; i <= 5; i++)
-    {
-        if (i <= Math.Floor(avgRating))
-        {
-            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
-        }
-        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
-        {
-            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
-        }
-        else
-        {
-            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
-        }
-    }
-    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
-</div>
-
+                                <div class="d-flex align-items-center gap-1 mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(avgRating))
+                                        {
+                                            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
+                                        }
+                                    }
+                                    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
+                                </div>
 
                                 <div class="mt-auto d-flex align-items-center justify-content-between">
                                     <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
@@ -92,11 +100,9 @@
 
                                         @if (product.RequiresSize)
                                         {
-                                            <!-- Beden gerekiyorsa detaya; isteğe bağlı: uyarı için alert=size -->
                                             <a asp-controller="Product"
                                                asp-action="Get"
                                                asp-route-id="@product.ProductId"
-                                               
                                                class="btn btn-primary btn-sm tooltip-btn"
                                                style="border:none;">
                                                 <i class="fa fa-cart-plus"></i>
@@ -127,60 +133,461 @@
             </button>
         </div>
     </div>
+}
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const container = document.getElementById('showcaseContainer');
-            const btnLeft = document.getElementById('showcaseScrollLeft');
-            const btnRight = document.getElementById('showcaseScrollRight');
+<!-- ⭐ EN ÇOK FAVORİLENENLER -->
+@if (Model.MostFavorited != null && Model.MostFavorited.Any())
+{
+    <div class="container py-5">
+        <div class="showcase-header mb-4">
+            <h2 class="showcase-title">
+                <i class="fa-solid fa-heart"></i>
+                En Çok Favorilenenler
+            </h2>
+            <a asp-controller="Product" asp-action="Index" class="showcase-view-all">
+                Tümünü Gör <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
 
-            if (!container || !btnLeft || !btnRight) return;
+        <div class="related-products-wrapper">
+            <button class="carousel-btn carousel-btn-prev" id="favoritedScrollLeft">
+                <i class="fa fa-chevron-left"></i>
+            </button>
 
-            const scrollAmount = 270; // Kart genişliği + gap
-            let isScrolling = false;
+            <div class="related-products-container" id="favoritedContainer">
+                @foreach (var product in Model.MostFavorited)
+                {
+                    <div class="related-product-card">
+                        <div class="card h-100 hover-card">
+                            
+                            <a asp-controller="Product"
+                               asp-action="Get"
+                               asp-route-id="@product.ProductId"
+                               class="card-img-link"
+                               aria-label="@product.ProductName">
+                                <div class="img-box"
+                                     style="height: 200px; padding: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                    <img src="@product.ImageUrl"
+                                         class="img-fluid"
+                                         alt="@product.ProductName"
+                                         style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                </div>
+                            </a>
 
-            function scroll(direction) {
-                if (isScrolling) return;
-                isScrolling = true;
+                            <div class="card-body d-flex flex-column p-3">
+                                <div class="text-navy text-center mb-2 fw-bold">
+                                    @product.Price.ToString("c")
+                                </div>
 
-                const scrollLeft = container.scrollLeft;
-                const maxScroll = container.scrollWidth - container.clientWidth;
+                                <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
 
-                if (direction === 'right') {
-                    if (scrollLeft >= maxScroll - 10) {
-                        container.scrollTo({ left: 0, behavior: 'smooth' });
-                    } else {
-                        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-                    }
-                } else {
-                    if (scrollLeft <= 10) {
-                        container.scrollTo({ left: maxScroll, behavior: 'smooth' });
-                    } else {
-                        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-                    }
+                                @{
+                                    var ratings = ViewBag.Ratings as Dictionary<int,(int count,double avg)>
+                                                  ?? new Dictionary<int,(int,double)>();
+                                    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
+                                    var reviewCount = hasR ? rdata.count : 0;
+                                    var avgRating = hasR ? rdata.avg : 0.0;
+                                }
+
+                                <div class="d-flex align-items-center gap-1 mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(avgRating))
+                                        {
+                                            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
+                                        }
+                                    }
+                                    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
+                                </div>
+
+                                <div class="mt-auto d-flex align-items-center justify-content-between">
+                                    <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
+                                       class="btn btn-sm tooltip1-btn"
+                                       style="background-color:#ffea00; color:black; border:none;">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
+                                            var isFavorite = favoriteIds.Contains(product.ProductId);
+
+                                            <button type="button"
+                                                    class="btn p-0 border-0 bg-transparent js-fav-btn"
+                                                    data-product-id="@product.ProductId"
+                                                    aria-pressed="@(isFavorite.ToString().ToLower())"
+                                                    style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+                                                <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+                                                   style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+                                            </button>
+                                        }
+
+                                        @if (product.RequiresSize)
+                                        {
+                                            <a asp-controller="Product"
+                                               asp-action="Get"
+                                               asp-route-id="@product.ProductId"
+                                               class="btn btn-primary btn-sm tooltip-btn"
+                                               style="border:none;">
+                                                <i class="fa fa-cart-plus"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <form asp-page="/cart" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ProductId" value="@product.ProductId" />
+                                                <input type="hidden" name="returnUrl"
+                                                       value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                <button type="submit" class="btn btn-primary btn-sm" style="border:none;">
+                                                    <i class="fa fa-cart-plus"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 }
+            </div>
 
-                setTimeout(() => { isScrolling = false; }, 500);
+            <button class="carousel-btn carousel-btn-next" id="favoritedScrollRight">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+}
+
+<!-- 🆕 YENİ EKLENENLER -->
+@if (Model.NewArrivals != null && Model.NewArrivals.Any())
+{
+    <div class="container py-5">
+        <div class="showcase-header mb-4">
+            <h2 class="showcase-title">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Yeni Eklenenler
+            </h2>
+            <a asp-controller="Product" asp-action="Index" class="showcase-view-all">
+                Tümünü Gör <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="related-products-wrapper">
+            <button class="carousel-btn carousel-btn-prev" id="newScrollLeft">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+
+            <div class="related-products-container" id="newContainer">
+                @foreach (var product in Model.NewArrivals)
+                {
+                    <div class="related-product-card">
+                        <div class="card h-100 hover-card">
+                            
+                            <a asp-controller="Product"
+                               asp-action="Get"
+                               asp-route-id="@product.ProductId"
+                               class="card-img-link"
+                               aria-label="@product.ProductName">
+                                <div class="img-box"
+                                     style="height: 200px; padding: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                    <img src="@product.ImageUrl"
+                                         class="img-fluid"
+                                         alt="@product.ProductName"
+                                         style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                </div>
+                            </a>
+
+                            <div class="card-body d-flex flex-column p-3">
+                                <div class="text-navy text-center mb-2 fw-bold">
+                                    @product.Price.ToString("c")
+                                </div>
+
+                                <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
+
+                                @{
+                                    var ratings = ViewBag.Ratings as Dictionary<int,(int count,double avg)>
+                                                  ?? new Dictionary<int,(int,double)>();
+                                    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
+                                    var reviewCount = hasR ? rdata.count : 0;
+                                    var avgRating = hasR ? rdata.avg : 0.0;
+                                }
+
+                                <div class="d-flex align-items-center gap-1 mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(avgRating))
+                                        {
+                                            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
+                                        }
+                                    }
+                                    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
+                                </div>
+
+                                <div class="mt-auto d-flex align-items-center justify-content-between">
+                                    <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
+                                       class="btn btn-sm tooltip1-btn"
+                                       style="background-color:#ffea00; color:black; border:none;">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
+                                            var isFavorite = favoriteIds.Contains(product.ProductId);
+
+                                            <button type="button"
+                                                    class="btn p-0 border-0 bg-transparent js-fav-btn"
+                                                    data-product-id="@product.ProductId"
+                                                    aria-pressed="@(isFavorite.ToString().ToLower())"
+                                                    style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+                                                <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+                                                   style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+                                            </button>
+                                        }
+
+                                        @if (product.RequiresSize)
+                                        {
+                                            <a asp-controller="Product"
+                                               asp-action="Get"
+                                               asp-route-id="@product.ProductId"
+                                               class="btn btn-primary btn-sm tooltip-btn"
+                                               style="border:none;">
+                                                <i class="fa fa-cart-plus"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <form asp-page="/cart" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ProductId" value="@product.ProductId" />
+                                                <input type="hidden" name="returnUrl"
+                                                       value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                <button type="submit" class="btn btn-primary btn-sm" style="border:none;">
+                                                    <i class="fa fa-cart-plus"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button class="carousel-btn carousel-btn-next" id="newScrollRight">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+}
+
+<!-- 🔥 ÇOK SATANLAR -->
+@if (Model.BestSellers != null && Model.BestSellers.Any())
+{
+    <div class="container py-5">
+        <div class="showcase-header mb-4">
+            <h2 class="showcase-title">
+                <i class="fa-solid fa-fire"></i>
+                Çok Satanlar
+            </h2>
+            <a asp-controller="Product" asp-action="Index" class="showcase-view-all">
+                Tümünü Gör <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="related-products-wrapper">
+            <button class="carousel-btn carousel-btn-prev" id="bestsellersScrollLeft">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+
+            <div class="related-products-container" id="bestsellersContainer">
+                @foreach (var product in Model.BestSellers)
+                {
+                    <div class="related-product-card">
+                        <div class="card h-100 hover-card">
+                            
+                            <a asp-controller="Product"
+                               asp-action="Get"
+                               asp-route-id="@product.ProductId"
+                               class="card-img-link"
+                               aria-label="@product.ProductName">
+                                <div class="img-box"
+                                     style="height: 200px; padding: 10px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                    <img src="@product.ImageUrl"
+                                         class="img-fluid"
+                                         alt="@product.ProductName"
+                                         style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                                </div>
+                            </a>
+
+                            <div class="card-body d-flex flex-column p-3">
+                                <div class="text-navy text-center mb-2 fw-bold">
+                                    @product.Price.ToString("c")
+                                </div>
+
+                                <h6 class="card-title small" style="min-height: 2.5rem;">@product.ProductName</h6>
+
+                                @{
+                                    var ratings = ViewBag.Ratings as Dictionary<int,(int count,double avg)>
+                                                  ?? new Dictionary<int,(int,double)>();
+                                    var hasR = ratings.TryGetValue(product.ProductId, out var rdata);
+                                    var reviewCount = hasR ? rdata.count : 0;
+                                    var avgRating = hasR ? rdata.avg : 0.0;
+                                }
+
+                                <div class="d-flex align-items-center gap-1 mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= Math.Floor(avgRating))
+                                        {
+                                            <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
+                                        {
+                                            <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fa-regular fa-star" style="color:#ddd; font-size:0.95rem;"></i>
+                                        }
+                                    }
+                                    <span class="text-muted small ms-2">@avgRating.ToString("0.0") (@reviewCount)</span>
+                                </div>
+
+                                <div class="mt-auto d-flex align-items-center justify-content-between">
+                                    <a asp-controller="Product" asp-action="Get" asp-route-id="@product.ProductId"
+                                       class="btn btn-sm tooltip1-btn"
+                                       style="background-color:#ffea00; color:black; border:none;">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
+                                            var isFavorite = favoriteIds.Contains(product.ProductId);
+
+                                            <button type="button"
+                                                    class="btn p-0 border-0 bg-transparent js-fav-btn"
+                                                    data-product-id="@product.ProductId"
+                                                    aria-pressed="@(isFavorite.ToString().ToLower())"
+                                                    style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
+                                                <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
+                                                   style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
+                                            </button>
+                                        }
+
+                                        @if (product.RequiresSize)
+                                        {
+                                            <a asp-controller="Product"
+                                               asp-action="Get"
+                                               asp-route-id="@product.ProductId"
+                                               class="btn btn-primary btn-sm tooltip-btn"
+                                               style="border:none;">
+                                                <i class="fa fa-cart-plus"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <form asp-page="/cart" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ProductId" value="@product.ProductId" />
+                                                <input type="hidden" name="returnUrl"
+                                                       value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                                <button type="submit" class="btn btn-primary btn-sm" style="border:none;">
+                                                    <i class="fa fa-cart-plus"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button class="carousel-btn carousel-btn-next" id="bestsellersScrollRight">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Tüm carousel'ları tanımla
+    const carousels = [
+        { container: 'showcaseContainer', left: 'showcaseScrollLeft', right: 'showcaseScrollRight' },
+        { container: 'favoritedContainer', left: 'favoritedScrollLeft', right: 'favoritedScrollRight' },
+        { container: 'newContainer', left: 'newScrollLeft', right: 'newScrollRight' },
+        { container: 'bestsellersContainer', left: 'bestsellersScrollLeft', right: 'bestsellersScrollRight' }
+    ];
+
+    carousels.forEach(carousel => {
+        const container = document.getElementById(carousel.container);
+        const btnLeft = document.getElementById(carousel.left);
+        const btnRight = document.getElementById(carousel.right);
+
+        if (!container || !btnLeft || !btnRight) return;
+
+        const scrollAmount = 270;
+        let isScrolling = false;
+
+        function scroll(direction) {
+            if (isScrolling) return;
+            isScrolling = true;
+
+            const scrollLeft = container.scrollLeft;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+
+            if (direction === 'right') {
+                if (scrollLeft >= maxScroll - 10) {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                }
+            } else {
+                if (scrollLeft <= 10) {
+                    container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+                } else {
+                    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                }
             }
 
-            btnRight.addEventListener('click', () => scroll('right'));
-            btnLeft.addEventListener('click', () => scroll('left'));
+            setTimeout(() => { isScrolling = false; }, 500);
+        }
 
-            // Otomatik kaydırma
-            let autoScrollInterval = setInterval(() => {
-                scroll('right');
-            }, 5000);
+        btnRight.addEventListener('click', () => scroll('right'));
+        btnLeft.addEventListener('click', () => scroll('left'));
 
-            // Hover'da otomatik kaydırmayı durdur
-            container.addEventListener('mouseenter', () => {
-                clearInterval(autoScrollInterval);
-            });
+        // Otomatik kaydırma
+        let autoScrollInterval = setInterval(() => scroll('right'), 5000);
 
-            container.addEventListener('mouseleave', () => {
-                autoScrollInterval = setInterval(() => {
-                    scroll('right');
-                }, 5000);
-            });
+        container.addEventListener('mouseenter', () => clearInterval(autoScrollInterval));
+        container.addEventListener('mouseleave', () => {
+            autoScrollInterval = setInterval(() => scroll('right'), 5000);
         });
-    </script>
-}
+    });
+});
+</script>
