@@ -4430,3 +4430,39 @@ html, body{ overflow-x: clip; } /* clip desteklenmezse hidden da olur */
     background: linear-gradient(180deg, #0a1232 0%, #050a1a 100%);
   }
 }
+/* Dropdown menü her koşulda üstte ve kırpılmasın */
+.user-dropdown-hover { position: relative; }
+.user-dropdown-hover .dropdown-menu {
+  z-index: 99999 !important;
+}
+
+/* Overlay collapse / fixed header yüzünden kırpılmayı engelle */
+.header-sticky,
+.main-navbar,
+.navbar,
+.navbar .container-fluid,
+#mainNav {
+  overflow: visible !important;
+}
+
+/* Mobilde menü ekrana sabitlensin (kırpılma/arkada kalma biter) */
+@media (max-width: 991.98px){
+  .user-dropdown-hover .dropdown-menu{
+    position: fixed !important;
+
+    /* ❌ top/right’ı burada kilitleme! JS ayarlayacak */
+    top: auto;
+    right: auto;
+
+    left: auto !important;
+    transform: none !important;
+
+    max-width: calc(100vw - 24px);
+    z-index: 99999 !important;
+  }
+}
+
+
+
+
+
