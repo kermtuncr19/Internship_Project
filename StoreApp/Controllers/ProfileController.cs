@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
-using StoreApp.Models; // ⬅️ ViewModel için
+using StoreApp.Models;
+using Services.Contracts;
 
 namespace StoreApp.Controllers
 {
@@ -13,23 +14,20 @@ namespace StoreApp.Controllers
     {
         private readonly RepositoryContext _ctx;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly IWebHostEnvironment _env;
+        private readonly IStorageService _storage;
 
-        public ProfileController(RepositoryContext ctx, UserManager<IdentityUser> userManager, IWebHostEnvironment env)
+        public ProfileController(RepositoryContext ctx, UserManager<IdentityUser> userManager, IStorageService storage)
         {
             _ctx = ctx;
             _userManager = userManager;
-            _env = env;
+            _storage = storage;
         }
 
-        // GET: /Profile veya /Profile/Index
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User)!;
-
-            var user = await _userManager.FindByIdAsync(userId);   // ✅ IdentityUser
-
+            var user = await _userManager.FindByIdAsync(userId);
 
             var profile = await _ctx.UserProfiles
                 .AsNoTracking()
@@ -45,12 +43,10 @@ namespace StoreApp.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            // 👇 Burayı AKTİF et
             var addressCount = await _ctx.UserAddresses
                 .AsNoTracking()
                 .CountAsync(a => a.UserId == userId);
 
-            // Favorites tablon yoksa 0 bırak; varsa aynı şekilde say:
             var favoriteCount = await _ctx.UserFavoriteProducts
                 .AsNoTracking()
                 .CountAsync(f => f.UserId == userId);
@@ -66,7 +62,6 @@ namespace StoreApp.Controllers
 
             return View(viewModel);
         }
-
 
         [HttpGet]
         public async Task<IActionResult> Edit()
@@ -101,21 +96,12 @@ namespace StoreApp.Controllers
             entity.PhoneNumber = formModel.PhoneNumber;
             entity.BirthDate = formModel.BirthDate;
 
+            // ✅ Avatarı bucket'a yükle (wwwroot'a yazma yok)
             if (avatar != null && avatar.Length > 0)
             {
-                var avatarsRoot = Path.Combine(_env.WebRootPath, "images", "avatars");
-                Directory.CreateDirectory(avatarsRoot);
-
-                var ext = Path.GetExtension(avatar.FileName);
-                var fileName = $"{userId}_{Guid.NewGuid():N}{ext}";
-                var fullPath = Path.Combine(avatarsRoot, fileName);
-
-                using (var stream = System.IO.File.Create(fullPath))
-                {
-                    await avatar.CopyToAsync(stream);
-                }
-
-                entity.AvatarUrl = $"/images/avatars/{fileName}";
+                // images/avatars altına atsın
+                var (_, publicUrl) = await _storage.UploadAsync(avatar, "images/avatars");
+                entity.AvatarUrl = publicUrl;
             }
 
             if (isNew)
@@ -125,7 +111,7 @@ namespace StoreApp.Controllers
 
             await _ctx.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index)); // ⬅️ Index'e yönlendir
+            return RedirectToAction(nameof(Index));
         }
     }
 }
