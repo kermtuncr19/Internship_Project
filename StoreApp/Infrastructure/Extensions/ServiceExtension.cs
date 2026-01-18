@@ -124,6 +124,17 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IReturnRequestService, ReturnRequestManager>();
             services.AddScoped<IProductStockService, ProductStockManager>();
             services.AddScoped<IEmailService, EmailService>();  // ✅ Bu zaten var, harika!
+            services.AddSingleton(new RailwayBucketOptions
+            {
+                Bucket = Environment.GetEnvironmentVariable("BUCKET")!,
+                AccessKeyId = Environment.GetEnvironmentVariable("ACCESS_KEY_ID")!,
+                SecretAccessKey = Environment.GetEnvironmentVariable("SECRET_ACCESS_KEY")!,
+                Endpoint = Environment.GetEnvironmentVariable("ENDPOINT")!,
+                Region = Environment.GetEnvironmentVariable("REGION") ?? "auto",
+                ImgProxyBaseUrl = Environment.GetEnvironmentVariable("IMGPROXY_BASE_URL")!
+            });
+
+            services.AddSingleton<IStorageService, BucketStorageService>();
         }
 
         public static void ConfigureApplicationCookie(this IServiceCollection services)

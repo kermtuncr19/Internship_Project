@@ -1,4 +1,3 @@
-using System.Drawing;
 using Entities.Dto;
 using Entities.Models;
 using StoreApp.Models;
@@ -18,16 +17,18 @@ namespace StoreApp.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IServiceManager _manager;
+        private readonly IStorageService _storage;
 
-        public ProductController(IServiceManager manager)
+        public ProductController(IServiceManager manager, IStorageService storage)
         {
             _manager = manager;
+            _storage = storage;
         }
 
         public IActionResult Index([FromQuery] ProductRequestParameters p)
         {
             ViewData["Title"] = "Ürünler";
-            
+
             if (!p.IsValidPrice)
             {
                 TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
@@ -75,9 +76,10 @@ namespace StoreApp.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm] ProductDtoForInsertion productDto, 
-                                                 IFormFile? file, 
-                                                 IFormFileCollection? additionalImages)
+        public async Task<IActionResult> Create(
+            [FromForm] ProductDtoForInsertion productDto,
+            IFormFile? file,
+            IFormFileCollection? additionalImages)
         {
             if (!ModelState.IsValid)
             {
@@ -94,7 +96,7 @@ namespace StoreApp.Areas.Admin.Controllers
                 return View(productDto);
             }
 
-            // ✅ 1. Ana fotoğraf kontrolü
+            // ✅ 1) Ana foto kontrolü
             if (file == null || file.Length == 0)
             {
                 ModelState.AddModelError("file", "Lütfen bir ürün görseli yükleyin.");
@@ -102,52 +104,38 @@ namespace StoreApp.Areas.Admin.Controllers
                 return View(productDto);
             }
 
-            // ✅ 2. Ana fotoğrafı yükle
-            string mainFileName = file.FileName;
-            string mainPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", mainFileName);
-            
-            using (var stream = new FileStream(mainPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            // ✅ 2) Ana fotoğrafı bucket'a yükle
+            var (_, mainPublicUrl) = await _storage.UploadAsync(file, "images");
+            productDto.ImageUrl = mainPublicUrl;
 
-            string mainImageUrl = $"/images/{mainFileName}";
-            productDto.ImageUrl = mainImageUrl;
-
-            // ✅ 3. Ürünü oluştur
+            // ✅ 3) Ürünü oluştur
             var product = _manager.PoductService.CreateProduct(productDto);
 
-            // ✅ 4. Ana fotoğrafı ProductImages tablosuna ekle
+            // ✅ 4) Ana fotoğrafı ProductImages tablosuna ekle
             var mainImage = new ProductImage
             {
                 ProductId = product.ProductId,
-                ImageUrl = mainImageUrl,
+                ImageUrl = mainPublicUrl,
                 DisplayOrder = 0,
                 IsMain = true
             };
             _manager.ProductImageService.CreateProductImage(mainImage);
 
-            // ✅ 5. Ek fotoğrafları ekle
+            // ✅ 5) Ek fotoğrafları ekle
             if (additionalImages != null && additionalImages.Count > 0)
             {
                 int order = 1;
-                
+
                 foreach (var additionalImage in additionalImages)
                 {
                     if (additionalImage.Length > 0)
                     {
-                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(additionalImage.FileName);
-                        string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", uniqueFileName);
-                        
-                        using (var stream = new FileStream(imagePath, FileMode.Create))
-                        {
-                            await additionalImage.CopyToAsync(stream);
-                        }
+                        var (_, publicUrl) = await _storage.UploadAsync(additionalImage, "images");
 
                         var productImage = new ProductImage
                         {
                             ProductId = product.ProductId,
-                            ImageUrl = $"/images/{uniqueFileName}",
+                            ImageUrl = publicUrl,
                             DisplayOrder = order++,
                             IsMain = false
                         };
@@ -166,7 +154,7 @@ namespace StoreApp.Areas.Admin.Controllers
             ViewBag.Categories = GetCategoriesSelectList();
             var model = _manager.PoductService.GetOneProductForUpdate(id, false);
             ViewData["Title"] = model?.ProductName;
-            
+
             // ✅ Ürünün fotoğraflarını ViewBag'e ekle
             ViewBag.ProductImages = _manager.PoductService
                 .GetAllProducts(false)
@@ -174,50 +162,45 @@ namespace StoreApp.Areas.Admin.Controllers
                 .FirstOrDefault(p => p.ProductId == id)?
                 .Images
                 .OrderBy(i => i.DisplayOrder)
-                .Select(i => new { 
-                    i.ProductImageId, 
-                    i.ImageUrl, 
-                    i.DisplayOrder, 
-                    i.IsMain 
+                .Select(i => new {
+                    i.ProductImageId,
+                    i.ImageUrl,
+                    i.DisplayOrder,
+                    i.IsMain
                 })
                 .ToList();
-            
+
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Update([FromForm] ProductDtoForUpdate productDto, 
-                                                 IFormFile? file, 
-                                                 IFormFileCollection? newImages)
+        public async Task<IActionResult> Update(
+            [FromForm] ProductDtoForUpdate productDto,
+            IFormFile? file,
+            IFormFileCollection? newImages)
         {
             System.Diagnostics.Debug.WriteLine($"DTO.RequiresSize={productDto.RequiresSize}, DTO.SizeOptionsCsv='{productDto.SizeOptionsCsv}'");
 
             if (ModelState.IsValid)
             {
-                // ✅ 1. Ana fotoğraf güncelleme (sadece yeni dosya yüklenmişse)
+                // ✅ 1) Ana fotoğraf güncelleme (sadece yeni dosya yüklenmişse)
                 if (file != null && file.Length > 0)
                 {
-                    string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", file.FileName);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-                    productDto.ImageUrl = String.Concat("/images/", file.FileName);
+                    var (_, publicUrl) = await _storage.UploadAsync(file, "images");
+                    productDto.ImageUrl = publicUrl;
                 }
 
                 _manager.PoductService.UpdateOneProduct(productDto);
 
-                // ✅ 2. Yeni fotoğraflar ekleme
+                // ✅ 2) Yeni fotoğraflar ekleme
                 if (newImages != null && newImages.Count > 0)
                 {
-                    // ✅ Include ile Images'ı yükle
                     var product = _manager.PoductService
                         .GetAllProducts(false)
                         .Include(p => p.Images)
                         .FirstOrDefault(p => p.ProductId == productDto.ProductId);
-                    
+
                     if (product != null)
                     {
                         var currentMaxOrder = product.Images.Any() ? product.Images.Max(i => i.DisplayOrder) : -1;
@@ -226,18 +209,12 @@ namespace StoreApp.Areas.Admin.Controllers
                         {
                             if (newImage.Length > 0)
                             {
-                                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(newImage.FileName);
-                                string imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
-                                
-                                using (var stream = new FileStream(imagePath, FileMode.Create))
-                                {
-                                    await newImage.CopyToAsync(stream);
-                                }
+                                var (_, publicUrl) = await _storage.UploadAsync(newImage, "images");
 
                                 var productImage = new ProductImage
                                 {
                                     ProductId = productDto.ProductId,
-                                    ImageUrl = $"/images/{fileName}",
+                                    ImageUrl = publicUrl,
                                     DisplayOrder = ++currentMaxOrder,
                                     IsMain = !product.Images.Any()
                                 };
@@ -256,7 +233,6 @@ namespace StoreApp.Areas.Admin.Controllers
             return View(productDto);
         }
 
-        // ✅ Ana fotoğraf ayarlama
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SetMainImage([FromBody] SetMainImageRequest request)
@@ -270,13 +246,11 @@ namespace StoreApp.Areas.Admin.Controllers
 
                 if (product == null) return NotFound();
 
-                // Tüm fotoğrafları ana olmaktan çıkar
                 foreach (var img in product.Images)
                 {
                     img.IsMain = false;
                 }
 
-                // Seçili fotoğrafı ana yap
                 var selectedImage = product.Images.FirstOrDefault(i => i.ProductImageId == request.ImageId);
                 if (selectedImage != null)
                 {
@@ -284,7 +258,6 @@ namespace StoreApp.Areas.Admin.Controllers
                 }
 
                 _manager.ProductImageService.UpdateProductImages(product.Images.ToList());
-                
                 return Ok(new { success = true });
             }
             catch (Exception ex)
@@ -293,29 +266,36 @@ namespace StoreApp.Areas.Admin.Controllers
             }
         }
 
-        // ✅ Fotoğraf silme
+        // ✅ Fotoğraf silme (Bucket + DB)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeleteImage(int id)
+        public async Task<IActionResult> DeleteImage(int id)
         {
             try
             {
                 var image = _manager.ProductImageService.GetOneProductImage(id, false);
-                
                 if (image == null) return NotFound();
 
-                // Dosyayı fiziksel olarak sil
-                if (!string.IsNullOrEmpty(image.ImageUrl))
+                // ✅ Bucket'tan sil (ImageUrl imgproxy formatındaysa key çıkar)
+                if (!string.IsNullOrWhiteSpace(image.ImageUrl))
                 {
-                    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", image.ImageUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
-                    if (System.IO.File.Exists(filePath))
+                    var marker = "/unsafe/plain/s3://";
+                    var idx = image.ImageUrl.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
                     {
-                        System.IO.File.Delete(filePath);
+                        // tail: BUCKET/images/xxx.jpg
+                        var tail = image.ImageUrl[(idx + marker.Length)..];
+                        var firstSlash = tail.IndexOf('/');
+                        if (firstSlash > 0 && firstSlash < tail.Length - 1)
+                        {
+                            // key: images/xxx.jpg
+                            var key = tail[(firstSlash + 1)..];
+                            await _storage.DeleteAsync(key);
+                        }
                     }
                 }
 
                 _manager.ProductImageService.DeleteProductImage(id);
-                
                 return Ok(new { success = true });
             }
             catch (Exception ex)
@@ -339,7 +319,6 @@ namespace StoreApp.Areas.Admin.Controllers
         }
     }
 
-    // ✅ Request Model
     public class SetMainImageRequest
     {
         public int ProductId { get; set; }
