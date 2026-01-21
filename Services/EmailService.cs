@@ -1,83 +1,57 @@
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace StoreApp.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailService> _logger;
+        private readonly IConfiguration _config;
+        private readonly HttpClient _http;
 
-        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+        public EmailService(IConfiguration config, IHttpClientFactory factory)
         {
-            _configuration = configuration;
-            _logger = logger;
+            _config = config;
+            _http = factory.CreateClient();
         }
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
-            var smtpServer = _configuration["Email:SmtpServer"];
-            var smtpPortRaw = _configuration["Email:SmtpPort"];
-            var senderEmail = _configuration["Email:SenderEmail"];
-            var senderName = _configuration["Email:SenderName"];
-            var username = _configuration["Email:Username"];
-            var password = _configuration["Email:Password"];
+            var apiKey = _config["BREVO_API_KEY"];
+            var senderEmail = _config["BREVO_SENDER_EMAIL"];
+            var senderName = _config["BREVO_SENDER_NAME"];
 
-            if (string.IsNullOrWhiteSpace(smtpServer))
-                throw new InvalidOperationException("Email:SmtpServer boş/null. Railway env varlarını kontrol et (Email__SmtpServer).");
-
-            if (string.IsNullOrWhiteSpace(senderEmail))
-                throw new InvalidOperationException("Email:SenderEmail boş/null.");
-
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-                throw new InvalidOperationException("Email:Username/Email:Password boş/null.");
-
-            var smtpPort = int.TryParse(smtpPortRaw, out var p) ? p : 587;
-
-            // 🔥 Railway’de pending kalmasın diye kritik:
-            const int timeoutMs = 10000; // 10 sn
-
-            _logger.LogInformation("SMTP send starting. Server={Server} Port={Port} User={User} To={To}",
-                smtpServer, smtpPort, username, to);
-
-            try
+            var payload = new
             {
-                using var client = new SmtpClient(smtpServer, smtpPort)
-                {
-                    EnableSsl = true,
-                    Credentials = new NetworkCredential(username, password),
-                    Timeout = timeoutMs,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false
-                };
+                sender = new { email = senderEmail, name = senderName },
+                to = new[] { new { email = to } },
+                subject = subject,
+                htmlContent = htmlBody
+            };
 
-                using var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(senderEmail, senderName),
-                    Subject = subject,
-                    Body = htmlBody,
-                    IsBodyHtml = true
-                };
-                mailMessage.To.Add(to);
+            var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://api.brevo.com/v3/smtp/email"
+            );
 
-                // SendMailAsync bazen Timeout’u tam uygulamıyor; garanti olsun diye Task.WhenAny ile sarıyoruz:
-                var sendTask = client.SendMailAsync(mailMessage);
-                var completed = await Task.WhenAny(sendTask, Task.Delay(timeoutMs));
+            request.Headers.Add("api-key", apiKey);
+            request.Headers.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json")
+            );
 
-                if (completed != sendTask)
-                    throw new TimeoutException($"SMTP gönderimi {timeoutMs}ms içinde tamamlanmadı (Server={smtpServer}, Port={smtpPort}).");
+            request.Content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json"
+            );
 
-                await sendTask;
+            var response = await _http.SendAsync(request);
 
-                _logger.LogInformation("E-posta başarıyla gönderildi: {To}", to);
-            }
-            catch (Exception ex)
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError(ex, "E-posta gönderilirken hata oluştu: {To} (Server={Server}, Port={Port})",
-                    to, smtpServer, smtpPort);
-                throw;
+                var error = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Brevo mail error: {error}");
             }
         }
     }
