@@ -306,32 +306,35 @@ namespace StoreApp.Controllers
                 return RedirectToAction("ForgotPassword");
             }
 
-            var model = new ResetPasswordModel
-            {
-                Email = email,
-                Token = token
-            };
+            ViewBag.Email = email;
+            ViewBag.Token = token;
 
-            return View(model);
+            return View();
         }
 
         // Şifre Sıfırlama İşlemi
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
-        public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
+        public async Task<IActionResult> ResetPassword(
+    [FromForm] string email,
+    [FromForm] string token,
+    [FromForm] ResetPasswordDto model)
         {
             if (!ModelState.IsValid)
+            {
+                ViewBag.Email = email;
+                ViewBag.Token = token;
                 return View(model);
+            }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
-                // Güvenlik: Kullanıcı bulunamasa bile başarılı sayfasına yönlendir
                 return RedirectToAction("ResetPasswordConfirmation");
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            var result = await _userManager.ResetPasswordAsync(user, token, model.Password);
 
             if (result.Succeeded)
             {
@@ -343,6 +346,8 @@ namespace StoreApp.Controllers
                 ModelState.AddModelError("", error.Description);
             }
 
+            ViewBag.Email = email;
+            ViewBag.Token = token;
             return View(model);
         }
 
