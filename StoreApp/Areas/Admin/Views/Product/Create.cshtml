@@ -49,7 +49,10 @@
     <!-- ✅ ANA FOTOĞRAF -->
     <div class="form-group my-3">
         <label class="fw-bold">Ana Fotoğraf <span class="text-danger">*</span></label>
-        <input name="file" type="file" class="form-control" accept="image/*" required />
+        <input name="file" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" required />
+        <small class="text-muted">
+    Maksimum 5 MB. JPG, JPEG, PNG veya WEBP formatı.
+</small>
         <div class="mt-2">
   <img id="mainPreviewImg" src="#" alt="" class="d-none" style="width:160px;height:160px;object-fit:cover;border-radius:8px;">
 </div>
@@ -64,7 +67,10 @@
 
   <!-- Dosya seçme butonu -->
   <div class="file-upload-wrapper mb-3">
-    <input name="additionalImages" type="file" class="form-control d-none" id="additionalImagesInput" accept="image/*" multiple />
+    <input name="additionalImages" type="file" class="form-control d-none" id="additionalImagesInput" accept=".jpg,.jpeg,.png,.webp" multiple />
+    <small class="text-muted">
+    Maksimum 5 MB. JPG, JPEG, PNG veya WEBP formatı.
+</small>
     <button type="button" class="btn btn-outline-primary" id="selectAdditionalBtn">
       <i class="fa fa-images me-2"></i>Fotoğraf Seç
     </button>

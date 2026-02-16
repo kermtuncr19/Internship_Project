@@ -10,12 +10,12 @@
                     <div class="col-12 d-flex align-items-center gap-3">
                         <div>
                             <img src="@(string.IsNullOrWhiteSpace(Model?.AvatarUrl) ? "/images/placeholder.png" : Model.AvatarUrl)"
-                                alt="Avatar" width="80" height="80" class="rounded-circle object-fit-cover" />
+                                 alt="Avatar" width="80" height="80" class="rounded-circle object-fit-cover" />
                         </div>
                         <div class="flex-grow-1">
                             <label class="form-label">Profil Fotoğrafı</label>
-                            <input type="file" name="avatar" accept="image/*" class="form-control" />
-                            <div class="form-text">JPG/PNG önerilir. Maks. birkaç MB.</div>
+                            <input type="file" name="avatar" accept=".jpg,.jpeg,.png,.webp" class="form-control" />
+                            <div class="form-text">JPG/JPEG/PNG/WEBP. Maks. 2 MB.</div>
                         </div>
                     </div>
 

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Services.Contracts;
 using Repositories.Extensions;
 using Microsoft.EntityFrameworkCore;
+using StoreApp.Infrastructure.Extensions;
 
 namespace StoreApp.Areas.Admin.Controllers
 {
@@ -104,6 +105,15 @@ namespace StoreApp.Areas.Admin.Controllers
                 return View(productDto);
             }
 
+            // ✅ Boyut + uzantı kontrolü
+            if (!file.IsValidImage(5, out var mainImageError))
+            {
+                ModelState.AddModelError("file", mainImageError);
+                ViewBag.Categories = GetCategoriesSelectList();
+                return View(productDto);
+            }
+
+
             // ✅ 2) Ana fotoğrafı bucket'a yükle
             var (_, mainPublicUrl) = await _storage.UploadAsync(file, "images");
             productDto.ImageUrl = mainPublicUrl;
@@ -128,21 +138,30 @@ namespace StoreApp.Areas.Admin.Controllers
 
                 foreach (var additionalImage in additionalImages)
                 {
-                    if (additionalImage.Length > 0)
+                    if (additionalImage == null || additionalImage.Length == 0)
+                        continue;
+
+                    if (!additionalImage.IsValidImage(5, out var additionalImageError))
                     {
-                        var (_, publicUrl) = await _storage.UploadAsync(additionalImage, "images");
-
-                        var productImage = new ProductImage
-                        {
-                            ProductId = product.ProductId,
-                            ImageUrl = publicUrl,
-                            DisplayOrder = order++,
-                            IsMain = false
-                        };
-
-                        _manager.ProductImageService.CreateProductImage(productImage);
+                        ModelState.AddModelError("additionalImages", additionalImageError);
+                        ViewBag.Categories = GetCategoriesSelectList();
+                        return View(productDto);
                     }
+
+
+                    var (_, publicUrl) = await _storage.UploadAsync(additionalImage, "images");
+
+                    var productImage = new ProductImage
+                    {
+                        ProductId = product.ProductId,
+                        ImageUrl = publicUrl,
+                        DisplayOrder = order++,
+                        IsMain = false
+                    };
+
+                    _manager.ProductImageService.CreateProductImage(productImage);
                 }
+
             }
 
             TempData["success"] = $"{productDto.ProductName} isimli ürün başarıyla oluşturuldu.";
@@ -162,7 +181,8 @@ namespace StoreApp.Areas.Admin.Controllers
                 .FirstOrDefault(p => p.ProductId == id)?
                 .Images
                 .OrderBy(i => i.DisplayOrder)
-                .Select(i => new {
+                .Select(i => new
+                {
                     i.ProductImageId,
                     i.ImageUrl,
                     i.DisplayOrder,
@@ -187,6 +207,13 @@ namespace StoreApp.Areas.Admin.Controllers
                 // ✅ 1) Ana fotoğraf güncelleme (sadece yeni dosya yüklenmişse)
                 if (file != null && file.Length > 0)
                 {
+                    if (!file.IsValidImage(5, out var updateMainError))
+                    {
+                        ModelState.AddModelError("file", updateMainError);
+                        ViewBag.Categories = GetCategoriesSelectList();
+                        return View(productDto);
+                    }
+
                     var (_, publicUrl) = await _storage.UploadAsync(file, "images");
                     productDto.ImageUrl = publicUrl;
                 }
@@ -207,21 +234,29 @@ namespace StoreApp.Areas.Admin.Controllers
 
                         foreach (var newImage in newImages)
                         {
-                            if (newImage.Length > 0)
+                            if (newImage == null || newImage.Length == 0)
+                                continue;
+
+                            if (!newImage.IsValidImage(5, out var updateAdditionalError))
                             {
-                                var (_, publicUrl) = await _storage.UploadAsync(newImage, "images");
-
-                                var productImage = new ProductImage
-                                {
-                                    ProductId = productDto.ProductId,
-                                    ImageUrl = publicUrl,
-                                    DisplayOrder = ++currentMaxOrder,
-                                    IsMain = !product.Images.Any()
-                                };
-
-                                _manager.ProductImageService.CreateProductImage(productImage);
+                                ModelState.AddModelError("newImages", updateAdditionalError);
+                                ViewBag.Categories = GetCategoriesSelectList();
+                                return View(productDto);
                             }
+
+                            var (_, publicUrl) = await _storage.UploadAsync(newImage, "images");
+
+                            var productImage = new ProductImage
+                            {
+                                ProductId = productDto.ProductId,
+                                ImageUrl = publicUrl,
+                                DisplayOrder = ++currentMaxOrder,
+                                IsMain = !product.Images.Any()
+                            };
+
+                            _manager.ProductImageService.CreateProductImage(productImage);
                         }
+
                     }
                 }
 

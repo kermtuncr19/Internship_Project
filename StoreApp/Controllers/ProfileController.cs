@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Repositories;
 using StoreApp.Models;
 using Services.Contracts;
+using StoreApp.Infrastructure.Extensions;
+
 
 namespace StoreApp.Controllers
 {
@@ -99,6 +101,13 @@ namespace StoreApp.Controllers
             // ✅ Avatarı bucket'a yükle (wwwroot'a yazma yok)
             if (avatar != null && avatar.Length > 0)
             {
+
+                if (!avatar.IsValidImage(2, out var avatarError))
+                {
+                    ModelState.AddModelError("avatar", avatarError);
+                    return View(formModel);
+                }
+
                 // images/avatars altına atsın
                 var (_, publicUrl) = await _storage.UploadAsync(avatar, "images/avatars");
                 entity.AvatarUrl = publicUrl;
