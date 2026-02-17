@@ -27,7 +27,7 @@ namespace StoreApp.Controllers
         public async Task<IActionResult> Index(ProductRequestParameters p)
         {
             ViewData["Title"] = "Ürünler";
-            
+
             if (!p.IsValidPrice)
             {
                 TempData["PriceError"] = "Maksimum fiyat, minimum fiyattan küçük olamaz.";
@@ -42,11 +42,11 @@ namespace StoreApp.Controllers
             if (!string.IsNullOrWhiteSpace(p.SearchTerm))
             {
                 var normalizedSearch = p.SearchTerm.Trim().ToLower();
-                
+
                 // Türkçe karakterleri normalize et
                 var turkishChars = "çğıöşüÇĞİÖŞÜ";
                 var latinChars = "cgiosuCGIOSU";
-                
+
                 for (int i = 0; i < turkishChars.Length; i++)
                 {
                     normalizedSearch = normalizedSearch.Replace(turkishChars[i], latinChars[i]);
@@ -54,7 +54,7 @@ namespace StoreApp.Controllers
 
                 // Kategori adında ara
                 var categories = _manager.CategoryService.GetAllCategories(false);
-                var categoryMatch = categories.FirstOrDefault(c => 
+                var categoryMatch = categories.FirstOrDefault(c =>
                 {
                     var categoryName = c.CategoryName.ToLower();
                     // Türkçe karakterleri normalize et
@@ -178,6 +178,23 @@ namespace StoreApp.Controllers
             }
 
             ViewData["Title"] = model?.ProductName;
+
+            // ✅ Soru-Cevap: sadece cevaplanmışları getir
+            var answeredQa = await _manager.ProductQaService.GetAnsweredByProductAsync(id);
+            ViewBag.AnsweredQuestions = answeredQa;
+
+            // ✅ Soru soran + admin adları için profilleri çek (opsiyonel ama öneririm)
+            var qaUserIds = answeredQa
+                .SelectMany(q => new[] { q.UserId, q.Answer!.AdminUserId })
+                .Distinct()
+                .ToList();
+
+            var qaProfiles = await _db.UserProfiles
+                .Where(p => qaUserIds.Contains(p.UserId))
+                .ToDictionaryAsync(p => p.UserId, p => p.FullName ?? "Kullanıcı");
+
+            ViewBag.QaUserProfiles = qaProfiles;
+
 
             if (User.Identity?.IsAuthenticated == true)
             {

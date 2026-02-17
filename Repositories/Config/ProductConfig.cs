@@ -21,12 +21,18 @@ namespace Repositories.Config
                 .WithOne(s => s.Product)
                 .HasForeignKey(s => s.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
+            builder.HasMany(p => p.Questions)
+                .WithOne(q => q.Product)
+                .HasForeignKey(q => q.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
             builder
             .HasOne(p => p.Category)
             .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId)
-            .OnDelete(DeleteBehavior.Restrict); 
+            .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasData(
                 new Product() { ProductId = 1, CategoryId = 1, ImageUrl = "/images/forma3.jpg", ProductName = "Fenerbahçe 2025/26 Lacivert Forma", Price = 4249, ShowCase = true },

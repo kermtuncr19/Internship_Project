@@ -17,7 +17,7 @@ namespace StoreApp.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -324,6 +324,41 @@ namespace StoreApp.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductAnswer", b =>
+                {
+                    b.Property<int>("ProductAnswerId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProductAnswerId"));
+
+                    b.Property<string>("AdminUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("ProductQuestionId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProductAnswerId");
+
+                    b.HasIndex("AdminUserId");
+
+                    b.HasIndex("ProductQuestionId")
+                        .IsUnique();
+
+                    b.ToTable("ProductAnswers");
+                });
+
             modelBuilder.Entity("Entities.Models.ProductImage", b =>
                 {
                     b.Property<int>("ProductImageId")
@@ -429,6 +464,42 @@ namespace StoreApp.Migrations
                             IsMain = true,
                             ProductId = 9
                         });
+                });
+
+            modelBuilder.Entity("Entities.Models.ProductQuestion", b =>
+                {
+                    b.Property<int>("ProductQuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProductQuestionId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ProductQuestionId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ProductQuestions");
                 });
 
             modelBuilder.Entity("Entities.Models.ProductStock", b =>
@@ -963,6 +1034,25 @@ namespace StoreApp.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Entities.Models.ProductAnswer", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Entities.Models.ProductQuestion", "Question")
+                        .WithOne("Answer")
+                        .HasForeignKey("Entities.Models.ProductAnswer", "ProductQuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AdminUser");
+
+                    b.Navigation("Question");
+                });
+
             modelBuilder.Entity("Entities.Models.ProductImage", b =>
                 {
                     b.HasOne("Entities.Models.Product", "Product")
@@ -972,6 +1062,25 @@ namespace StoreApp.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Entities.Models.ProductQuestion", b =>
+                {
+                    b.HasOne("Entities.Models.Product", "Product")
+                        .WithMany("Questions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Entities.Models.ProductStock", b =>
@@ -1150,9 +1259,16 @@ namespace StoreApp.Migrations
                 {
                     b.Navigation("Images");
 
+                    b.Navigation("Questions");
+
                     b.Navigation("Reviews");
 
                     b.Navigation("Stocks");
+                });
+
+            modelBuilder.Entity("Entities.Models.ProductQuestion", b =>
+                {
+                    b.Navigation("Answer");
                 });
 
             modelBuilder.Entity("Entities.Models.ReturnRequest", b =>

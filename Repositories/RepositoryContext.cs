@@ -21,6 +21,10 @@ namespace Repositories
         public DbSet<ReturnRequestLine> ReturnRequestLines { get; set; }
         public DbSet<ProductStock> ProductStocks { get; set; }
 
+        public DbSet<ProductQuestion> ProductQuestions { get; set; }
+        public DbSet<ProductAnswer> ProductAnswers { get; set; }
+
+
         public RepositoryContext(DbContextOptions<RepositoryContext> options) : base(options) //RepositoryContext ten nesne üretmek isteyen DbContextOptions ile gelcek ve biz de onu base e göndereceğiz yani DbContext e.
         {
 

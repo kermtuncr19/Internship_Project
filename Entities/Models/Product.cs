@@ -65,4 +65,7 @@ public class Product
         var stock = Stocks?.FirstOrDefault(s => s.Size == size);
         return stock?.Quantity ?? 0;
     }
+
+    public ICollection<ProductQuestion> Questions { get; set; } = new List<ProductQuestion>();
+
 }

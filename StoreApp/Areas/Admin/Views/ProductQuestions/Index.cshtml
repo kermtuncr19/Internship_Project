@@ -1,0 +1,50 @@
+@model List<Entities.Models.ProductQuestion>
+
+@{
+    ViewData["Title"] = "Ürün Soruları";
+}
+
+<h3 class="mb-3">Cevap Bekleyen Sorular</h3>
+
+@if (TempData["success"] is string ok) { <div class="alert alert-success">@ok</div> }
+@if (TempData["Danger"] is string er) { <div class="alert alert-danger">@er</div> }
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">Bekleyen soru yok.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Ürün</th>
+                    <th>Soran</th>
+                    <th>Soru</th>
+                    <th>Tarih</th>
+                    <th style="width:35%;">Cevap</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var q in Model)
+            {
+                <tr>
+                    <td>@q.Product?.ProductName</td>
+                    <td>@(q.User?.Email ?? q.UserId)</td>
+                    <td style="white-space:pre-line;">@q.QuestionText</td>
+                    <td>@q.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        <form asp-action="Answer" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="questionId" value="@q.ProductQuestionId" />
+                            <textarea class="form-control mb-2" name="answerText" rows="3" maxlength="2000" required></textarea>
+                            <button class="btn btn-primary btn-sm" type="submit">Cevapla</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

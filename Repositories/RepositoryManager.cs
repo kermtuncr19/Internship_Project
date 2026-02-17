@@ -15,11 +15,14 @@ namespace Repositories
         private readonly IProductImageRepository _productImageRepository;
         private readonly IReturnRequestRepository _returnRequest;
         private readonly IProductStockRepository _productStockRepository;
+        private readonly IProductQuestionRepository _productQuestionRepository;
+        private readonly IProductAnswerRepository _productAnswerRepository;
+
 
 
         public RepositoryManager(IProductRepository productRepository, RepositoryContext context, ICategoryRepository categoryReposiitory, IOrderRepository orderRepository, IUserProfileRepository userProfile,
         IUserAddressRepository userAddress,
-        IFavoriteRepository favorite, IProductImageRepository productImageRepository, IReturnRequestRepository returnRequest, IProductStockRepository productStockRepository)
+        IFavoriteRepository favorite, IProductImageRepository productImageRepository, IReturnRequestRepository returnRequest, IProductStockRepository productStockRepository, IProductQuestionRepository productQuestionRepository, IProductAnswerRepository productAnswerRepository)
         {
             _productRepository = productRepository;
             _context = context;
@@ -31,6 +34,8 @@ namespace Repositories
             _productImageRepository = productImageRepository;
             _returnRequest = returnRequest;
             _productStockRepository = productStockRepository;
+            _productQuestionRepository = productQuestionRepository;
+            _productAnswerRepository = productAnswerRepository;
         }
 
         public IProductRepository Product => _productRepository;
@@ -49,6 +54,10 @@ namespace Repositories
 
         public IReturnRequestRepository ReturnRequest => _returnRequest;
         public IProductStockRepository ProductStock => _productStockRepository;
+
+        public IProductQuestionRepository QuestionRepository => _productQuestionRepository;
+
+        public IProductAnswerRepository AnswerRepository => _productAnswerRepository;
 
         public void Save()
         {

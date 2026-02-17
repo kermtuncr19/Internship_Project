@@ -15,9 +15,11 @@ namespace Services
         private readonly IProductImageService _productImageService;
         private readonly IProductStockService _productStockService;
         private readonly IEmailService _emailService;
+        private readonly IProductQaService _productQaService;
 
 
-        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService, IProductImageService productImageService, IProductStockService productStockService, IEmailService emailService)
+
+        public ServiceManager(IProductService productService, ICategoryService categoryService, IOrderService orderService, IAuthService authService, IProfileService profileService, IFavoriteService favoriteService, IAddressService addressService, IProductImageService productImageService, IProductStockService productStockService, IEmailService emailService, IProductQaService productQaService)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -29,6 +31,7 @@ namespace Services
             _productImageService = productImageService;
             _productStockService = productStockService;
             _emailService = emailService;
+            _productQaService = productQaService;
         }
 
         public IProductService PoductService => _productService;
@@ -50,5 +53,7 @@ namespace Services
         public IProductStockService ProductStockService => _productStockService;
 
         public IEmailService EmailService => _emailService;
+
+        public IProductQaService ProductQaService => _productQaService;
     }
 }

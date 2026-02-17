@@ -108,6 +108,8 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
             services.AddScoped<IProductStockRepository, ProductStockRepository>();
+            services.AddScoped<IProductQuestionRepository,ProductQuestionRepository>();
+            services.AddScoped<IProductAnswerRepository, ProductAnswerRepository>();
         }
 
         public static void ConfigureServiceRegistration(this IServiceCollection services)
@@ -123,18 +125,38 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IProductImageService, ProductImageManager>();
             services.AddScoped<IReturnRequestService, ReturnRequestManager>();
             services.AddScoped<IProductStockService, ProductStockManager>();
-            services.AddScoped<IEmailService, EmailService>();  // ✅ Bu zaten var, harika!
-            services.AddSingleton(new RailwayBucketOptions
-            {
-                Bucket = Environment.GetEnvironmentVariable("BUCKET")!,
-                AccessKeyId = Environment.GetEnvironmentVariable("ACCESS_KEY_ID")!,
-                SecretAccessKey = Environment.GetEnvironmentVariable("SECRET_ACCESS_KEY")!,
-                Endpoint = Environment.GetEnvironmentVariable("ENDPOINT")!,
-                Region = Environment.GetEnvironmentVariable("REGION") ?? "auto",
-                ImgProxyBaseUrl = Environment.GetEnvironmentVariable("IMGPROXY_BASE_URL")!
-            });
+            services.AddScoped<IEmailService, EmailService>
+            ();  // ✅ Bu zaten var, harika!
+            services.AddScoped<IProductQaService, ProductQaManager>();
+            var hasBucketConfig =
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BUCKET")) &&
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ACCESS_KEY_ID")) &&
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SECRET_ACCESS_KEY")) &&
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ENDPOINT")) &&
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("IMGPROXY_BASE_URL"));
 
-            services.AddSingleton<IStorageService, BucketStorageService>();
+            if (hasBucketConfig)
+            {
+                services.AddSingleton(new RailwayBucketOptions
+                {
+                    Bucket = Environment.GetEnvironmentVariable("BUCKET")!,
+                    AccessKeyId = Environment.GetEnvironmentVariable("ACCESS_KEY_ID")!,
+                    SecretAccessKey = Environment.GetEnvironmentVariable("SECRET_ACCESS_KEY")!,
+                    Endpoint = Environment.GetEnvironmentVariable("ENDPOINT")!,
+                    Region = Environment.GetEnvironmentVariable("REGION") ?? "auto",
+                    ImgProxyBaseUrl = Environment.GetEnvironmentVariable("IMGPROXY_BASE_URL")!
+                });
+
+                services.AddSingleton<IStorageService, BucketStorageService>();
+            }
+            else
+            {
+                // Local geliştirme: wwwroot'a yazar
+                services.AddScoped<IStorageService, DiskStorageService>();
+            }
+
+
+
         }
 
         public static void ConfigureApplicationCookie(this IServiceCollection services)

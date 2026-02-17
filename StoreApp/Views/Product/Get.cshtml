@@ -1,5 +1,6 @@
 @model Product
 @using Microsoft.AspNetCore.Identity
+@using Entities.Models
 @inject UserManager<IdentityUser> UserManager
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/get.css" asp-append-version="true" />
@@ -58,6 +59,11 @@
     {
         starCounts[s] = approvedReviews.Count(rv => rv.Rating == s);
     }
+
+    // ✅ Q/A verileri (controller ViewBag'den geliyor)
+    var answeredQuestions = ViewBag.AnsweredQuestions as List<ProductQuestion> ?? new List<ProductQuestion>();
+    var qaProfiles = ViewBag.QaUserProfiles as Dictionary<string, string>;
+
 }
 
 
@@ -87,8 +93,8 @@
 
                     <div id="imageWrapper" class="image-zoom-wrapper">
                         <img id="mainImage" class="img-fluid rounded shadow-sm w-100" src="@mainImageUrl"
-                            alt="@Model.ProductName"
-                            style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
+                             alt="@Model.ProductName"
+                             style="max-height:560px; object-fit:contain; transition: opacity 0.3s;" />
                         <div id="zoomLens" class="zoom-lens"></div>
                     </div>
 
@@ -112,9 +118,9 @@
                         {
                             var img = images[i];
                             <img src="@img.ImageUrl" class="thumbnail @(i == 0 ? "active" : "")" alt="@Model.ProductName"
-                                data-index="@i"
-                                style="width:80px; height:80px; object-fit:cover; cursor:pointer;
-                                                                                        border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
+                                 data-index="@i"
+                                 style="width:80px; height:80px; object-fit:cover; cursor:pointer;
+                            border:2px solid transparent; border-radius:8px; transition: all 0.3s;" />
                         }
                     </div>
                 }
@@ -138,10 +144,10 @@
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="productId" value="@Model.ProductId" />
                             <button type="button" class="btn-favorite-modern js-fav-btn"
-                                data-url="@Url.Action("ToggleAjax", "Favorites")" data-id="@Model.ProductId"
-                                aria-pressed="@(isFavorite.ToString().ToLower())">
+                                    data-url="@Url.Action("ToggleAjax", "Favorites")" data-id="@Model.ProductId"
+                                    aria-pressed="@(isFavorite.ToString().ToLower())">
                                 <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart"
-                                    style="@(isFavorite ? "color:#dc3545;" : "color:#001f3f;")"></i>
+                                   style="@(isFavorite ? "color:#dc3545;" : "color:#001f3f;")"></i>
                             </button>
                         </form>
                     }
@@ -257,7 +263,7 @@
 
                                     <div class="size-chip-modern @(isOutOfStock ? "size-out-of-stock" : "")">
                                         <input type="radio" id="@id" name="size" value="@s" @(isOutOfStock ? "disabled" : "")
-                                            data-stock="@stock" />
+                                               data-stock="@stock" />
                                         <label for="@id" class="size-btn-modern">
                                             @s
                                             @if (isOutOfStock)
@@ -303,7 +309,7 @@
 
                     <div class="mb-3">
                         <button id="addToCartBtn" type="submit" class="btn-add-cart-modern w-100" @(Model.RequiresSize
-                                                                                                                              || isCompletelyOutOfStock ? "disabled" : null)>
+                                                                                                                                                                                                                                                            || isCompletelyOutOfStock ? "disabled" : null)>
                             @if (isCompletelyOutOfStock)
                             {
                                 <i class="fa fa-times-circle me-2"></i>
@@ -341,20 +347,20 @@
                 <ul class="nav product-tabs-modern" id="productTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details"
-                            type="button" role="tab">
+                                type="button" role="tab">
                             <i class="fa fa-info-circle me-2"></i>Detaylar
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
-                            type="button" role="tab">
+                                type="button" role="tab">
                             <i class="fa fa-star me-2"></i>Yorumlar
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="discussion-tab" data-bs-toggle="tab" data-bs-target="#discussion"
-                            type="button" role="tab">
-                            <i class="fa fa-comments me-2"></i>Tartışma
+                                type="button" role="tab">
+                            <i class="fa fa-comments me-2"></i>Satıcıya Sor
                         </button>
                     </li>
                 </ul>
@@ -424,7 +430,7 @@
                                             <div class="flex-grow-1 mx-3">
                                                 <div class="progress-modern">
                                                     <div class="progress-bar-modern" role="progressbar"
-                                                        style="width:@percent.ToString("0")%"></div>
+                                                         style="width:@percent.ToString("0")%"></div>
                                                 </div>
                                             </div>
                                             <div class="fw-semibold" style="width:2.5rem; text-align:right; color: #001f3f;">
@@ -457,7 +463,7 @@
                                                     @for (int i = 1; i <= 5; i++)
                                                     {
                                                         <i class="fa fa-star"
-                                                            style="color: @(i <= review.Rating ? "#ffc107" : "#ddd");"></i>
+                                                           style="color: @(i <= review.Rating ? "#ffc107" : "#ddd");"></i>
                                                     }
                                                 </div>
                                             </div>
@@ -466,302 +472,435 @@
                                             {
                                                 <p class="mb-0 text-muted" style="white-space: pre-line; line-height: 1.7;">
                                                     @review.Comment</p>
-                                            }
+                                                }
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
-                        </div>
-                    }
+                                }
+                            </div>
+                        }
                     else
-                    {
-                        <div class="info-card-modern text-center py-5">
-                            <i class="fa fa-star-o fa-4x mb-4" style="color: #ddd;"></i>
-                            <h5 class="fw-bold mb-2" style="color: #001f3f;">Henüz değerlendirme yok</h5>
-                            <p class="text-muted">Bu ürün için ilk değerlendirmeyi siz yapın!</p>
-                        </div>
-                    }
-                </div>
+                        {
+                            <div class="info-card-modern text-center py-5">
+                                <i class="fa fa-star-o fa-4x mb-4" style="color: #ddd;"></i>
+                                <h5 class="fw-bold mb-2" style="color: #001f3f;">Henüz değerlendirme yok</h5>
+                                <p class="text-muted">Bu ürün için ilk değerlendirmeyi siz yapın!</p>
+                            </div>
+                        }
+                    </div>
 
-                <!-- Tartışma -->
-                <div class="tab-pane fade" id="discussion" role="tabpanel">
-                    <div class="info-card-modern text-center py-5">
-                        <i class="fa fa-comments fa-4x mb-4" style="color: #ddd;"></i>
-                        <h5 class="fw-bold mb-2" style="color: #001f3f;">Tartışma Bölümü</h5>
-                        <p class="text-muted">Bu özellik yakında eklenecek.</p>
+                    <!-- Satıcıya Sor -->
+                    <div class="tab-pane fade" id="discussion" role="tabpanel">
+                        <div class="info-card-modern animate-fade-in-up">
+
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1" style="color:#001f3f;">Soru & Cevap</h5>
+                                    <div class="text-muted small">Sadece satıcı tarafından cevaplanan sorular burada
+                                        görünür.</div>
+                                    </div>
+                                    <i class="fa fa-comments" style="font-size:1.8rem; color:#001f3f; opacity:.25;"></i>
+                                </div>
+
+                                @* Kullanıcıya mesajlar *@
+                                @if (TempData["QaSuccess"] is string qOk && !string.IsNullOrWhiteSpace(qOk))
+                                {
+                                    <div class="alert alert-success">@qOk</div>
+                                }
+                                @if (TempData["QaError"] is string qEr && !string.IsNullOrWhiteSpace(qEr))
+                                {
+                                    <div class="alert alert-danger">@qEr</div>
+                                }
+
+                                @* Cevaplanmış soru listesi *@
+                                @if (answeredQuestions.Count == 0)
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fa fa-comment-dots" style="font-size:3rem; color:#ddd;"></i>
+                                        <div class="mt-3 fw-semibold" style="color:#001f3f;">Henüz cevaplanmış soru yok</div>
+                                        <div class="text-muted">İlk soruyu sen sorabilirsin.</div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="reviews-list">
+                                        @foreach (var q in answeredQuestions)
+                                        {
+                                            // Soran adı
+                                            var askerName =
+                                                (qaProfiles != null && qaProfiles.ContainsKey(q.UserId)) ? qaProfiles[q.UserId] :
+                                                (q.User?.Email?.Split('@').FirstOrDefault() ?? "Kullanıcı");
+
+                                            // Admin adı
+                                            var adminName =
+                                                (q.Answer != null && qaProfiles != null && qaProfiles.ContainsKey(q.Answer.AdminUserId)) ?
+                                                    qaProfiles[q.Answer.AdminUserId] :
+                                                (q.Answer?.AdminUser?.Email?.Split('@').FirstOrDefault() ?? "Admin");
+
+                                            <div class="review-card-modern animate-fade-in-up">
+                                                <div class="d-flex gap-3">
+                                                    <div class="review-avatar">
+                                                        @(askerName.Length > 0 ? askerName.Substring(0,1).ToUpper() : "K")
+                                                    </div>
+
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                                            <div>
+                                                                <div class="fw-bold" style="color:#001f3f;">@askerName sordu</div>
+                                                                <div class="small text-muted">@q.CreatedAt.ToLocalTime().ToString("dd                 MMMM yyyy")</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <p class="mb-0 text-muted" style="white-space:pre-line; line-height:1.7;">
+                                                            @q.QuestionText
+                                                        </p>
+
+                                                        <hr class="my-3" />
+
+                                                        <div class="d-flex gap-3">
+                                                            <div class="review-avatar" style="background:#001f3f; color:#fff;">
+                                                                @(adminName.Length > 0 ? adminName.Substring(0,1).ToUpper() : "A")
+                                                            </div>
+
+                                                            <div class="flex-grow-1">
+                                                                <div class="fw-bold" style="color:#001f3f;">Admin tarafından cevaplandı</div>
+                                                                <div class="small text-muted mb-2">
+                                                                    @q.Answer!.CreatedAt.ToLocalTime().ToString("dd MMMM yyyy")
+                                                                </div>
+
+                                                                <p class="mb-0 text-muted"
+                                                                       style="white-space:pre-line; line-height:1.7;">
+                                                                    @q.Answer!.AnswerText
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <hr class="my-4" />
+
+                                @* Soru sorma alanı *@
+                                <h6 class="fw-bold mb-2" style="color:#001f3f;">Satıcıya soru sor</h6>
+                                <div class="text-muted small mb-3">
+                                    Sorunuz satıcı tarafından cevaplandığında bu sayfada görünecektir.
+                                </div>
+
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form method="post" asp-controller="ProductQuestions" asp-action="Create">
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden" name="productId" value="@Model.ProductId" />
+                                        <input type="hidden" name="returnUrl" value="@($"{Context.Request.Path}#discussion")" />
+
+                                        <textarea name="questionText"            class="form-control mb-3"   rows="3"            maxlength="1000"                      required
+                                                  placeholder="Örn: Bu ürün kalıbı dar mı? Kumaşı nasıl?"></textarea>
+
+                                        <button class="btn btn-primary">
+                                            <i class="fa fa-paper-plane me-2"></i> Soruyu Gönder
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    @* Login'e yönlendirme (returnUrl ile aynı sekmeye döner) *@
+                                    var returnUrl = $"{Context.Request.Path}#discussion";
+                                    <a class="btn btn-primary"
+                                           href="/Identity/Account/Login?returnUrl=@Uri.EscapeDataString(returnUrl)">
+                                        <i class="fa fa-sign-in-alt me-2"></i> Soru sormak için giriş yap
+                                    </a>
+
+                                    <div class="text-muted small mt-2">
+                                        Giriş yaptıktan sonra bu sekmeye geri yönlendirileceksiniz.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-@await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
+        @await Component.InvokeAsync("RelatedProducts", new { productId = Model.ProductId, categoryId = Model.CategoryId })
 
-@section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const mainImage = document.getElementById('mainImage');
-            const thumbnails = document.querySelectorAll('.thumbnail');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const imageWrapper = document.getElementById('imageWrapper');
-            const zoomLens = document.getElementById('zoomLens');
-            const zoomResult = document.getElementById('zoomResult');
+        @section Scripts {
+            <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const mainImage = document.getElementById('mainImage');
+                        const thumbnails = document.querySelectorAll('.thumbnail');
+                        const prevBtn = document.getElementById('prevBtn');
+                        const nextBtn = document.getElementById('nextBtn');
+                        const imageWrapper = document.getElementById('imageWrapper');
+                        const zoomLens = document.getElementById('zoomLens');
+                        const zoomResult = document.getElementById('zoomResult');
 
-            if (!mainImage) return;
+                        if (!mainImage) return;
 
-            let currentIndex = 0;
-            const totalImages = thumbnails.length;
-            let isZoomActive = false;
+                        let currentIndex = 0;
+                        const totalImages = thumbnails.length;
+                        let isZoomActive = false;
 
-            imageWrapper.addEventListener('click', function (e) {
-                if (e.target.closest('.gallery-nav-btn')) return;
-                isZoomActive = !isZoomActive;
-                if (isZoomActive) {
-                    imageWrapper.classList.add('zoom-active');
-                    initZoom();
-                } else {
-                    imageWrapper.classList.remove('zoom-active');
-                    removeZoomListeners();
+                        imageWrapper.addEventListener('click', function (e) {
+                            if (e.target.closest('.gallery-nav-btn')) return;
+                            isZoomActive = !isZoomActive;
+                            if (isZoomActive) {
+                                imageWrapper.classList.add('zoom-active');
+                                initZoom();
+                            } else {
+                                imageWrapper.classList.remove('zoom-active');
+                                removeZoomListeners();
+                            }
+                        });
+
+                        let moveHandler = null;
+
+                        function initZoom() {
+                            let cx = zoomResult.offsetWidth / zoomLens.offsetWidth;
+                            let cy = zoomResult.offsetHeight / zoomLens.offsetHeight;
+                            zoomResult.style.backgroundImage = "url('" + mainImage.src + "')";
+                            zoomResult.style.backgroundSize = (mainImage.width * cx) + "px " + (mainImage.height * cy) + "px";
+
+                            moveHandler = function (e) {
+                                moveLens(e);
+                            };
+                            imageWrapper.addEventListener('mousemove', moveHandler);
+
+                            function moveLens(e) {
+                                e.preventDefault();
+                                let pos = getCursorPos(e);
+                                let x = pos.x - (zoomLens.offsetWidth / 2);
+                                let y = pos.y - (zoomLens.offsetHeight / 2);
+
+                                if (x > imageWrapper.offsetWidth - zoomLens.offsetWidth) {
+                                    x = imageWrapper.offsetWidth - zoomLens.offsetWidth;
+                                }
+                                if (x < 0) { x = 0; }
+                                if (y > imageWrapper.offsetHeight - zoomLens.offsetHeight) {
+                                    y = imageWrapper.offsetHeight - zoomLens.offsetHeight;
+                                }
+                                if (y < 0) { y = 0; }
+
+                                zoomLens.style.left = x + "px";
+                                zoomLens.style.top = y + "px";
+                                zoomResult.style.backgroundPosition = "-" + (x * cx) + "px -" + (y * cy) + "px";
+                            }
+
+                            function getCursorPos(e) {
+                                let a, x = 0, y = 0;
+                                e = e || window.event;
+                                a = imageWrapper.getBoundingClientRect();
+                                x = e.pageX - a.left;
+                                y = e.pageY - a.top;
+                                x = x - window.pageXOffset;
+                                y = y - window.pageYOffset;
+                                return { x: x, y: y };
+                            }
+                        }
+
+                        function removeZoomListeners() {
+                            if (moveHandler) {
+                                imageWrapper.removeEventListener('mousemove', moveHandler);
+                                moveHandler = null;
+                            }
+                        }
+
+                        function updateImage(index) {
+                            if (thumbnails.length === 0) return;
+                            isZoomActive = false;
+                            imageWrapper.classList.remove('zoom-active');
+                            removeZoomListeners();
+
+                            mainImage.style.opacity = '0';
+                            setTimeout(function () {
+                                mainImage.src = thumbnails[index].src;
+                                mainImage.style.opacity = '1';
+                                thumbnails.forEach(function (t) { t.classList.remove('active'); });
+                                thumbnails[index].classList.add('active');
+                                currentIndex = index;
+                            }, 150);
+                        }
+
+                        thumbnails.forEach(function (thumb, index) {
+                            thumb.addEventListener('click', function () { updateImage(index); });
+                        });
+
+                        if (prevBtn) {
+                            prevBtn.addEventListener('click', function () {
+                                const newIndex = (currentIndex - 1 + totalImages) % totalImages;
+                                updateImage(newIndex);
+                            });
+                        }
+
+                        if (nextBtn) {
+                            nextBtn.addEventListener('click', function () {
+                                const newIndex = (currentIndex + 1) % totalImages;
+                                updateImage(newIndex);
+                            });
+                        }
+
+                        document.addEventListener('keydown', function (e) {
+                            if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
+                            if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
+                        });
+
+                        const requires = @(Model.RequiresSize.ToString().ToLowerInvariant());
+                        const form = document.getElementById('addToCartForm');
+                        if (!form) return;
+
+                        const radios = form.querySelectorAll('input[name="size"]');
+                        const button = document.getElementById('addToCartBtn');
+
+                        if (requires && radios.length > 0) {
+                            function syncState() {
+                                const anyChecked = Array.from(radios).some(function (r) { return r.checked; });
+                                button.disabled = !anyChecked;
+                            }
+                            radios.forEach(function (r) { r.addEventListener('change', syncState); });
+                            syncState();
+                        }
+                    });
+
+                    // Favori toggle
+                    document.addEventListener('click', async function (e) {
+                        const btn = e.target.closest('.js-fav-btn');
+                        if (!btn) return;
+
+                        const form = btn.closest('.js-fav-form');
+                        const icon = btn.querySelector('.fav-icon');
+                        if (!form || !icon) return;
+
+                        const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+                        const token = tokenInput ? tokenInput.value : null;
+                        const url = btn.getAttribute('data-url');
+                        const productId = Number(btn.getAttribute('data-id') || 0);
+
+                        try {
+                            const res = await fetch(url, {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    ...(token ? { 'RequestVerificationToken': token } : {})
+                                },
+                                body: JSON.stringify({ ProductId: productId })
+                            });
+
+                            if (!res.ok) {
+                                console.error('Fav toggle HTTP error', res.status);
+                                return;
+                            }
+
+                            const ct = res.headers.get('content-type') || '';
+                            if (!ct.includes('application/json')) {
+                                window.location.reload();
+                                return;
+                            }
+
+                            const data = await res.json();
+                            if (data && data.isFavorite === true) {
+                                icon.classList.remove('fa-regular');
+                                icon.classList.add('fa-solid');
+                                icon.style.color = '#dc3545';
+                            } else if (data && data.isFavorite === false) {
+                                icon.classList.remove('fa-solid');
+                                icon.classList.add('fa-regular');
+                                icon.style.color = '#001f3f';
+                            }
+                        } catch (err) {
+                            console.error('Favorites toggle failed', err);
+                        }
+                    });
+            </script>
+
+            <script>
+                    // ✅ Beden seçildiğinde stok durumunu göster
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const sizeRadios = document.querySelectorAll('input[name="size"]');
+                        const sizeStockInfo = document.getElementById('sizeStockInfo');
+                        const lowStockWarning = document.getElementById('lowStockWarning');
+                        const stockCountSpan = document.getElementById('stockCount');
+                        const addToCartBtn = document.getElementById('addToCartBtn');
+
+                        if (sizeRadios.length === 0) return;
+
+                        sizeRadios.forEach(radio => {
+                            radio.addEventListener('change', function () {
+                                const stock = parseInt(this.getAttribute('data-stock') || '0');
+
+                                if (stock > 0 && stock <script 10) {
+                                    // Az stok uyarısı göster
+                                    sizeStockInfo.style.display = 'block';
+                                    lowStockWarning.style.display = 'block';
+                                    stockCountSpan.textContent = stock;
+                                } else {
+                                    // Uyarıyı gizle
+                                    sizeStockInfo.style.display = 'none';
+                                    lowStockWarning.style.display = 'none';
+                                }
+
+                                // Sepete ekle butonunu aktif et
+                                if (addToCartBtn) {
+                                    addToCartBtn.disabled = false;
+                                }
+                            });
+                        });
+                    });
+            </script>
+            <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.location.hash === '#discussion') {
+      const btn = document.querySelector('#discussion-tab');
+      if (btn) btn.click();
+    }
+  });
+</script>
+
+        }
+        <style>
+            /* ✅ Tablet + Mobil: Detaylar / Yorumlar / Tartışma ASLA alta düşmez */
+            @@media (max-width: 991px) {
+
+                /* lg altı: tablet + telefon + yarım ekran */
+                .product-tabs-modern {
+                    width: 100%;
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 12px;
+                    padding: 14px !important;
+                    border-radius: 26px;
                 }
-            });
 
-            let moveHandler = null;
-
-            function initZoom() {
-                let cx = zoomResult.offsetWidth / zoomLens.offsetWidth;
-                let cy = zoomResult.offsetHeight / zoomLens.offsetHeight;
-                zoomResult.style.backgroundImage = "url('" + mainImage.src + "')";
-                zoomResult.style.backgroundSize = (mainImage.width * cx) + "px " + (mainImage.height * cy) + "px";
-
-                moveHandler = function (e) {
-                    moveLens(e);
-                };
-                imageWrapper.addEventListener('mousemove', moveHandler);
-
-                function moveLens(e) {
-                    e.preventDefault();
-                    let pos = getCursorPos(e);
-                    let x = pos.x - (zoomLens.offsetWidth / 2);
-                    let y = pos.y - (zoomLens.offsetHeight / 2);
-
-                    if (x > imageWrapper.offsetWidth - zoomLens.offsetWidth) {
-                        x = imageWrapper.offsetWidth - zoomLens.offsetWidth;
-                    }
-                    if (x < 0) { x = 0; }
-                    if (y > imageWrapper.offsetHeight - zoomLens.offsetHeight) {
-                        y = imageWrapper.offsetHeight - zoomLens.offsetHeight;
-                    }
-                    if (y < 0) { y = 0; }
-
-                    zoomLens.style.left = x + "px";
-                    zoomLens.style.top = y + "px";
-                    zoomResult.style.backgroundPosition = "-" + (x * cx) + "px -" + (y * cy) + "px";
+                .product-tabs-modern .nav-item {
+                    width: 100%;
                 }
 
-                function getCursorPos(e) {
-                    let a, x = 0, y = 0;
-                    e = e || window.event;
-                    a = imageWrapper.getBoundingClientRect();
-                    x = e.pageX - a.left;
-                    y = e.pageY - a.top;
-                    x = x - window.pageXOffset;
-                    y = y - window.pageYOffset;
-                    return { x: x, y: y };
+                .product-tabs-modern .nav-link {
+                    width: 100%;
+                    justify-content: center;
+                    padding: 10px 10px !important;
+                    font-size: 0.95rem !important;
+                    white-space: nowrap;
+                    border-radius: 16px !important;
+                }
+
+                .product-tabs-modern .nav-link i {
+                    margin-right: 6px;
+                    font-size: 0.95rem;
                 }
             }
 
-            function removeZoomListeners() {
-                if (moveHandler) {
-                    imageWrapper.removeEventListener('mousemove', moveHandler);
-                    moveHandler = null;
+            /* Çok dar ekranlar (360px vs) */
+            @@media (max-width: 400px) {
+                .product-tabs-modern .nav-link {
+                    font-size: 0.9rem !important;
+                    padding: 9px 8px !important;
                 }
             }
-
-            function updateImage(index) {
-                if (thumbnails.length === 0) return;
-                isZoomActive = false;
-                imageWrapper.classList.remove('zoom-active');
-                removeZoomListeners();
-
-                mainImage.style.opacity = '0';
-                setTimeout(function () {
-                    mainImage.src = thumbnails[index].src;
-                    mainImage.style.opacity = '1';
-                    thumbnails.forEach(function (t) { t.classList.remove('active'); });
-                    thumbnails[index].classList.add('active');
-                    currentIndex = index;
-                }, 150);
-            }
-
-            thumbnails.forEach(function (thumb, index) {
-                thumb.addEventListener('click', function () { updateImage(index); });
-            });
-
-            if (prevBtn) {
-                prevBtn.addEventListener('click', function () {
-                    const newIndex = (currentIndex - 1 + totalImages) % totalImages;
-                    updateImage(newIndex);
-                });
-            }
-
-            if (nextBtn) {
-                nextBtn.addEventListener('click', function () {
-                    const newIndex = (currentIndex + 1) % totalImages;
-                    updateImage(newIndex);
-                });
-            }
-
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
-                if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
-            });
-
-            const requires = @(Model.RequiresSize.ToString().ToLowerInvariant());
-            const form = document.getElementById('addToCartForm');
-            if (!form) return;
-
-            const radios = form.querySelectorAll('input[name="size"]');
-            const button = document.getElementById('addToCartBtn');
-
-            if (requires && radios.length > 0) {
-                function syncState() {
-                    const anyChecked = Array.from(radios).some(function (r) { return r.checked; });
-                    button.disabled = !anyChecked;
-                }
-                radios.forEach(function (r) { r.addEventListener('change', syncState); });
-                syncState();
-            }
-        });
-
-        // Favori toggle
-        document.addEventListener('click', async function (e) {
-            const btn = e.target.closest('.js-fav-btn');
-            if (!btn) return;
-
-            const form = btn.closest('.js-fav-form');
-            const icon = btn.querySelector('.fav-icon');
-            if (!form || !icon) return;
-
-            const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
-            const token = tokenInput ? tokenInput.value : null;
-            const url = btn.getAttribute('data-url');
-            const productId = Number(btn.getAttribute('data-id') || 0);
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'RequestVerificationToken': token } : {})
-                    },
-                    body: JSON.stringify({ ProductId: productId })
-                });
-
-                if (!res.ok) {
-                    console.error('Fav toggle HTTP error', res.status);
-                    return;
-                }
-
-                const ct = res.headers.get('content-type') || '';
-                if (!ct.includes('application/json')) {
-                    window.location.reload();
-                    return;
-                }
-
-                const data = await res.json();
-                if (data && data.isFavorite === true) {
-                    icon.classList.remove('fa-regular');
-                    icon.classList.add('fa-solid');
-                    icon.style.color = '#dc3545';
-                } else if (data && data.isFavorite === false) {
-                    icon.classList.remove('fa-solid');
-                    icon.classList.add('fa-regular');
-                    icon.style.color = '#001f3f';
-                }
-            } catch (err) {
-                console.error('Favorites toggle failed', err);
-            }
-        });
-    </script>
-
-    <script>
-        // ✅ Beden seçildiğinde stok durumunu göster
-        document.addEventListener('DOMContentLoaded', function () {
-            const sizeRadios = document.querySelectorAll('input[name="size"]');
-            const sizeStockInfo = document.getElementById('sizeStockInfo');
-            const lowStockWarning = document.getElementById('lowStockWarning');
-            const stockCountSpan = document.getElementById('stockCount');
-            const addToCartBtn = document.getElementById('addToCartBtn');
-
-            if (sizeRadios.length === 0) return;
-
-            sizeRadios.forEach(radio => {
-                radio.addEventListener('change', function () {
-                    const stock = parseInt(this.getAttribute('data-stock') || '0');
-
-                    if (stock > 0 && stock < 10) {
-                        // Az stok uyarısı göster
-                        sizeStockInfo.style.display = 'block';
-                        lowStockWarning.style.display = 'block';
-                        stockCountSpan.textContent = stock;
-                    } else {
-                        // Uyarıyı gizle
-                        sizeStockInfo.style.display = 'none';
-                        lowStockWarning.style.display = 'none';
-                    }
-
-                    // Sepete ekle butonunu aktif et
-                    if (addToCartBtn) {
-                        addToCartBtn.disabled = false;
-                    }
-                });
-            });
-        });
-    </script>
-}
-<style>
-    /* ✅ Tablet + Mobil: Detaylar / Yorumlar / Tartışma ASLA alta düşmez */
-@@media (max-width: 991px) { /* lg altı: tablet + telefon + yarım ekran */
-  .product-tabs-modern {
-    width: 100%;
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    padding: 14px !important;
-    border-radius: 26px;
-  }
-
-  .product-tabs-modern .nav-item {
-    width: 100%;
-  }
-
-  .product-tabs-modern .nav-link {
-    width: 100%;
-    justify-content: center;
-    padding: 10px 10px !important;
-    font-size: 0.95rem !important;
-    white-space: nowrap;
-    border-radius: 16px !important;
-  }
-
-  .product-tabs-modern .nav-link i {
-    margin-right: 6px;
-    font-size: 0.95rem;
-  }
-}
-
-/* Çok dar ekranlar (360px vs) */
-@@media (max-width: 400px) {
-  .product-tabs-modern .nav-link {
-    font-size: 0.9rem !important;
-    padding: 9px 8px !important;
-  }
-}
-
-
-</style>
+        </style>

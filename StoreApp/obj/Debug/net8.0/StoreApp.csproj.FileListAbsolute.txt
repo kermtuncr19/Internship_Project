@@ -182,3 +182,5 @@ C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net8.0\refint\S
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net8.0\StoreApp.pdb
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net8.0\StoreApp.genruntimeconfig.cache
 C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\obj\Debug\net8.0\ref\StoreApp.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net8.0\AWSSDK.Core.dll
+C:\Users\kermtuncr\Desktop\Internship_Project\StoreApp\bin\Debug\net8.0\AWSSDK.S3.dll

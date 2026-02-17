@@ -14,5 +14,7 @@ namespace Services.Contracts
         IProductImageService ProductImageService { get; }
         IProductStockService ProductStockService { get; }
         IEmailService EmailService {get;}
+        IProductQaService ProductQaService { get; }
+
     }
 }

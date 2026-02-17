@@ -11,6 +11,8 @@ namespace Repositories.Contracts
         IProductImageRepository ProductImage { get; } 
         IReturnRequestRepository ReturnRequest { get; }
         IProductStockRepository ProductStock { get; }
+        IProductQuestionRepository QuestionRepository {get;}
+        IProductAnswerRepository AnswerRepository {get;}
         void Save();
     }
 }
