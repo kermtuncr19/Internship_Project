@@ -610,7 +610,7 @@
                                     @* Login'e yönlendirme (returnUrl ile aynı sekmeye döner) *@
                                     var returnUrl = $"{Context.Request.Path}#discussion";
                                     <a class="btn btn-primary"
-                                           href="/Identity/Account/Login?returnUrl=@Uri.EscapeDataString(returnUrl)">
+                                           href="/Account/Login?returnUrl=@Uri.EscapeDataString(returnUrl)">
                                         <i class="fa fa-sign-in-alt me-2"></i> Soru sormak için giriş yap
                                     </a>
 
