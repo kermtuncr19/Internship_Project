@@ -1,50 +1,170 @@
+<link rel="stylesheet" href="~/css/product-question.css" asp-append-version="true" />
+
 @model List<Entities.Models.ProductQuestion>
 
 @{
     ViewData["Title"] = "Ürün Soruları";
 }
 
-<h3 class="mb-3">Cevap Bekleyen Sorular</h3>
 
-@if (TempData["success"] is string ok) { <div class="alert alert-success">@ok</div> }
-@if (TempData["Danger"] is string er) { <div class="alert alert-danger">@er</div> }
+<div class="pq-wrapper admin-questions-page">
 
-@if (Model.Count == 0)
-{
-    <div class="alert alert-info">Bekleyen soru yok.</div>
-}
-else
-{
-    <div class="table-responsive">
-        <table class="table table-bordered align-middle">
-            <thead>
-                <tr>
-                    <th>Ürün</th>
-                    <th>Soran</th>
-                    <th>Soru</th>
-                    <th>Tarih</th>
-                    <th style="width:35%;">Cevap</th>
-                </tr>
-            </thead>
-            <tbody>
+    <div class="pq-header">
+        <div class="pq-header-icon">💬</div>
+        <div>
+            <h3>
+                Cevap Bekleyen Sorular
+                @if (Model.Count > 0)
+                {
+                    <span class="pq-count-badge">@Model.Count</span>
+                }
+            </h3>
+            <p class="pq-header-sub">Müşteri sorularını yanıtlayın</p>
+        </div>
+    </div>
+
+    @if (TempData["success"] is string ok)
+    {
+        <div class="pq-alert pq-alert-success">✅ @ok</div>
+    }
+    @if (TempData["Danger"] is string er)
+    {
+        <div class="pq-alert pq-alert-danger">⚠️ @er</div>
+    }
+
+    @if (Model.Count == 0)
+    {
+        <div class="pq-alert pq-alert-info">🎉 Bekleyen soru bulunmuyor. Harika iş!</div>
+    }
+    else
+    {
+        <!-- ====== DESKTOP TABLE ====== -->
+        <div class="pq-table-wrap">
+            <table class="pq-table">
+                <thead>
+                    <tr>
+                        <th>Ürün</th>
+                        <th>Soran</th>
+                        <th>Soru</th>
+                        <th>Tarih</th>
+                        <th style="width:32%;">Cevap</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var q in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="pq-product-name">@q.Product?.ProductName</div>
+                            </td>
+                            <td>
+                                <div class="pq-email">@(q.User?.Email ?? q.UserId)</div>
+                            </td>
+                            <td>
+                                <div class="pq-question-text">@q.QuestionText</div>
+                            </td>
+                            <td>
+                                <div class="pq-date">@q.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")<br /><span style="font-size:0.75rem;">@q.CreatedAt.ToLocalTime().ToString("HH:mm")</span></div>
+                            </td>
+                            <td>
+                                <form class="pq-answer-form" asp-action="Answer" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="questionId" value="@q.ProductQuestionId" />
+                                    <textarea name="answerText" rows="3" maxlength="2000" required placeholder="Cevabınızı buraya yazın…"></textarea>
+                                    <button class="pq-btn-answer" type="submit">
+                                        <span>↩</span> Cevapla
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ====== MOBILE CARDS ====== -->
+        <div class="pq-mobile-list">
             @foreach (var q in Model)
             {
-                <tr>
-                    <td>@q.Product?.ProductName</td>
-                    <td>@(q.User?.Email ?? q.UserId)</td>
-                    <td style="white-space:pre-line;">@q.QuestionText</td>
-                    <td>@q.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
-                        <form asp-action="Answer" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="questionId" value="@q.ProductQuestionId" />
-                            <textarea class="form-control mb-2" name="answerText" rows="3" maxlength="2000" required></textarea>
-                            <button class="btn btn-primary btn-sm" type="submit">Cevapla</button>
-                        </form>
-                    </td>
-                </tr>
+                <div class="pq-card">
+                    <div class="pq-card-product">@q.Product?.ProductName</div>
+                    <div class="pq-card-meta">
+                        <span>✉️ @(q.User?.Email ?? q.UserId)</span>
+                        <span>🕐 @q.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                    </div>
+                    <div class="pq-card-question-preview">@q.QuestionText</div>
+                    <button
+                        class="pq-detail-btn"
+                        data-qid="@q.ProductQuestionId"
+                        data-product="@(q.Product?.ProductName ?? "")"
+                        data-email="@(q.User?.Email ?? q.UserId)"
+                        data-question="@q.QuestionText"
+                        data-date="@q.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")">
+                        Detaylar →
+                    </button>
+                </div>
             }
-            </tbody>
-        </table>
+        </div>
+    }
+</div>
+
+<!-- ====== MODAL ====== -->
+<div class="pq-modal-overlay" id="pqModal" onclick="closeModalOnOverlay(event)">
+    <div class="pq-modal" style="position:relative;">
+        <div class="pq-modal-handle"></div>
+        <button class="pq-modal-close" onclick="closeModal()">✕</button>
+
+        <div class="pq-modal-title" id="modal-product"></div>
+
+        <div class="pq-modal-label">Soran</div>
+        <div class="pq-modal-value muted" id="modal-email"></div>
+
+        <div class="pq-modal-label">Tarih</div>
+        <div class="pq-modal-value muted" id="modal-date"></div>
+
+        <hr class="pq-modal-divider" />
+
+        <div class="pq-modal-label">Soru</div>
+        <div class="pq-modal-value" id="modal-question" style="white-space:pre-line;"></div>
+
+        <hr class="pq-modal-divider" />
+
+        <div class="pq-modal-label">Cevabınız</div>
+        <form class="pq-answer-form" asp-action="Answer" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="questionId" id="modal-qid" />
+            <textarea name="answerText" rows="4" maxlength="2000" required placeholder="Cevabınızı buraya yazın…"></textarea>
+            <button class="pq-btn-answer" type="submit" style="width:100%; justify-content:center; margin-top:0.75rem; padding:0.65rem;">
+                ↩ Cevapla
+            </button>
+        </form>
     </div>
-}
+</div>
+
+<script>
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.pq-detail-btn');
+        if (btn) {
+            document.getElementById('modal-qid').value    = btn.dataset.qid;
+            document.getElementById('modal-product').textContent  = btn.dataset.product;
+            document.getElementById('modal-email').textContent    = btn.dataset.email;
+            document.getElementById('modal-question').textContent = btn.dataset.question;
+            document.getElementById('modal-date').textContent     = btn.dataset.date;
+            document.getElementById('pqModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    });
+
+    function closeModal() {
+        document.getElementById('pqModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function closeModalOnOverlay(e) {
+        if (e.target.id === 'pqModal') closeModal();
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+</script>
