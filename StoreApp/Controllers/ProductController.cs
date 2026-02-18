@@ -147,6 +147,104 @@ namespace StoreApp.Controllers
             });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> LoadMore(ProductRequestParameters p)
+        {
+            // Index ile aynı validasyon
+            if (!p.IsValidPrice)
+            {
+                p.MinPrice = 0;
+                p.MaxPrice = int.MaxValue;
+            }
+
+            // ✅ AKILLI ARAMA (Index ile aynı)
+            if (!string.IsNullOrWhiteSpace(p.SearchTerm))
+            {
+                var normalizedSearch = p.SearchTerm.Trim().ToLower();
+
+                var turkishChars = "çğıöşüÇĞİÖŞÜ";
+                var latinChars = "cgiosuCGIOSU";
+
+                for (int i = 0; i < turkishChars.Length; i++)
+                    normalizedSearch = normalizedSearch.Replace(turkishChars[i], latinChars[i]);
+
+                var categories = _manager.CategoryService.GetAllCategories(false);
+                var categoryMatch = categories.FirstOrDefault(c =>
+                {
+                    var categoryName = c.CategoryName.ToLower();
+                    for (int i = 0; i < turkishChars.Length; i++)
+                        categoryName = categoryName.Replace(turkishChars[i], latinChars[i]);
+
+                    return categoryName.Contains(normalizedSearch);
+                });
+
+                if (categoryMatch != null)
+                {
+                    p.CategoryId = categoryMatch.CategoryId;
+                    p.SearchTerm = null;
+                }
+            }
+
+            // ✅ Favoriler (partial bunu kullanıyor)
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = _um.GetUserId(User)!;
+                var favoriteIds = await _db.UserFavoriteProducts
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.ProductId)
+                    .ToListAsync();
+
+                ViewBag.FavoriteIds = favoriteIds;
+            }
+            else
+            {
+                ViewBag.FavoriteIds = new List<int>();
+            }
+
+            // ✅ Filtrelenmiş sorgu
+            var filtered = _manager.PoductService.GetAllProducts(false)
+                .FilteredByCategoryId(p.CategoryId)
+                .FilteredBySearchTerm(p.SearchTerm)
+                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+                .SortBy(p.SortBy);
+
+            var total = await filtered.CountAsync();
+
+            var pageNumber = p.PageNumber < 1 ? 1 : p.PageNumber;
+            var pageSize = p.PageSize < 1 ? 10 : p.PageSize;
+
+            var products = await filtered
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Include(x => x.Stocks)
+                .ToListAsync();
+
+            // ✅ Ratings (partial bunu kullanıyor)
+            var ids = products.Select(x => x.ProductId).ToList();
+
+            var ratingData = await _db.Reviews
+                .Where(r => r.IsApproved && ids.Contains(r.ProductId))
+                .GroupBy(r => r.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    Count = g.Count(),
+                    Avg = g.Average(x => (double)x.Rating)
+                })
+                .ToListAsync();
+
+            ViewBag.Ratings = ratingData.ToDictionary(
+                x => x.ProductId,
+                x => (count: x.Count, avg: x.Avg)
+            );
+
+            // ✅ Butonu gizlemek için "hasMore" bilgisini header ile dön
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            Response.Headers["X-HasMore"] = (pageNumber < totalPages).ToString().ToLowerInvariant();
+
+            return PartialView("_ProductCardsPartial", products);
+        }
+
         public async Task<IActionResult> Get([FromRoute(Name = "id")] int id)
         {
             var model = _manager.PoductService

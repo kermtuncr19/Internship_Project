@@ -297,13 +297,12 @@
     
  <script>
 (function () {
-  if (window.favInit) return; window.favInit = true;
+  if (window.favInit) return; 
+  window.favInit = true;
 
-  // CSRF (head içinde meta ile üretildiğini varsayıyoruz)
   const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   function ensureIcon(btn) {
-    // .fav-icon yoksa oluştur
     let icon = btn.querySelector('.fav-icon');
     if (!icon) {
       icon = document.createElement('i');
@@ -320,11 +319,14 @@
     icon.classList.toggle('fa-regular', !solid);
     icon.style.color = solid ? '#dc3545' : '#0d1b4c';
     btn.setAttribute('aria-pressed', solid ? 'true' : 'false');
-    btn.dataset.fav = solid ? '1' : '0';
+
+    // pop
+    icon.classList.remove('fav-pop', 'fav-shake');
+    void icon.offsetWidth;
+    icon.classList.add(solid ? 'fav-pop' : 'fav-shake');
   }
 
-  async function onFavClick(ev) {
-    const btn = ev.currentTarget;
+  async function toggle(btn) {
     const productId = Number(btn.dataset.productId || 0);
     if (!productId) return;
 
@@ -332,10 +334,10 @@
     const wasSolid = icon.classList.contains('fa-solid');
     const wantSolid = !wasSolid;
 
-    // İyimser UI (hemen değiştir)
+    // optimistic
     setUI(btn, wantSolid);
-
     btn.disabled = true;
+
     try {
       const resp = await fetch('/Favorites/ToggleAjax', {
         method: 'POST',
@@ -344,17 +346,16 @@
           ...(csrf ? { 'RequestVerificationToken': csrf } : {})
         },
         credentials: 'same-origin',
-        body: JSON.stringify({ productId })
+        body: JSON.stringify({ ProductId: productId })
       });
 
       if (!resp.ok) {
-        // başarısız → geri al
         setUI(btn, wasSolid);
         console.warn('Favorites AJAX status:', resp.status);
         return;
       }
-      // Sunucu sonucu ile senkronize et (güvence)
-      const data = await resp.json(); // { isFavorite: bool }
+
+      const data = await resp.json();
       if (typeof data?.isFavorite === 'boolean') {
         setUI(btn, !!data.isFavorite);
       }
@@ -366,21 +367,25 @@
     }
   }
 
-  function bindAll() {
+  // ✅ DELEGATION: sonradan gelen kartlarda da çalışır
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.js-fav-btn');
+    if (!btn) return;
+    e.preventDefault();
+    toggle(btn);
+  });
+
+  // ilk açılışta aria-pressed'a göre UI normalize et
+  document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.js-fav-btn').forEach(btn => {
-      btn.removeEventListener('click', onFavClick);
-      btn.addEventListener('click', onFavClick);
-      // İlk render’da aria-pressed’a göre normalize et
       const pressed = (btn.getAttribute('aria-pressed') || 'false') === 'true';
       setUI(btn, pressed);
     });
-  }
+  });
 
-  document.addEventListener('DOMContentLoaded', bindAll);
-  window.bindFavoriteButtons = bindAll; // sonsuz scroll vs. için dışarıdan çağırabilirsin
-  
 })();
 </script>
+
 
 
 
