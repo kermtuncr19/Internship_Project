@@ -13,6 +13,7 @@ namespace Repositories.Contracts
         IProductStockRepository ProductStock { get; }
         IProductQuestionRepository QuestionRepository {get;}
         IProductAnswerRepository AnswerRepository {get;}
+        ICouponRepository CouponRepository {get;}
         void Save();
     }
 }

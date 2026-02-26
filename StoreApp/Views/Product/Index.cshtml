@@ -284,6 +284,7 @@
     const minPrice = qs.get("MinPrice") || "";
     const maxPrice = qs.get("MaxPrice") || "";
     const sortBy = qs.get("SortBy") || "";
+    const discountedOnly = qs.get("DiscountedOnly") || "";
 
     btn.disabled = true;
     btn.textContent = "Yükleniyor...";
@@ -294,7 +295,8 @@
       `&SearchTerm=${encodeURIComponent(searchTerm)}` +
       `&MinPrice=${encodeURIComponent(minPrice)}` +
       `&MaxPrice=${encodeURIComponent(maxPrice)}` +
-      `&SortBy=${encodeURIComponent(sortBy)}`;
+      `&SortBy=${encodeURIComponent(sortBy)}`+
+      `&DiscountedOnly=${encodeURIComponent(discountedOnly)}`;
 
     const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
 

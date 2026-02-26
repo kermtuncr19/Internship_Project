@@ -23,6 +23,8 @@ namespace Repositories
 
         public DbSet<ProductQuestion> ProductQuestions { get; set; }
         public DbSet<ProductAnswer> ProductAnswers { get; set; }
+        public DbSet<Coupon> Coupons {get;set;}
+        public DbSet<CouponUsage> CouponUsages { get; set; }
 
 
         public RepositoryContext(DbContextOptions<RepositoryContext> options) : base(options) //RepositoryContext ten nesne üretmek isteyen DbContextOptions ile gelcek ve biz de onu base e göndereceğiz yani DbContext e.

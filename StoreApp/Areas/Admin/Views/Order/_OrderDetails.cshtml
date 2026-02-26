@@ -1,14 +1,18 @@
 @model Order
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 @{
-    decimal subTotal = Model.Lines.Sum(l => (l.Product?.Price ?? 0m) * l.Quantity);
-    decimal shippingThreshold = 2000m;
-    decimal shippingCost = subTotal >= shippingThreshold ? 0m : 39.99m;
-    decimal grandTotal = subTotal + shippingCost;
+    // ✅ Sipariş anındaki kayıtlı değerleri kullan
+    decimal subTotal = Model.Subtotal;                 // indirimsiz
+    decimal discountAmount = Model.DiscountAmount;     // kupon indirimi
+    decimal discountedSubTotal = Math.Max(0m, subTotal - discountAmount);
+
+    decimal shippingCost = Model.ShippingCost;         // ödeme anındaki kargo
+    decimal grandTotal = Model.GrandTotal;             // ödeme anındaki toplam
+
     int installment = Model.Installment ?? 1;
     decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
 
-    // İade bilgileri - Her CartLineId için iade taleplerini tut
+    // İade bilgileri (senin mevcut kodun aynen)
     var lineReturnRequests = Model.ReturnRequests?
         .SelectMany(r => r.Lines.Select(l => new { ReturnRequest = r, Line = l }))
         .GroupBy(x => x.Line.CartLineId)
@@ -203,42 +207,43 @@
             <div class="list-group list-group-flush">
                 @foreach (var item in Model.Lines)
                 {
-                    var lineTotal = (item.Product?.Price ?? 0m) * item.Quantity;
-                    var hasReturnRequest = lineReturnRequests.ContainsKey(item.CartLineId);
-                    var returnRequests = hasReturnRequest ? lineReturnRequests[item.CartLineId] : new List<Entities.Models.ReturnRequest>();
-                    
-                    // Bu ürünün tamamlanmış iadesi var mı kontrol et
-                    var hasCompletedReturn = returnRequests.Any(r => r.Status == Entities.Models.ReturnStatus.Completed);
+                   var unit = item.UnitPrice;          // ✅ sipariş anındaki fiyat
+    var lineTotal = unit * item.Quantity;
+
+    var hasReturnRequest = lineReturnRequests.ContainsKey(item.CartLineId);
+    var returnRequests = hasReturnRequest ? lineReturnRequests[item.CartLineId] : new List<Entities.Models.ReturnRequest>();
+    var hasCompletedReturn = returnRequests.Any(r => r.Status == Entities.Models.ReturnStatus.Completed);
+    
                     
                     <div class="list-group-item py-3 @(hasCompletedReturn ? "bg-light" : "")">
                         <div class="d-flex align-items-start justify-content-between mb-2">
-                            <div class="d-flex align-items-center flex-grow-1">
-                                <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
-                                <div class="flex-grow-1">
-                                    <div class="fw-semibold">
-                                        @item.Product.ProductName
-                                        @if (!string.IsNullOrWhiteSpace(item.Size))
-                                        {
-                                            <span class="text-muted">(@item.Size Beden)</span>
-                                        }
-                                        
-                                        @* İade Edildi Rozeti *@
-                                        @if (hasCompletedReturn)
-                                        {
-                                            <span class="badge bg-primary ms-2">
-                                                <i class="fa fa-undo me-1"></i>İade Edildi
-                                            </span>
-                                        }
-                                    </div>
-                                    <div class="text-muted small">
-                                        @item.Quantity × @((item.Product?.Price ?? 0m).ToString("C2"))
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="price-col fw-semibold text-end @(hasCompletedReturn ? "text-decoration-line-through text-muted" : "")">
-                                @lineTotal.ToString("C2")
-                            </div>
-                        </div>
+            <div class="d-flex align-items-center flex-grow-1">
+                <img src="@item.Product.ImageUrl" width="50" class="rounded me-3 order-thumb" />
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">
+                        @item.Product.ProductName
+                        @if (!string.IsNullOrWhiteSpace(item.Size))
+                        {
+                            <span class="text-muted">(@item.Size Beden)</span>
+                        }
+
+                        @if (hasCompletedReturn)
+                        {
+                            <span class="badge bg-primary ms-2">
+                                <i class="fa fa-undo me-1"></i>İade Edildi
+                            </span>
+                        }
+                    </div>
+                    <div class="text-muted small">
+                        @item.Quantity × @unit.ToString("C2")
+                    </div>
+                </div>
+            </div>
+
+            <div class="price-col fw-semibold text-end @(hasCompletedReturn ? "text-decoration-line-through text-muted" : "")">
+                @lineTotal.ToString("C2")
+            </div>
+        </div>
                         
                         @if (hasReturnRequest && returnRequests.Any())
                         {
@@ -307,6 +312,20 @@
                     <div class="text-muted">Ara Toplam</div>
                     <div class="price-col">@subTotal.ToString("C2")</div>
                 </div>
+
+                @if (discountAmount > 0)
+{
+    <div class="list-group-item py-3 d-flex justify-content-between">
+        <div class="text-muted">İndirim</div>
+        <div class="price-col text-danger">-@discountAmount.ToString("C2")</div>
+    </div>
+
+    <div class="list-group-item py-3 d-flex justify-content-between">
+        <div class="text-muted">İndirimli Ara Toplam</div>
+        <div class="price-col fw-semibold">@discountedSubTotal.ToString("C2")</div>
+    </div>
+}
+
                 <div class="list-group-item py-3 d-flex justify-content-between">
                     <div class="text-muted">Kargo</div>
                     <div class="price-col">

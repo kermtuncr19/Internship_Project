@@ -20,6 +20,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -29,6 +30,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -38,6 +40,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card shadow-soft">
                 <div class="card-body text-center">
@@ -47,6 +50,7 @@
                 </div>
             </div>
         </div>
+
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="m-0">Son Siparişler</h5>
@@ -54,12 +58,28 @@
                     Tümünü Gör <i class="fa fa-arrow-right ms-1"></i>
                 </a>
             </div>
+
             @if (Model.LastOrders.Any())
             {
                 <div class="recent-orders">
                     @foreach (var o in Model.LastOrders.Take(2))
                     {
-                        var total = o.Lines?.Sum(l => (l.Product?.Price ?? 0) * l.Quantity) ?? 0;
+                        // ✅ Ürün kartında normal fiyat (Product.Price) görünsün,
+                        // ✅ Alt tarafta Toplam kısmında indirimli tutar (GrandTotal) + indirim tutarı görünsün.
+                        var subtotal = o.Subtotal;
+                        var discount = o.DiscountAmount;
+                        var shipping = o.ShippingCost;
+                        var grandTotal = o.GrandTotal;
+
+                        // Fallback: eski siparişlerde alanlar boş/0 olabilir
+                        if (grandTotal <= 0)
+                        {
+                            subtotal = o.Lines?.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity) ?? 0m;
+                            shipping = subtotal >= 2000m ? 0m : 39.99m;
+                            grandTotal = subtotal + shipping;
+                            discount = 0m;
+                        }
+
                         string statusBadge = "";
                         string statusText = "";
                         if (o.Cancelled)
@@ -92,6 +112,7 @@
                             statusBadge = "bg-secondary";
                             statusText = "Onay Bekliyor";
                         }
+
                         <div class="order-card-mini mb-3">
                             <div class="order-card-header">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -102,6 +123,7 @@
                                     <span class="badge @statusBadge">@statusText</span>
                                 </div>
                             </div>
+
                             <div class="order-card-body">
                                 <div class="order-products-list">
                                     @foreach (var line in o.Lines.Take(3))
@@ -112,9 +134,9 @@
                                         {
                                             imgSrc = Url.Content($"~/images/{imgSrc}");
                                         }
-                                        
-                                        @* ✅ Ürünü tıklanabilir link yaptık *@
-                                        <a href="@Url.Action("Get", "Product", new { id = line.Product?.ProductId })" class="order-product-mini text-decoration-none" style="display: block; transition: background-color 0.2s;">
+
+                                        <a href="@Url.Action("Get", "Product", new { id = line.Product?.ProductId })"
+                                           class="order-product-mini text-decoration-none" style="display: block; transition: background-color 0.2s;">
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="product-thumb-mini">
                                                     <img src="@imgSrc" alt="@line.Product?.ProductName" class="img-fluid" />
@@ -129,13 +151,15 @@
                                                         <span>@line.Quantity adet</span>
                                                     </div>
                                                 </div>
-                                                
+
+                                                @* ✅ Ürün yanında NORMAL fiyat kalsın *@
                                                 <div class="text-primary fw-semibold small">
-                                                    @((line.Product?.Price ?? 0).ToString("C2"))
+                                                    @((line.Product?.Price ?? 0m).ToString("C2"))
                                                 </div>
                                             </div>
                                         </a>
                                     }
+
                                     @if (o.Lines.Count > 3)
                                     {
                                         <div class="text-muted small text-center mt-2">
@@ -144,13 +168,26 @@
                                     }
                                 </div>
                             </div>
+
                             <div class="order-card-footer">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="text-muted small">Toplam:</span>
-                                        <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
+
+                                        @* ✅ Burada indirimli toplam (GrandTotal) *@
+                                        <span class="fs-5 fw-bold text-primary ms-2">@grandTotal.ToString("C2")</span>
+
+                                        @* ✅ İndirim varsa tutarı da göster *@
+                                        @if (discount > 0m)
+                                        {
+                                            <div class="small text-success mt-1">
+                                                <i class="fa fa-tag me-1"></i> İndirim: -@discount.ToString("C2")
+                                            </div>
+                                        }
                                     </div>
-                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm btn-pill">
+
+                                    <a asp-controller="MyOrders" asp-action="Detail" asp-route-id="@o.OrderId"
+                                       class="btn btn-outline-primary btn-sm btn-pill">
                                         <i class="fa fa-eye me-1"></i> Detay
                                     </a>
                                 </div>

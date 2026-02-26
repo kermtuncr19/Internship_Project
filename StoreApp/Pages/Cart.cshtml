@@ -8,18 +8,41 @@
     var anySized = Model.Cart?.Lines?.Any(l => !string.IsNullOrEmpty(l.Size)) == true;
     var hasItems = Model.Cart?.Lines?.Any() == true;
 
-    decimal total = Model.Cart?.ComputeTotalValue() ?? 0m;
-    decimal shippingThreshold = 2000m;
-    decimal shippingCost = total <= 0m ? 0m : (total >= shippingThreshold ? 0m : 39.99m);
+    // ✅ İndirimsiz ara toplam (liste fiyatı)
+decimal subtotalRaw = Model.Cart?.Lines?.Sum(l => l.Product.Price * l.Quantity) ?? 0m;
 
-    decimal grandTotal = total + shippingCost;
-    decimal remaining = Math.Max(0m, shippingThreshold - total);
+// ✅ Ürün indirimli ara toplam (kampanyalı fiyat)
+decimal subtotalDiscounted = Model.Cart?.Lines?.Sum(l => l.Product.DiscountedPrice * l.Quantity) ?? 0m;
+
+// ✅ Ürün indirimi (TL)
+decimal productDiscountAmount = Model.Cart?.Lines?
+    .Sum(l => (l.Product.Price - l.Product.DiscountedPrice) * l.Quantity) ?? 0m;
+
+productDiscountAmount = Math.Max(0m, productDiscountAmount);
+
+// ✅ Kupon (session’dan geliyor) - kupon indirimi, indirimli ara toplam üzerinden hesaplanır
+var applied = Model.AppliedCoupon;
+decimal couponDiscountAmount = 0m;
+if (applied != null && applied.Percent > 0)
+{
+    couponDiscountAmount = Math.Round(subtotalDiscounted * (applied.Percent / 100m), 2);
+    if (couponDiscountAmount > subtotalDiscounted) couponDiscountAmount = subtotalDiscounted;
+}
+
+decimal discountedTotal = subtotalDiscounted - couponDiscountAmount;
+
+// kargo eşiği indirimli toplam üzerinden
+decimal shippingThreshold = 2000m;
+decimal shippingCost = discountedTotal <= 0m ? 0m : (discountedTotal >= shippingThreshold ? 0m : 39.99m);
+
+decimal grandTotal = discountedTotal + shippingCost;
+decimal remaining = Math.Max(0m, shippingThreshold - discountedTotal);
 }
 
 <div class="container my-4 cart-page">
     <h2 class="text-center mb-3">Sepet</h2>
 
-     <!-- ✅ STOK UYARILARI -->
+    <!-- ✅ STOK UYARILARI -->
     @if (TempData["StockWarnings"] is List<string> warnings && warnings.Any())
     {
         <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -37,15 +60,15 @@
     }
 
     <!-- 💛 Ücretsiz kargo bilgilendirme çubuğu / Boş sepet mesajı -->
-    @if (total == 0)
+    @if (discountedTotal == 0)
     {
         <div id="shipping-info" class="alert alert-light text-center mt-3">
             <span id="shipping-text">Sepetiniz boş. Alışverişe başlayın!</span>
         </div>
     }
-    else if (total < shippingThreshold)
+    else if (discountedTotal < shippingThreshold)
     {
-        var progress = (int)Math.Min(100m, Math.Round((total / shippingThreshold) * 100m, 0));
+        var progress = (int)Math.Min(100m, Math.Round((discountedTotal / shippingThreshold) * 100m, 0));
 
         <div id="shipping-info" class="p-3 text-center shadow-sm rounded mb-4" style="background-color:#fffbe6;">
             <div class="fw-semibold mb-2 text-navy">
@@ -53,9 +76,7 @@
             </div>
 
             <div class="progress" style="height:10px; border-radius:8px;">
-                <div class="progress-bar"
-                     id="shipping-progress"
-                     role="progressbar"
+                <div class="progress-bar" id="shipping-progress" role="progressbar"
                      style="width:@progress%; background-color:#ffea00;">
                 </div>
             </div>
@@ -99,20 +120,16 @@
                             ? Url.Content(line.Product.ImageUrl)
                             : Url.Content($"~/images/{line.Product.ImageUrl}"));
 
-                    <div class="card mb-3 shadow-sm border-0 cart-line"
-                         data-cart-line
-                         data-product-id="@line.Product.ProductId"
+                    <div class="card mb-3 shadow-sm border-0 cart-line" data-cart-line data-product-id="@line.Product.ProductId"
                          data-size="@line.Size">
                         <div class="row g-0 align-items-center">
                             <div class="col-3 col-md-2">
-                                <img src="@imgSrc"
-                                     asp-append-version="true"
-                                     alt="@line.Product.ProductName"
+                                <img src="@imgSrc" asp-append-version="true" alt="@line.Product.ProductName"
                                      class="img-fluid rounded-start" />
                             </div>
 
                             <div class="col-9 col-md-10">
-                                <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                                <div                    class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
 
                                     <!-- Ürün bilgileri -->
                                     <div>
@@ -126,12 +143,28 @@
                                         }
 
                                         <div class="small text-muted">
-                                            Birim Fiyat: @line.Product.Price.ToString("C2")
-                                        </div>
+    Birim Fiyat:
+    @if (line.Product.DiscountPercent > 0)
+    {
+        <span class="text-muted" style="text-decoration:line-through;">
+            @line.Product.Price.ToString("C2")
+        </span>
+        <span class="ms-2 fw-semibold text-navy">
+            @line.Product.DiscountedPrice.ToString("C2")
+        </span>
+        <span class="badge bg-danger ms-2" style="border-radius:999px;">
+            -%@line.Product.DiscountPercent
+        </span>
+    }
+    else
+    {
+        <span>@line.Product.Price.ToString("C2")</span>
+    }
+</div>
                                     </div>
 
                                     <!-- Adet, toplam, sil -->
-                                    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 ms-md-auto">
+                                    <div                        class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3 ms-md-auto">
 
                                         <!-- 🔢 Adet butonları (AJAX) -->
                                         <div class="d-inline-flex align-items-center gap-2">
@@ -146,8 +179,15 @@
 
                                         <!-- 💰 Satır toplamı -->
                                         <div class="fw-semibold js-cart-line-total">
-                                            @((line.Product.Price * line.Quantity).ToString("C2"))
-                                        </div>
+    <div class="js-line-raw text-muted small"
+         style="text-decoration:line-through; @(line.Product.DiscountPercent > 0 ? "" : "display:none;")">
+        @((line.Product.Price * line.Quantity).ToString("C2"))
+    </div>
+
+    <div class="js-line-discounted fw-bold text-navy">
+        @(((line.Product.DiscountPercent > 0 ? line.Product.DiscountedPrice : line.Product.Price) * line.Quantity).ToString("C2"))
+    </div>
+</div>
 
                                         <!-- 🗑 Sil -->
                                         <button type="button" class="btn btn-sm btn-danger js-cart-remove btn-pill">
@@ -173,8 +213,38 @@
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Ara Toplam</span>
-                        <span id="cart-subtotal" class="fw-semibold">@total.ToString("C2")</span>
+                        <span id="cart-subtotal" class="fw-semibold">@subtotalRaw.ToString("C2")</span>
                     </div>
+
+                   @if (productDiscountAmount > 0)
+{
+  <div class="d-flex justify-content-between mb-2 text-success" id="product-discount-row">
+      <span>Ürün İndirimi</span>
+      <span id="product-discount" class="fw-semibold">-@productDiscountAmount.ToString("C2")</span>
+  </div>
+}
+else
+{
+  <div class="d-flex justify-content-between mb-2 text-success d-none" id="product-discount-row">
+      <span>Ürün İndirimi</span>
+      <span id="product-discount" class="fw-semibold"></span>
+  </div>
+}
+
+                    @if (Model.AppliedCoupon != null && couponDiscountAmount > 0)
+                    {
+                        <div id="coupon-row" class="d-flex justify-content-between mb-2 text-success">
+                            <span id="coupon-label">Kupon İndirimi (@Model.AppliedCoupon.Code)</span>
+                            <span id="coupon-discount" class="fw-semibold">-@couponDiscountAmount.ToString("C2")</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div id="coupon-row" class="d-flex justify-content-between mb-2 text-success d-none">
+                            <span id="coupon-label"></span>
+                            <span id="coupon-discount" class="fw-semibold"></span>
+                        </div>
+                    }
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Kargo</span>
@@ -191,6 +261,39 @@
                         </span>
                     </div>
 
+                    <!-- 🎟 Kupon -->
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Kupon Kodu</label>
+
+                        @if (Model.AppliedCoupon != null)
+                        {
+                            <div class="d-flex align-items-center justify-content-between border rounded p-2">
+                                <div>
+                                    <span class="fw-semibold">@Model.AppliedCoupon.Code</span>
+                                    <span class="text-muted small">(@("%" + Model.AppliedCoupon.Percent))</span>
+                                </div>
+
+                                <form method="post" asp-page-handler="RemoveCoupon" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Kaldır</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page-handler="ApplyCoupon" class="d-flex gap-2">
+                                @Html.AntiForgeryToken()
+                                <input name="code" class="form-control" placeholder="örn:SEPETTE20" />
+                                <button type="submit" class="btn btn-navy">Uygula</button>
+                            </form>
+
+                            @if (TempData["CouponError"] is string ce && !string.IsNullOrWhiteSpace(ce))
+                            {
+                                <div class="text-danger small mt-1">@ce</div>
+                            }
+                        }
+                    </div>
+
                     <hr class="my-3" />
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -203,27 +306,20 @@
                     <div class="d-grid gap-2">
                         @if (hasItems)
                         {
-                            <a class="btn border-2 btn-pill"
-                               style="background-color:#ffea00; color:black;"
-                               asp-action="Checkout"
-                               asp-controller="Order">
+                            <a class="btn border-2 btn-pill" style="background-color:#ffea00; color:black;"
+                                   asp-action="Checkout" asp-controller="Order">
                                 Ödeme Yap
                             </a>
                         }
                         else
                         {
-                            <button type="button"
-                                    class="btn border-0 btn-pill"
-                                    style="background-color:#ffea00; color:black;"
-                                    disabled
-                                    title="Sepetiniz boş">
+                            <button type="button" class="btn border-0 btn-pill"
+                                    style="background-color:#ffea00; color:black;" disabled title="Sepetiniz boş">
                                 Ödeme Yap
                             </button>
                         }
 
-                        <a class="btn btn-outline-primary btn-pill"
-                           asp-controller="Product"
-                           asp-action="Index">
+                        <a class="btn btn-outline-primary btn-pill" asp-controller="Product" asp-action="Index">
                             Alışverişe Devam Et
                         </a>
                     </div>
@@ -240,252 +336,182 @@
 </form>
 
 @section Scripts {
+    
+
     <script>
-        (function () {
+                    (function () {
 
-            async function callCartApi(handler, productId, size) {
-                // gizli formdan antiforgery token'ı al
-                var tokenInput = document.querySelector(
-                    '#cart-antiforgery-form input[name="__RequestVerificationToken"]'
-                );
-                var antiToken = tokenInput ? tokenInput.value : "";
+                        async function callCartApi(handler, productId, size) {
+                            var tokenInput = document.querySelector(
+                                '#cart-antiforgery-form input[name="__RequestVerificationToken"]'
+                            );
+                            var antiToken = tokenInput ? tokenInput.value : "";
 
-                var body = new URLSearchParams();
-                body.append("id", productId);
-                body.append("size", size || "");
-                body.append("__RequestVerificationToken", antiToken);
+                            var body = new URLSearchParams();
+                            body.append("id", productId);
+                            body.append("size", size || "");
+                            body.append("__RequestVerificationToken", antiToken);
 
-                const response = await fetch("/cart?handler=" + handler, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                    },
-                    body: body
-                });
+                            const response = await fetch("/cart?handler=" + handler, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                                },
+                                body: body
+                            });
 
-                if (!response.ok) {
-                    console.error("Cart API error", response.status);
-                    return null;
-                }
+                            if (!response.ok) {
+                                console.error("Cart API error", response.status);
+                                return null;
+                            }
 
-                return await response.json();
-            }
+                            return await response.json();
+                        }
 
-            function updateTotals(data) {
-                var sub = document.getElementById("cart-subtotal");
-                var ship = document.getElementById("cart-shipping");
-                var grand = document.getElementById("cart-grandtotal");
+                        function updateTotals(data) {
+                            var sub = document.getElementById("cart-subtotal");
+                            var ship = document.getElementById("cart-shipping");
+                            var grand = document.getElementById("cart-grandtotal");
 
-                if (sub) sub.textContent = data.cartTotalFormatted;
-                if (ship) ship.textContent = data.shippingCostFormatted;
-                if (grand) grand.textContent = data.grandTotalFormatted;
+                            if (sub) sub.textContent = data.subtotalRawFormatted; // Ara Toplam = indirimsiz
+                            var prodRow = document.getElementById("product-discount-row");
+var prodEl  = document.getElementById("product-discount");
 
-                var shippingInfo = document.getElementById("shipping-info");
-                var progressBar = document.getElementById("shipping-progress");
-                var shippingText = document.getElementById("shipping-text");
+if (prodRow && prodEl) {
+  if (data.productDiscountAmount && data.productDiscountAmount > 0) {
+    prodRow.classList.remove("d-none");
+    prodEl.textContent = "-" + data.productDiscountAmountFormatted;
+  } else {
+    prodRow.classList.add("d-none");
+    prodEl.textContent = "";
+  }
+}
+                            if (ship) ship.textContent = data.shippingCostFormatted;
+                            if (grand) grand.textContent = data.grandTotalFormatted; // Genel Toplam = indirimli+ kargo
 
-                if (!shippingInfo) return;
+                            var couponRow = document.getElementById("coupon-row");
+var couponLabel = document.getElementById("coupon-label");
+var couponDiscount = document.getElementById("coupon-discount");
 
-                if (data.cartTotal <= 0) {
-                    // Sepet tamamen boşsa barı gizle (reload'dan önce)
-                    shippingInfo.style.display = "none";
-                    return;
-                }
-
-                shippingInfo.style.display = "";
-
-                if (progressBar) {
-                    progressBar.style.width = (data.progress || 0) + "%";
-                }
-
-                if (shippingText) {
-                    if (data.freeShipping) {
-                        // Başlık zaten "Tebrikler..." diyor, altta tekrar etmeyelim
-                        shippingText.textContent = "";
-                        shippingInfo.style.backgroundColor = "#d1e7dd";
-                    } else {
-                        shippingText.textContent =
-                            "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
-                        shippingInfo.style.backgroundColor = "#fffbe6";
-                    }
-                }
-            }
-
-            document.addEventListener("click", async function (e) {
-                var incBtn = e.target.closest(".js-cart-inc");
-                var decBtn = e.target.closest(".js-cart-dec");
-                var remBtn = e.target.closest(".js-cart-remove");
-
-                if (!incBtn && !decBtn && !remBtn) return;
-
-                var lineEl = e.target.closest("[data-cart-line]");
-                if (!lineEl) return;
-
-                var productId = lineEl.dataset.productId;
-                var size = lineEl.dataset.size || "";
-
-                var handler;
-                if (incBtn) handler = "IncrementAjax";
-                else if (decBtn) handler = "DecrementAjax";
-                else handler = "RemoveAjax";
-
-                var data = await callCartApi(handler, productId, size);
-                if (!data || !data.success) return;
-
-                if (data.removed) {
-                    // satır komple silindiyse kartı DOM'dan kaldır
-                    lineEl.remove();
-                } else {
-                    var qtySpan = lineEl.querySelector(".js-cart-qty");
-                    var lineTotalEl = lineEl.querySelector(".js-cart-line-total");
-
-                    if (qtySpan) qtySpan.textContent = data.quantity;
-                    if (lineTotalEl) lineTotalEl.textContent = data.lineTotalFormatted;
-                }
-
-                updateTotals(data);
-
-                // 🧹 Eğer sepet tamamen boşaldıysa, tam sayfa yenile:
-                // - boş sepet tasarımı gelsin
-                // - navbar'daki sepet sayacı güncellensin
-                if (data.cartTotal <= 0) {
-                    window.location.reload();
-                }
-            });
-
-        })();
-    </script>
-
-     <script>
-        (function () {
-
-            async function callCartApi(handler, productId, size) {
-                var tokenInput = document.querySelector(
-                    '#cart-antiforgery-form input[name="__RequestVerificationToken"]'
-                );
-                var antiToken = tokenInput ? tokenInput.value : "";
-
-                var body = new URLSearchParams();
-                body.append("id", productId);
-                body.append("size", size || "");
-                body.append("__RequestVerificationToken", antiToken);
-
-                const response = await fetch("/cart?handler=" + handler, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                    },
-                    body: body
-                });
-
-                if (!response.ok) {
-                    console.error("Cart API error", response.status);
-                    return null;
-                }
-
-                return await response.json();
-            }
-
-            function updateTotals(data) {
-                var sub = document.getElementById("cart-subtotal");
-                var ship = document.getElementById("cart-shipping");
-                var grand = document.getElementById("cart-grandtotal");
-
-                if (sub) sub.textContent = data.cartTotalFormatted;
-                if (ship) ship.textContent = data.shippingCostFormatted;
-                if (grand) grand.textContent = data.grandTotalFormatted;
-
-                var shippingInfo = document.getElementById("shipping-info");
-                var progressBar = document.getElementById("shipping-progress");
-                var shippingText = document.getElementById("shipping-text");
-
-                if (!shippingInfo) return;
-
-                if (data.cartTotal <= 0) {
-                    shippingInfo.style.display = "none";
-                    return;
-                }
-
-                shippingInfo.style.display = "";
-
-                if (progressBar) {
-                    progressBar.style.width = (data.progress || 0) + "%";
-                }
-
-                if (shippingText) {
-                    if (data.freeShipping) {
-                        shippingText.textContent = "";
-                        shippingInfo.style.backgroundColor = "#d1e7dd";
-                    } else {
-                        shippingText.textContent =
-                            "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
-                        shippingInfo.style.backgroundColor = "#fffbe6";
-                    }
-                }
-            }
-
-            // ✅ HATA MESAJI GÖSTERME FONKSİYONU
-            function showError(message) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-                alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-                alertDiv.innerHTML = `
-                    <i class="fa fa-exclamation-circle me-2"></i>${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                `;
-                document.body.appendChild(alertDiv);
-                
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-
-            document.addEventListener("click", async function (e) {
-                var incBtn = e.target.closest(".js-cart-inc");
-                var decBtn = e.target.closest(".js-cart-dec");
-                var remBtn = e.target.closest(".js-cart-remove");
-
-                if (!incBtn && !decBtn && !remBtn) return;
-
-                var lineEl = e.target.closest("[data-cart-line]");
-                if (!lineEl) return;
-
-                var productId = lineEl.dataset.productId;
-                var size = lineEl.dataset.size || "";
-
-                var handler;
-                if (incBtn) handler = "IncrementAjax";
-                else if (decBtn) handler = "DecrementAjax";
-                else handler = "RemoveAjax";
-
-                var data = await callCartApi(handler, productId, size);
-                
-                // ✅ STOK HATASI KONTROLÜ
-                if (!data || !data.success) {
-                    if (data && data.message) {
-                        showError(data.message);
-                    }
-                    return;
-                }
-
-                if (data.removed) {
-                    lineEl.remove();
-                } else {
-                    var qtySpan = lineEl.querySelector(".js-cart-qty");
-                    var lineTotalEl = lineEl.querySelector(".js-cart-line-total");
-
-                    if (qtySpan) qtySpan.textContent = data.quantity;
-                    if (lineTotalEl) lineTotalEl.textContent = data.lineTotalFormatted;
-                }
-
-                updateTotals(data);
-
-                if (data.cartTotal <= 0) {
-                    window.location.reload();
-                }
-            });
-
-        })();
-    </script>
+if (couponRow && couponLabel && couponDiscount) {
+  if (data.couponCode && data.discountAmount > 0) {
+    couponRow.classList.remove("d-none");
+    couponLabel.textContent = "Kupon İndirimi (" + data.couponCode + ")";
+    couponDiscount.textContent = "-"+ data.discountAmountFormatted;
+  } else {
+    couponRow.classList.add("d-none");
+    couponLabel.textContent = "";
+    couponDiscount.textContent = "";
+  }
 }
 
+                            var shippingInfo = document.getElementById("shipping-info");
+                            var progressBar = document.getElementById("shipping-progress");
+                            var shippingText = document.getElementById("shipping-text");
+
+                            if (!shippingInfo) return;
+
+                            if (data.cartTotal <= 0) {
+                                shippingInfo.style.display = "none";
+                                return;
+                            }
+
+                            shippingInfo.style.display = "";
+
+                            if (progressBar) {
+                                progressBar.style.width = (data.progress || 0) + "%";
+                            }
+
+                            if (shippingText) {
+                                if (data.freeShipping) {
+                                    shippingText.textContent = "";
+                                    shippingInfo.style.backgroundColor = "#d1e7dd";
+                                } else {
+                                    shippingText.textContent =
+                                        "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
+                                    shippingInfo.style.backgroundColor = "#fffbe6";
+                                }
+                            }
+                        }
+
+                        // ✅ HATA MESAJI GÖSTERME FONKSİYONU
+                        function showError(message) {
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+                            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                            alertDiv.innerHTML = `
+                                <i class="fa fa-exclamation-circle me-2"></i>${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            `;
+                            document.body.appendChild(alertDiv);
+
+                            setTimeout(() => {
+                                alertDiv.remove();
+                            }, 5000);
+                        }
+
+                        document.addEventListener("click", async function (e) {
+                            var incBtn = e.target.closest(".js-cart-inc");
+                            var decBtn = e.target.closest(".js-cart-dec");
+                            var remBtn = e.target.closest(".js-cart-remove");
+
+                            if (!incBtn && !decBtn && !remBtn) return;
+
+                            var lineEl = e.target.closest("[data-cart-line]");
+                            if (!lineEl) return;
+
+                            var productId = lineEl.dataset.productId;
+                            var size = lineEl.dataset.size || "";
+
+                            var handler;
+                            if (incBtn) handler = "IncrementAjax";
+                            else if (decBtn) handler = "DecrementAjax";
+                            else handler = "RemoveAjax";
+
+                            var data = await callCartApi(handler, productId, size);
+
+                            // ✅ STOK HATASI KONTROLÜ
+                            if (!data || !data.success) {
+                                if (data && data.message) {
+                                    showError(data.message);
+                                }
+                                return;
+                            }
+
+                            if (data.removed) {
+                                lineEl.remove();
+                            } else {
+                                var qtySpan = lineEl.querySelector(".js-cart-qty");
+                                var lineTotalEl = lineEl.querySelector(".js-cart-line-total");
+var rawEl = lineEl.querySelector(".js-line-raw");
+var discEl = lineEl.querySelector(".js-line-discounted");
+
+if (qtySpan) qtySpan.textContent = data.quantity;
+
+if (rawEl && discEl) {
+  if (data.hasLineDiscount) {
+    rawEl.style.display = "";
+    rawEl.textContent = data.lineTotalRawFormatted;
+    discEl.textContent = data.lineTotalDiscountedFormatted;
+  } else {
+    rawEl.style.display = "none";
+    rawEl.textContent = "";
+    // indirimsiz ürünlerde discounted = raw gibi davranıyoruz
+    discEl.textContent = data.lineTotalRawFormatted;
+  }
+} else if (lineTotalEl) {
+  // fallback: hiç span yoksa eski davranış
+  lineTotalEl.textContent = data.lineTotalFormatted;
+}
+                            }
+
+                            updateTotals(data);
+
+                            if (data.cartTotal <= 0) {
+                                window.location.reload();
+                            }
+                        });
+
+                    })();
+    </script>
+}

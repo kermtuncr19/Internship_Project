@@ -118,11 +118,28 @@ namespace StoreApp.Controllers
                 UnitPrice = l.Product.Price
             }).ToList();
 
+            var subtotal = _cart.Lines.Sum(l => l.Product.Price * l.Quantity);
+
+            // kuponu session'dan al
+            var applied = HttpContext.Session.GetJson<StoreApp.Models.AppliedCoupon>("applied_coupon");
+
+            decimal discountAmount = 0m;
+            if (applied != null && applied.Percent > 0)
+            {
+                discountAmount = Math.Round(subtotal * (applied.Percent / 100m), 2);
+                if (discountAmount > subtotal) discountAmount = subtotal;
+            }
+
+            var discountedTotal = subtotal - discountAmount;
+
             var viewModel = new PaymentViewModel
             {
                 Order = order,
                 PaymentInfo = new PaymentInfo(),
-                TotalAmount = _cart.Lines.Sum(l => l.Product.Price * l.Quantity),
+                AppliedCoupon = applied,
+                DiscountAmount = discountAmount,
+                Subtotal = subtotal,
+                TotalAmount = discountedTotal,
                 CartItems = cartItems
             };
 
@@ -132,10 +149,9 @@ namespace StoreApp.Controllers
         // ADIM 4: Ödeme İşlemi ve Sipariş Oluşturma
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ProcessPayment([FromForm] PaymentInfo paymentInfo)
+        public async Task<IActionResult> ProcessPayment([FromForm] PaymentInfo paymentInfo)
         {
             var order = HttpContext.Session.GetJson<Order>("PendingOrder");
-
             if (order == null || !_cart.Lines.Any())
             {
                 TempData["Error"] = "Sipariş bilgileri bulunamadı. Lütfen tekrar deneyin.";
@@ -149,30 +165,55 @@ namespace StoreApp.Controllers
                 order.Installment = taksit;
             }
 
-            // ✅ STOK KONTROLÜ - Ödeme öncesi
-            var stockErrors = new List<string>();
-            foreach (var line in _cart.Lines)
+            // ✅ Kupon (session)
+            var applied = HttpContext.Session.GetJson<StoreApp.Models.AppliedCoupon>("applied_coupon");
+
+            if (applied != null)
             {
-                var inStock = _manager.ProductStockService.IsInStock(
-                    line.Product.ProductId,
-                    line.Size,
-                    line.Quantity
+                var hasDiscountedItem = _cart.Lines.Any(l =>
+                    l.Product != null &&
+                    (
+                        (l.Product.DiscountPercent > 0) ||
+                        (l.Product.DiscountedPrice > 0 && l.Product.DiscountedPrice < l.Product.Price)
+                    )
                 );
 
-                if (!inStock)
+                if (hasDiscountedItem)
                 {
-                    var stock = _manager.ProductStockService.GetStockByProductAndSize(
-                        line.Product.ProductId,
-                        line.Size
-                    );
-
-                    var availableQty = stock?.Quantity ?? 0;
-                    var sizeText = string.IsNullOrEmpty(line.Size) ? "" : $" (Beden: {line.Size})";
-
-                    stockErrors.Add($"{line.Product.ProductName}{sizeText} - Mevcut stok: {availableQty}, İstenen: {line.Quantity}");
+                    TempData["Error"] = "İndirimli ürün bulunan sepetlerde kupon kullanılamaz.";
+                    return RedirectToPage("/cart");
                 }
             }
 
+            // ✅ Tutar hesapları
+            decimal subtotal = _cart.Lines.Sum(l => l.Product.Price * l.Quantity);
+
+            decimal discountAmount = 0m;
+            if (applied != null && applied.Percent > 0)
+            {
+                discountAmount = Math.Round(subtotal * (applied.Percent / 100m), 2);
+                if (discountAmount > subtotal) discountAmount = subtotal;
+            }
+
+            decimal discountedTotal = subtotal - discountAmount;
+
+            decimal shippingThreshold = 2000m;
+            decimal shippingCost = discountedTotal <= 0m ? 0m : (discountedTotal >= shippingThreshold ? 0m : 39.99m);
+            decimal grandTotal = discountedTotal + shippingCost;
+
+            // ✅ STOK KONTROLÜ - ödeme öncesi
+            var stockErrors = new List<string>();
+            foreach (var line in _cart.Lines)
+            {
+                var inStock = _manager.ProductStockService.IsInStock(line.Product.ProductId, line.Size, line.Quantity);
+                if (!inStock)
+                {
+                    var stock = _manager.ProductStockService.GetStockByProductAndSize(line.Product.ProductId, line.Size);
+                    var availableQty = stock?.Quantity ?? 0;
+                    var sizeText = string.IsNullOrEmpty(line.Size) ? "" : $" (Beden: {line.Size})";
+                    stockErrors.Add($"{line.Product.ProductName}{sizeText} - Mevcut stok: {availableQty}, İstenen: {line.Quantity}");
+                }
+            }
             if (stockErrors.Any())
             {
                 TempData["Error"] = "Bazı ürünlerde yeterli stok yok:\n" + string.Join("\n", stockErrors);
@@ -194,15 +235,14 @@ namespace StoreApp.Controllers
                 {
                     Order = order,
                     PaymentInfo = paymentInfo,
-                    TotalAmount = _cart.Lines.Sum(l => l.Product.Price * l.Quantity),
+                    TotalAmount = discountedTotal, // ✅ burada indirimli toplamı taşı
                     CartItems = cartItems
                 };
                 return View("Payment", viewModel);
             }
 
-            // Yapay ödeme işlemi
+            // Yapay ödeme
             bool paymentSuccessful = ProcessFakePayment(paymentInfo);
-
             if (!paymentSuccessful)
             {
                 ModelState.AddModelError(string.Empty, "Ödeme işlemi başarısız. Lütfen kart bilgilerinizi kontrol edin.");
@@ -219,23 +259,17 @@ namespace StoreApp.Controllers
                 {
                     Order = order,
                     PaymentInfo = paymentInfo,
-                    TotalAmount = _cart.Lines.Sum(l => l.Product.Price * l.Quantity),
+                    TotalAmount = discountedTotal,
                     CartItems = cartItems
                 };
                 return View("Payment", viewModel);
             }
 
-            // ✅ ÖDEME BAŞARILI - STOKLARI AZALT
+            // ✅ ÖDEME BAŞARILI - stok düş
             try
             {
                 foreach (var line in _cart.Lines)
-                {
-                    _manager.ProductStockService.DecreaseStock(
-                        line.Product.ProductId,
-                        line.Size,
-                        line.Quantity
-                    );
-                }
+                    _manager.ProductStockService.DecreaseStock(line.Product.ProductId, line.Size, line.Quantity);
             }
             catch (Exception ex)
             {
@@ -243,8 +277,17 @@ namespace StoreApp.Controllers
                 return RedirectToPage("/cart");
             }
 
-            // Siparişi oluştur
+            // ✅ Siparişe kupon + tutar bilgilerini yaz (Complete için şart)
             order.OrderedAt = DateTime.UtcNow;
+
+            order.Subtotal = subtotal;
+            order.DiscountAmount = discountAmount;
+            order.ShippingCost = shippingCost;
+            order.GrandTotal = grandTotal;
+
+            order.CouponCode = applied?.Code;
+            order.CouponPercent = applied?.Percent;
+
             order.Lines = _cart.Lines.Select(l => new CartLine
             {
                 ProductId = l.Product.ProductId,
@@ -253,16 +296,30 @@ namespace StoreApp.Controllers
                 UnitPrice = l.Product.Price
             }).ToList();
 
-            // Siparişi kaydet
             _manager.OrderService.SaveOrder(order);
 
-            // Sepeti temizle
+            if (!string.IsNullOrWhiteSpace(applied?.Code))
+            {
+                var userId = _userManager.GetUserId(User) ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var (ok, error) = await _manager.CouponService.MarkUsedByUserAsync(
+                    userId!,
+                    applied.Code,
+                    order.OrderId
+                );
+
+                if (!ok)
+                {
+                    TempData["Error"] = error ?? "Kupon kullanılamadı.";
+                    return RedirectToPage("/cart");
+                }
+            }
+
+            // ✅ Sepet temizle + session temizle
             _cart.Clear();
-
-            // Session'dan pending order'ı sil
             HttpContext.Session.Remove("PendingOrder");
+            HttpContext.Session.Remove("applied_coupon"); // kuponu da temizle
 
-            // Başarı sayfasına yönlendir
             TempData["OrderSuccess"] = "Ödemeniz başarıyla alındı!";
             return RedirectToPage("/Complete", new { OrderId = order.OrderId });
         }

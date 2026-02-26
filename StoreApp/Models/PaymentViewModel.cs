@@ -9,5 +9,8 @@ namespace StoreApp.Models
         public PaymentInfo PaymentInfo { get; set; } = new PaymentInfo();
         public decimal TotalAmount { get; set; }
         public List<CartLine> CartItems { get; set; } = new List<CartLine>();
+        public AppliedCoupon? AppliedCoupon { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal Subtotal { get; set; }
     }
 }

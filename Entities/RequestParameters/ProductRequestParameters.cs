@@ -9,7 +9,7 @@ namespace Entities.RequestParameters
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
         public string? SortBy { get; set; }
-
+        public bool DiscountedOnly { get; set; } = false;
         public ProductRequestParameters() : this(1,10){}
         
         public ProductRequestParameters(int pageNumber, int pageSize)

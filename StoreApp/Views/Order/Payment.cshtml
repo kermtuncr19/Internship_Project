@@ -34,7 +34,7 @@
                                 <i class="fa fa-user me-1"></i>Kart Üzerindeki İsim
                             </label>
                             <input asp-for="PaymentInfo.CardHolderName" class="form-control"
-                                placeholder="Örn: AHMET YILMAZ" style="text-transform: uppercase;" />
+                                   placeholder="Örn: AHMET YILMAZ" style="text-transform: uppercase;" />
                             <span asp-validation-for="PaymentInfo.CardHolderName" class="text-danger small"></span>
                         </div>
 
@@ -43,7 +43,7 @@
                                 <i class="fa fa-credit-card me-1"></i>Kart Numarası
                             </label>
                             <input asp-for="PaymentInfo.CardNumber" class="form-control"
-                                placeholder="1234 5678 9012 3456" maxlength="16" id="cardNumber" />
+                                   placeholder="1234 5678 9012 3456" maxlength="16" id="cardNumber" />
                             <span asp-validation-for="PaymentInfo.CardNumber" class="text-danger small"></span>
                             <small class="text-muted">
                                 <i class="fa fa-info-circle"></i> Test için 4 ile başlayan 16 haneli numara girin
@@ -56,7 +56,7 @@
                                     <i class="fa fa-calendar me-1"></i>Son Kullanma Tarihi
                                 </label>
                                 <input asp-for="PaymentInfo.ExpiryDate" class="form-control" placeholder="AA/YY"
-                                    maxlength="5" id="expiryDate" />
+                                       maxlength="5" id="expiryDate" />
                                 <span asp-validation-for="PaymentInfo.ExpiryDate" class="text-danger small"></span>
                             </div>
 
@@ -65,7 +65,7 @@
                                     <i class="fa fa-lock me-1"></i>CVV
                                 </label>
                                 <input asp-for="PaymentInfo.CVV" class="form-control" placeholder="123" maxlength="4"
-                                    type="password" id="cvv" />
+                                       type="password" id="cvv" />
                                 <span asp-validation-for="PaymentInfo.CVV" class="text-danger small"></span>
                             </div>
 
@@ -84,7 +84,7 @@
                                     <!-- 2000 TL ve üzeri: Tek çekim / 2 / 3 taksit göster -->
                                     <div class="btn-group w-100" role="group" aria-label="Taksit Seçenekleri">
                                         <input class="btn-check" type="radio" name="Installment" id="inst1" value="1"
-                                            checked>
+                                               checked>
                                         <label class="btn btn-outline-secondary" for="inst1">Tek Çekim</label>
 
                                         <input class="btn-check" type="radio" name="Installment" id="inst2" value="2">
@@ -119,7 +119,7 @@
                             <button type="submit" class="btn btn-success btn-lg" id="payButton">
                                 <i class="fa fa-lock me-2"></i>
                                 <span id="payButtonText"
-                                    data-amount="@grandTotal.ToString("C2")">@grandTotal.ToString("C2") Öde</span>
+                                      data-amount="@grandTotal.ToString("C2")">@grandTotal.ToString("C2") Öde</span>
                                 <span id="payButtonLoading" style="display: none;">
                                     <span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...
                                 </span>
@@ -179,6 +179,14 @@
                             <span>@Model.TotalAmount.ToString("C2")</span>
                         </div>
 
+                        @if (Model.AppliedCoupon != null && Model.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Kupon İndirimi (@Model.AppliedCoupon.Code)</span>
+                                <span class="fw-semibold">-@Model.DiscountAmount.ToString("C2")</span>
+                            </div>
+                        }
+
                         <div class="d-flex justify-content-between mb-2">
                             <span>Kargo:</span>
                             @if (shippingCost == 0m)
@@ -235,116 +243,116 @@
 
 @section Scripts {
     <script>
-        // Kart numarası formatla
-        const cardInput = document.getElementById('cardNumber');
-        cardInput?.addEventListener('input', function (e) {
-            // Sadece rakam kabul et
-            this.value = this.value.replace(/\D/g, '');
-        });
+            // Kart numarası formatla
+            const cardInput = document.getElementById('cardNumber');
+            cardInput?.addEventListener('input', function (e) {
+                // Sadece rakam kabul et
+                this.value = this.value.replace(/\D/g, '');
+            });
 
-        // Son kullanma tarihi formatla (AA/YY)
-        const expiryInput = document.getElementById('expiryDate');
-        expiryInput?.addEventListener('input', function (e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value.length >= 2) {
-                value = value.substring(0, 2) + '/' + value.substring(2, 4);
-            }
-            this.value = value;
-        });
+            // Son kullanma tarihi formatla (AA/YY)
+            const expiryInput = document.getElementById('expiryDate');
+            expiryInput?.addEventListener('input', function (e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                this.value = value;
+            });
 
-        // CVV sadece rakam
-        const cvvInput = document.getElementById('cvv');
-        cvvInput?.addEventListener('input', function (e) {
-            this.value = this.value.replace(/\D/g, '');
-        });
+            // CVV sadece rakam
+            const cvvInput = document.getElementById('cvv');
+            cvvInput?.addEventListener('input', function (e) {
+                this.value = this.value.replace(/\D/g, '');
+            });
 
-        // Form submit
-        const paymentForm = document.getElementById('paymentForm');
-        const payButton = document.getElementById('payButton');
-        const payButtonText = document.getElementById('payButtonText');
-        const payButtonLoading = document.getElementById('payButtonLoading');
+            // Form submit
+            const paymentForm = document.getElementById('paymentForm');
+            const payButton = document.getElementById('payButton');
+            const payButtonText = document.getElementById('payButtonText');
+            const payButtonLoading = document.getElementById('payButtonLoading');
 
-        paymentForm?.addEventListener('submit', function (e) {
-            // Loading state
-            payButton.disabled = true;
-            payButtonText.style.display = 'none';
-            payButtonLoading.style.display = 'inline';
-        });
+            paymentForm?.addEventListener('submit', function (e) {
+                // Loading state
+                payButton.disabled = true;
+                payButtonText.style.display = 'none';
+                payButtonLoading.style.display = 'inline';
+            });
     </script>
     <script>
-        (function () {
-            const payButtonText = document.getElementById('payButtonText');
-            const radios = document.querySelectorAll('input[name="Installment"]');
-            const summaryTotal = document.getElementById('summaryTotal');
-            const installmentInfo = document.getElementById('installmentInfo');
+            (function () {
+                const payButtonText = document.getElementById('payButtonText');
+                const radios = document.querySelectorAll('input[name="Installment"]');
+                const summaryTotal = document.getElementById('summaryTotal');
+                const installmentInfo = document.getElementById('installmentInfo');
 
-            if (!payButtonText) return;
+                if (!payButtonText) return;
 
-            const numericValue = parseFloat('@grandTotal'.replace(',', '.'));
+                const numericValue = parseFloat('@grandTotal'.replace(',', '.'));
 
-            function formatCurrency(value) {
-                return new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 2
-                }).format(value);
-            }
-
-            function refresh() {
-                const picked = document.querySelector('input[name="Installment"]:checked');
-                const n = picked ? parseInt(picked.value, 10) : 1;
-
-                if (n > 1) {
-                    const perInstallment = numericValue / n;
-                    // 🟢 Buton
-                    payButtonText.textContent = `${n}×${formatCurrency(perInstallment)} Öde`;
-                    // 🟢 Sağ taraf toplam kısmı
-                    installmentInfo.textContent = ` (${n} Taksit)`;
-                } else {
-                    payButtonText.textContent = `${formatCurrency(numericValue)} Öde`;
-                    installmentInfo.textContent = '';
+                function formatCurrency(value) {
+                    return new Intl.NumberFormat('tr-TR', {
+                        style: 'currency',
+                        currency: 'TRY',
+                        minimumFractionDigits: 2
+                    }).format(value);
                 }
-            }
 
-            radios.forEach(r => r.addEventListener('change', refresh));
-            refresh();
-        })();
+                function refresh() {
+                    const picked = document.querySelector('input[name="Installment"]:checked');
+                    const n = picked ? parseInt(picked.value, 10) : 1;
+
+                    if (n > 1) {
+                        const perInstallment = numericValue / n;
+                        // 🟢 Buton
+                        payButtonText.textContent = `${n}×${formatCurrency(perInstallment)} Öde`;
+                        // 🟢 Sağ taraf toplam kısmı
+                        installmentInfo.textContent = ` (${n} Taksit)`;
+                    } else {
+                        payButtonText.textContent = `${formatCurrency(numericValue)} Öde`;
+                        installmentInfo.textContent = '';
+                    }
+                }
+
+                radios.forEach(r => r.addEventListener('change', refresh));
+                refresh();
+            })();
     </script>
 
 
 
 
     <style>
-        .card {
-            border-radius: 12px;
-            border: none;
-        }
+            .card {
+                border-radius: 12px;
+                border: none;
+            }
 
-        .card-header {
-            border-radius: 12px 12px 0 0 !important;
-        }
+            .card-header {
+                border-radius: 12px 12px 0 0 !important;
+            }
 
-        .btn-lg {
-            padding: 12px;
-            font-size: 1.1rem;
-        }
+            .btn-lg {
+                padding: 12px;
+                font-size: 1.1rem;
+            }
 
-        input.form-control {
-            padding: 12px;
-            border-radius: 8px;
-        }
+            input.form-control {
+                padding: 12px;
+                border-radius: 8px;
+            }
 
-        .shadow-sm {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-        }
+            .shadow-sm {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+            }
 
-        .btn-group .btn {
-            min-width: 0;
-        }
+            .btn-group .btn {
+                min-width: 0;
+            }
 
-        /* taşma olmasın */
-        .btn-group {
-            gap: .25rem;
-        }
+            /* taşma olmasın */
+            .btn-group {
+                gap: .25rem;
+            }
     </style>
 }

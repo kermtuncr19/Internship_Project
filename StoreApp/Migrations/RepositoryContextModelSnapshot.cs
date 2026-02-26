@@ -92,6 +92,81 @@ namespace StoreApp.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Entities.Models.Coupon", b =>
+                {
+                    b.Property<int>("CouponId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CouponId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("EndsAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("MinCartTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal>("Percent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<DateTime?>("StartsAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UsageLimit")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CouponId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Coupons");
+                });
+
+            modelBuilder.Entity("Entities.Models.CouponUsage", b =>
+                {
+                    b.Property<int>("CouponUsageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CouponUsageId"));
+
+                    b.Property<int>("CouponId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UsedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("CouponUsageId");
+
+                    b.HasIndex("CouponId");
+
+                    b.HasIndex("UserId", "CouponId")
+                        .IsUnique();
+
+                    b.ToTable("CouponUsages");
+                });
+
             modelBuilder.Entity("Entities.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -123,11 +198,20 @@ namespace StoreApp.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CouponCode")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("CouponPercent")
+                        .HasColumnType("numeric");
+
                     b.Property<bool>("Delivered")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("District")
                         .IsRequired()
@@ -135,6 +219,9 @@ namespace StoreApp.Migrations
 
                     b.Property<bool>("GiftWrap")
                         .HasColumnType("boolean");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("numeric");
 
                     b.Property<bool>("InTransit")
                         .HasColumnType("boolean");
@@ -173,6 +260,12 @@ namespace StoreApp.Migrations
                     b.Property<DateTime?>("ShippedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<decimal>("ShippingCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
@@ -193,6 +286,9 @@ namespace StoreApp.Migrations
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
@@ -227,6 +323,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 1,
                             CategoryId = 1,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/forma3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Lacivert Forma",
@@ -238,6 +335,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 2,
                             CategoryId = 1,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/2.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Çubuklu Forma",
@@ -249,6 +347,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 3,
                             CategoryId = 1,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/3.jpg",
                             Price = 4249m,
                             ProductName = "Fenerbahçe 2025/26 Sarı Forma",
@@ -260,6 +359,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 4,
                             CategoryId = 2,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/4.jpg",
                             Price = 3799m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Erkek Çubuklu Forma",
@@ -271,6 +371,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 5,
                             CategoryId = 2,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/5.jpg",
                             Price = 2499m,
                             ProductName = "Fenerbahçe Beko 2025/26 Adidas Lacivert Erkek Maç Şortu",
@@ -282,6 +383,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 6,
                             CategoryId = 3,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/6.jpg",
                             Price = 1499m,
                             ProductName = "Fenerbahçe Medicana 24/25 Çubuklu Kadın Voleybol Forma",
@@ -293,6 +395,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 7,
                             CategoryId = 2,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/9.jpg",
                             Price = 899m,
                             ProductName = "Fenerbahçe Basketbol Üç Kupa Tek Şampiyon Sarı Tshirt",
@@ -304,6 +407,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 8,
                             CategoryId = 1,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/8.jpg",
                             Price = 5399m,
                             ProductName = "Fenerbahçe 2025/26 Antrasit Kaleci Forma",
@@ -315,6 +419,7 @@ namespace StoreApp.Migrations
                         {
                             ProductId = 9,
                             CategoryId = 2,
+                            DiscountPercent = 0m,
                             ImageUrl = "/images/10.jpg",
                             Price = 279m,
                             ProductName = "Fenerbahçe 24/25 EuroLeague Basketbol Şampiyonluk Kupa Anahtarlık",
@@ -1013,6 +1118,17 @@ namespace StoreApp.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("Entities.Models.CouponUsage", b =>
+                {
+                    b.HasOne("Entities.Models.Coupon", "Coupon")
+                        .WithMany()
+                        .HasForeignKey("CouponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Coupon");
                 });
 
             modelBuilder.Entity("Entities.Models.Order", b =>

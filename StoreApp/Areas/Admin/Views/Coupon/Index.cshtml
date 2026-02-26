@@ -1,0 +1,324 @@
+@model List<Entities.Models.Coupon>
+
+<link rel="stylesheet" href="~/css/coupon.css" asp-append-version="true" />
+
+
+@{
+    ViewData["Title"] = "Kuponlar";
+
+    var tz = TimeZoneInfo.FindSystemTimeZoneById(
+        System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(
+            System.Runtime.InteropServices.OSPlatform.Windows)
+        ? "Turkey Standard Time"
+        : "Europe/Istanbul"
+    );
+
+    string fmt(DateTime? utc) =>
+        utc.HasValue
+            ? TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc), tz)
+                .ToString("dd MMM yyyy, HH:mm")
+            : "—";
+
+    string fmtShort(DateTime? utc) =>
+        utc.HasValue
+            ? TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc), tz)
+                .ToString("dd MMM yy")
+            : "—";
+}
+
+<style>
+    
+</style>
+
+<div class="coupon-page-header">
+    <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             style="color:var(--fb-navy)">
+            <path d="M21 5H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/>
+            <path d="M12 5v14M3 12h18"/>
+        </svg>
+        Kuponlar
+        <span class="badge-count">@Model.Count</span>
+    </h2>
+    <a class="btn-new-coupon" asp-area="Admin" asp-controller="Coupon" asp-action="Create">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Yeni Kupon
+    </a>
+</div>
+
+@if (TempData["Ok"] is string ok)
+{
+    <div class="alert-ok">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        @ok
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M21 5H3a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/>
+            <path d="M12 5v14M3 12h18"/>
+        </svg>
+        <p>Henüz kupon oluşturulmamış.</p>
+    </div>
+}
+else
+{
+    <div class="coupon-table-wrap">
+        <table class="coupon-table">
+            <thead>
+                <tr>
+                    <th>Kod</th>
+                    <th>İndirim</th>
+                    <th>Min Sepet</th>
+                    <th>Tarih Aralığı</th>
+                    <th>Kullanım</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    var pct = c.UsageLimit.HasValue && c.UsageLimit > 0
+                        ? (double)c.UsedCount / c.UsageLimit.Value * 100
+                        : 0;
+                    var barDanger = pct >= 90;
+
+                    <tr>
+                        <td><span class="code-badge">@c.Code</span></td>
+                        <td>
+                            <span class="percent-badge">
+                                %@c.Percent.ToString("0.##") <small>indirim</small>
+                            </span>
+                        </td>
+                        <td>
+                            @if (c.MinCartTotal.HasValue)
+                            {
+                                @c.MinCartTotal.Value.ToString("C2")
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="date-cell">
+                                <div><strong>BŞL:</strong> @fmt(c.StartsAtUtc)</div>
+                                <div><strong>BTŞ:</strong> @fmt(c.EndsAtUtc)</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="usage-bar-wrap">
+                                <div class="usage-text">
+                                    @c.UsedCount
+                                    @if (c.UsageLimit.HasValue)
+                                    {
+                                        <span style="color:var(--fb-muted);font-weight:400"> / @c.UsageLimit</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--fb-muted);font-weight:400"> kullanım</span>
+                                    }
+                                </div>
+                                @if (c.UsageLimit.HasValue)
+                                {
+                                    <div class="usage-bar-bg">
+                                        <div class="usage-bar-fill @(barDanger ? "danger" : "")"
+                                             style="width:@(Math.Min(pct,100))%"></div>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @if (c.IsActive)
+                            {
+                                <span class="status-pill active">
+                                    <span class="status-dot active"></span>Aktif
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-pill inactive">
+                                    <span class="status-dot inactive"></span>Pasif
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="action-group">
+                                <a class="btn-action btn-edit"
+                                   asp-action="Edit" asp-route-id="@c.CouponId">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                    Düzenle
+                                </a>
+
+                                <form asp-action="Toggle" asp-route-id="@c.CouponId" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    @if (c.IsActive)
+                                    {
+                                        <button type="submit" class="btn-action btn-toggle-off">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                            </svg>
+                                            Pasif Yap
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn-action btn-toggle-on">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                            Aktif Yap
+                                        </button>
+                                    }
+                                </form>
+
+                                <form asp-action="Delete" asp-route-id="@c.CouponId" method="post" class="d-inline"
+                                      onsubmit="return confirm('Bu kuponu silmek istediğinize emin misiniz?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-action btn-del">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="3 6 5 6 21 6"/>
+                                            <path d="M19 6l-1 14H6L5 6"/>
+                                            <path d="M10 11v6M14 11v6"/>
+                                            <path d="M9 6V4h6v2"/>
+                                        </svg>
+                                        Sil
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="coupon-cards" id="couponCards">
+        @foreach (var c in Model)
+        {
+            var pct2 = c.UsageLimit.HasValue && c.UsageLimit > 0
+                ? (double)c.UsedCount / c.UsageLimit.Value * 100 : 0;
+            var barDanger2 = pct2 >= 90;
+
+            <div class="coupon-card" data-card>
+                <div class="card-header-strip">
+                    <span class="card-code">@c.Code</span>
+                    <div style="display:flex;align-items:center;gap:.6rem">
+                        <span class="card-percent-tag">%@c.Percent.ToString("0.##")</span>
+                        @if (c.IsActive)
+                        {
+                            <span class="status-pill active" style="font-size:.7rem;padding:.2em .6em">
+                                <span class="status-dot active"></span>Aktif
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="status-pill inactive" style="font-size:.7rem;padding:.2em .6em;border-color:#3a4d6b;color:#94a3b8">
+                                <span class="status-dot inactive"></span>Pasif
+                            </span>
+                        }
+                    </div>
+                </div>
+
+                <div class="card-summary" onclick="toggleCard(this)">
+                    <div class="card-summary-info">
+                        <div>
+                            <div style="font-size:.78rem;color:var(--fb-muted);font-weight:600">
+                                Kullanım:&nbsp;
+                                <strong style="color:#1e293b">
+                                    @c.UsedCount@(c.UsageLimit.HasValue ? $" / {c.UsageLimit}" : "")
+                                </strong>
+                            </div>
+                            @if (c.UsageLimit.HasValue)
+                            {
+                                <div class="usage-bar-bg" style="width:140px;margin-top:5px">
+                                    <div class="usage-bar-fill @(barDanger2 ? "danger" : "")"
+                                         style="width:@(Math.Min(pct2,100))%"></div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-toggle-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="var(--fb-navy)" stroke-width="2.5"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="card-detail">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Min. Sepet</label>
+                            <span>@(c.MinCartTotal.HasValue ? c.MinCartTotal.Value.ToString("C2") : "—")</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Kullanım Limiti</label>
+                            <span>@(c.UsageLimit.HasValue ? c.UsageLimit.ToString() : "Sınırsız")</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Başlangıç</label>
+                            <span>@fmtShort(c.StartsAtUtc)</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Bitiş</label>
+                            <span>@fmtShort(c.EndsAtUtc)</span>
+                        </div>
+                    </div>
+
+                    <div class="card-actions">
+                        <a class="btn-action btn-edit"
+                           asp-action="Edit" asp-route-id="@c.CouponId">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Düzenle
+                        </a>
+
+                        <form asp-action="Toggle" asp-route-id="@c.CouponId" method="post" style="flex:1">
+                            @Html.AntiForgeryToken()
+                            @if (c.IsActive)
+                            {
+                                <button type="submit" style="width:100%" class="btn-action btn-toggle-off">Pasif Yap</button>
+                            }
+                            else
+                            {
+                                <button type="submit" style="width:100%" class="btn-action btn-toggle-on">Aktif Yap</button>
+                            }
+                        </form>
+
+                        <form asp-action="Delete" asp-route-id="@c.CouponId" method="post" style="flex:1"
+                              onsubmit="return confirm('Bu kuponu silmek istediğinize emin misiniz?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" style="width:100%" class="btn-action btn-del">Sil</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<script>
+    function toggleCard(summaryEl) {
+        var card = summaryEl.closest('[data-card]');
+        card.classList.toggle('open');
+    }
+</script>

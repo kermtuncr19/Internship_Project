@@ -4513,7 +4513,7 @@ html, body{ overflow-x: clip; } /* clip desteklenmezse hidden da olur */
 
 /* kart yüksekliği sabit */
 .related-product-card .card {
-  height: 430px !important;
+  height: 450px !important;
   display: flex;
   flex-direction: column;
 }

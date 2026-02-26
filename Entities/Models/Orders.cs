@@ -60,5 +60,12 @@ namespace Entities.Models
         public string? CancellationReason { get; set; }
 
         public List<ReturnRequest> ReturnRequests { get; set; } = new();
+        public string? CouponCode { get; set; }
+        public decimal? CouponPercent { get; set; }
+
+        public decimal Subtotal { get; set; }          // indirimsiz sepet toplamı
+        public decimal DiscountAmount { get; set; }    // kupon indirimi
+        public decimal ShippingCost { get; set; }      // ödeme anındaki kargo
+        public decimal GrandTotal { get; set; }        // ödeme anındaki genel toplam
     }
 }

@@ -102,6 +102,7 @@ namespace StoreApp.Controllers
                 .FilteredByCategoryId(p.CategoryId)
                 .FilteredBySearchTerm(p.SearchTerm)
                 .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+                .FilteredByDiscountedOnly(p.DiscountedOnly)
                 .SortBy(p.SortBy);
 
             // ✅ Toplam sayıyı al
@@ -206,6 +207,7 @@ namespace StoreApp.Controllers
                 .FilteredByCategoryId(p.CategoryId)
                 .FilteredBySearchTerm(p.SearchTerm)
                 .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
+                .FilteredByDiscountedOnly(p.DiscountedOnly)
                 .SortBy(p.SortBy);
 
             var total = await filtered.CountAsync();

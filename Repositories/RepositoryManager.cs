@@ -17,12 +17,13 @@ namespace Repositories
         private readonly IProductStockRepository _productStockRepository;
         private readonly IProductQuestionRepository _productQuestionRepository;
         private readonly IProductAnswerRepository _productAnswerRepository;
+        private readonly ICouponRepository _couponRepository;
 
 
 
         public RepositoryManager(IProductRepository productRepository, RepositoryContext context, ICategoryRepository categoryReposiitory, IOrderRepository orderRepository, IUserProfileRepository userProfile,
         IUserAddressRepository userAddress,
-        IFavoriteRepository favorite, IProductImageRepository productImageRepository, IReturnRequestRepository returnRequest, IProductStockRepository productStockRepository, IProductQuestionRepository productQuestionRepository, IProductAnswerRepository productAnswerRepository)
+        IFavoriteRepository favorite, IProductImageRepository productImageRepository, IReturnRequestRepository returnRequest, IProductStockRepository productStockRepository, IProductQuestionRepository productQuestionRepository, IProductAnswerRepository productAnswerRepository, ICouponRepository couponRepository)
         {
             _productRepository = productRepository;
             _context = context;
@@ -36,6 +37,7 @@ namespace Repositories
             _productStockRepository = productStockRepository;
             _productQuestionRepository = productQuestionRepository;
             _productAnswerRepository = productAnswerRepository;
+            _couponRepository = couponRepository;
         }
 
         public IProductRepository Product => _productRepository;
@@ -58,6 +60,8 @@ namespace Repositories
         public IProductQuestionRepository QuestionRepository => _productQuestionRepository;
 
         public IProductAnswerRepository AnswerRepository => _productAnswerRepository;
+
+        public ICouponRepository CouponRepository => _couponRepository;
 
         public void Save()
         {

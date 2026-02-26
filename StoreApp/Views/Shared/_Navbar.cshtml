@@ -170,6 +170,7 @@
   @if (ViewBag.Categories is IEnumerable<Entities.Models.Category> cats)
   {
     var activeId = ViewBag.ActiveCategoryId as int?;
+    var discountedOnly = string.Equals(Context.Request.Query["DiscountedOnly"], "true", StringComparison.OrdinalIgnoreCase);
     var ctrl = (ViewContext.RouteData.Values["controller"] as string) ?? "";
     var act = (ViewContext.RouteData.Values["action"] as string) ?? "";
     bool showBar = ctrl == "Home" || ctrl == "Product";
@@ -189,52 +190,70 @@
           </button>
 
           <!-- ✅ MOBİL: Dropdown Menü -->
-          <div class="collapse cat-dd-collapse d-md-none mt-2" id="mobileCategoryMenu">
-            <div class="cat-dd-panel">
-              <a asp-controller="Product" asp-action="Index" class="cat-dd-item @(activeId == null ? "active" : "")">
-                <i class="fa-solid fa-store"></i> Tüm Ürünler
-              </a>
+<div class="collapse cat-dd-collapse d-md-none mt-2" id="mobileCategoryMenu">
+  <div class="cat-dd-panel">
 
-              @foreach (var c in cats)
-              {
-                string icon = c.CategoryName switch
-                {
-                  "Futbol" => "fa-solid fa-futbol",
-                  "Basketbol" => "fa-solid fa-basketball",
-                  "Voleybol" => "fa-solid fa-volleyball",
-                  _ => "fa-solid fa-tag"
-                };
+    <a asp-controller="Product" asp-action="Index"
+       class="cat-dd-item @((activeId == null && !discountedOnly) ? "active" : "")">
+      <i class="fa-solid fa-store"></i> Tüm Ürünler
+    </a>
 
-                <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
-                   class="cat-dd-item @(activeId == c.CategoryId ? "active" : "")">
-                  <i class="@icon"></i> @c.CategoryName
-                </a>
-              }
-            </div>
-          </div>
+    <a asp-controller="Product" asp-action="Index"
+       asp-route-DiscountedOnly="true"
+       class="cat-dd-item @(discountedOnly ? "active" : "")">
+      <i class="fa-solid fa-tags"></i> İndirimdekiler
+    </a>
+
+    @foreach (var c in cats)
+    {
+      string icon = c.CategoryName switch
+      {
+        "Futbol" => "fa-solid fa-futbol",
+        "Basketbol" => "fa-solid fa-basketball",
+        "Voleybol" => "fa-solid fa-volleyball",
+        _ => "fa-solid fa-tag"
+      };
+
+      <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
+         class="cat-dd-item @(activeId == c.CategoryId ? "active" : "")">
+        <i class="@icon"></i> @c.CategoryName
+      </a>
+    }
+
+  </div>
+</div>
 
           <!-- ✅ DESKTOP: Yatay şerit -->
-          <div class="d-none d-md-flex gap-3 overflow-auto">
-            <a asp-controller="Product" asp-action="Index" class="category-item @(activeId == null ? "active-cat" : "")">
-              <i class="fa-solid fa-store"></i> Tüm Ürünler
-            </a>
+<div class="d-none d-md-flex gap-3 overflow-auto">
 
-            @foreach (var c in cats)
-            {
-              string icon = c.CategoryName switch
-              {
-                "Futbol" => "fa-solid fa-futbol",
-                "Basketbol" => "fa-solid fa-basketball",
-                "Voleybol" => "fa-solid fa-volleyball",
-                _ => "fa-solid fa-tag"
-              };
+  <a asp-controller="Product" asp-action="Index"
+     class="category-item @((activeId == null && !discountedOnly) ? "active-cat" : "")">
+    <i class="fa-solid fa-store"></i> Tüm Ürünler
+  </a>
 
-              <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
-                 class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
-                <i class="@icon"></i> @c.CategoryName
-              </a>
-            }
-          </div>
+  <a asp-controller="Product" asp-action="Index"
+     asp-route-DiscountedOnly="true"
+     class="category-item @(discountedOnly ? "active-cat" : "")">
+    <i class="fa-solid fa-tags"></i> İndirimdekiler
+  </a>
+
+  @foreach (var c in cats)
+  {
+    string icon = c.CategoryName switch
+    {
+      "Futbol" => "fa-solid fa-futbol",
+      "Basketbol" => "fa-solid fa-basketball",
+      "Voleybol" => "fa-solid fa-volleyball",
+      _ => "fa-solid fa-tag"
+    };
+
+    <a asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.CategoryId"
+       class="category-item @(activeId == c.CategoryId ? "active-cat" : "")">
+      <i class="@icon"></i> @c.CategoryName
+    </a>
+  }
+
+</div>
 
         </div>
       </div>

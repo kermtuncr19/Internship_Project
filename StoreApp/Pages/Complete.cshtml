@@ -1,14 +1,15 @@
 @page "{OrderId:int}"
 @model CompleteModel
 @{
-    var total = Model.Order.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+    // ✅ Artık complete sayfasında hesapları Order'dan okuyacağız
+    // (Controller/ProcessPayment'de kaydettiğin değerler)
+    decimal subtotal = Model.Order.Subtotal;                 // indirimsiz
+    decimal discount = Model.Order.DiscountAmount;           // kupon indirimi
+    decimal shippingCost = Model.Order.ShippingCost;         // ödeme anındaki kargo
+    decimal grandTotal = Model.Order.GrandTotal;             // ödeme anındaki genel toplam
+
     string statusText = Model.Order.Cancelled ? "İptal"
         : (Model.Order.Shipped ? "Onaylandı" : "Onay Aşamasında");
-
-    // Kargo hesapları
-    decimal shippingThreshold = 2000m;
-    decimal shippingCost = total >= shippingThreshold ? 0m : 39.99m;
-    decimal grandTotal = total + shippingCost;
 
     int installment = Model.Installment;
     decimal perInstallment = installment > 1 ? grandTotal / installment : 0m;
@@ -107,8 +108,16 @@
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Ara Toplam</span>
-                        <span class="fw-semibold">@total.ToString("C2")</span>
+                        <span class="fw-semibold">@subtotal.ToString("C2")</span>
                     </div>
+
+                    @if (discount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Kupon İndirimi (@Model.Order.CouponCode)</span>
+                            <span class="fw-semibold">-@discount.ToString("C2")</span>
+                        </div>
+                    }
 
                     <div class="d-flex justify-content-between mb-2">
                         <span>Kargo</span>

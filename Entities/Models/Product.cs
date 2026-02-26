@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Entities.Models;
 
@@ -67,5 +68,22 @@ public class Product
     }
 
     public ICollection<ProductQuestion> Questions { get; set; } = new List<ProductQuestion>();
+
+    [Range(0, 100)]
+    public decimal DiscountPercent { get; set; } = 0; // 0 = indirim yok
+
+    [NotMapped]
+    public decimal DiscountedPrice
+    {
+        get
+        {
+            if (DiscountPercent <= 0) return Price;
+            var ratio = (100m - DiscountPercent) / 100m;
+            return Math.Round(Price * ratio, 2);
+        }
+    }
+
+    [NotMapped]
+    public bool HasDiscount => DiscountPercent > 0;
 
 }

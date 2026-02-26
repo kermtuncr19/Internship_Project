@@ -79,7 +79,7 @@ namespace Entities.Models
         }
 
 
-        public decimal ComputeTotalValue() => Lines.Sum(e => e.Product.Price * e.Quantity);
+        public decimal ComputeTotalValue() => Lines.Sum(e => e.Product.DiscountedPrice * e.Quantity);
 
         public virtual void Clear() => Lines.Clear();
     }

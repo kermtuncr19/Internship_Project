@@ -110,6 +110,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IProductStockRepository, ProductStockRepository>();
             services.AddScoped<IProductQuestionRepository,ProductQuestionRepository>();
             services.AddScoped<IProductAnswerRepository, ProductAnswerRepository>();
+            services.AddScoped<ICouponRepository, CouponRepository>();
         }
 
         public static void ConfigureServiceRegistration(this IServiceCollection services)
@@ -125,6 +126,7 @@ namespace StoreApp.Infrastructure.Extensions
             services.AddScoped<IProductImageService, ProductImageManager>();
             services.AddScoped<IReturnRequestService, ReturnRequestManager>();
             services.AddScoped<IProductStockService, ProductStockManager>();
+            services.AddScoped<ICouponService, CouponService>();
             services.AddScoped<IEmailService, EmailService>
             ();  // ✅ Bu zaten var, harika!
             services.AddScoped<IProductQaService, ProductQaManager>();

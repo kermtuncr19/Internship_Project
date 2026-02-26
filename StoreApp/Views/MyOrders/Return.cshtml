@@ -4,14 +4,14 @@
 @{
     // Rejected dışındaki tüm iade taleplerini “aktif” sayıyoruz (Pending/Approved/Completed)
     var activeRequests = Model.Order.ReturnRequests?
-    .Where(r => r.Status != Entities.Models.ReturnStatus.Rejected)
-    .ToList() ?? new List<Entities.Models.ReturnRequest>();
+        .Where(r => r.Status != Entities.Models.ReturnStatus.Rejected)
+        .ToList() ?? new List<Entities.Models.ReturnRequest>();
 
     // Hangi CartLineId için aktif iade var? (satır -> statü)
     var lineStatus = activeRequests
-    .SelectMany(r => r.Lines.Select(l => new { l.CartLineId, r.Status }))
-    .GroupBy(x => x.CartLineId)
-    .ToDictionary(g => g.Key, g => g.Select(x => x.Status).First());
+        .SelectMany(r => r.Lines.Select(l => new { l.CartLineId, r.Status }))
+        .GroupBy(x => x.CartLineId)
+        .ToDictionary(g => g.Key, g => g.Select(x => x.Status).First());
 
     string StatusText(Entities.Models.ReturnStatus s) => s switch
     {
@@ -28,6 +28,14 @@
         Entities.Models.ReturnStatus.Completed => "badge bg-primary",
         _ => "badge bg-secondary"
     };
+
+    // ✅ Kupon bilgisi (sipariş geneli)
+    var orderSubTotal = (Model.Order.Subtotal > 0m)
+        ? Model.Order.Subtotal
+        : (Model.Order.Lines?.Sum(x => x.UnitPrice * x.Quantity) ?? 0m);
+
+    var orderCouponDiscount = Model.Order.DiscountAmount; // kupon indirimi (order bazlı)
+    var hasCoupon = orderCouponDiscount > 0m;
 }
 
 <div class="container my-4">
@@ -38,121 +46,179 @@
                 İade Talebi Oluştur
             </h5>
         </div>
+
         <div class="card-body">
             <div class="alert alert-info">
                 <i class="fa fa-info-circle me-2"></i>
                 <strong>Sipariş #@Model.Order.OrderId</strong> için iade talebi oluşturuyorsunuz.
                 <br>
-                <small>İade süresi: @Model.DaysRemaining gün kaldı
-                    (@Model.ReturnDeadline.ToLocalTime().ToString("dd.MM.yyyy") tarihine kadar)</small>
+                <small>
+                    İade süresi: @Model.DaysRemaining gün kaldı
+                    (@Model.ReturnDeadline.ToLocalTime().ToString("dd.MM.yyyy") tarihine kadar)
+                </small>
+
+                @if (hasCoupon)
+                {
+                    <div class="mt-2 small text-success">
+                        <i class="fa fa-tag me-1"></i>
+                        Bu siparişte kupon indirimi uygulanmış. İade tutarı, kupon indirimi satırlara oranlı dağıtılarak hesaplanır.
+                    </div>
+                }
             </div>
 
             <h6 class="mb-3">1. İade Etmek İstediğiniz Ürünleri Seçin</h6>
             <div class="row g-3 mb-4">
-               @foreach (var line in Model.Order.Lines)
-{
-    var imgSrc = "/images/placeholders/product-thumb.png";
-    if (!string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
-    {
-        if (line.Product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || line.Product.ImageUrl.StartsWith("/"))
-            imgSrc = line.Product.ImageUrl;
-        else
-            imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
-    }
 
-    var isLocked = Model.LockedLineIds.Contains(line.CartLineId);
-    Entities.Models.ReturnStatus? st = null;
-    DateTime? processedAt = null;
-    string? adminNotes = null;
-
-    if (isLocked)
-    {
-        st = Model.LineStatus.TryGetValue(line.CartLineId, out var s) ? s : null;
-        processedAt = Model.LineProcessedAt.TryGetValue(line.CartLineId, out var dt) ? dt : null;
-        adminNotes = Model.LineAdminNotes.TryGetValue(line.CartLineId, out var notes) ? notes : null;
-    }
-
-    string badgeClass = "bg-secondary";
-    string titleText = "Bu ürün için iade talebi oluşturulmuş.";
-    string subText = "Tekrardan talep oluşturulamaz.";
-    if (st.HasValue)
-    {
-        switch (st.Value)
-        {
-            case Entities.Models.ReturnStatus.Pending:
-                badgeClass = "bg-warning text-dark";
-                titleText = "İade talebi beklemede.";
-                subText = "Değerlendirme sürüyor. Yeni talep oluşturulamaz.";
-                break;
-            case Entities.Models.ReturnStatus.Approved:
-                badgeClass = "bg-success";
-                titleText = "İade talebi onaylandı.";
-                subText = "Kargo/iadeye ilişkin talimatlara uyunuz. Yeni talep oluşturulamaz.";
-                break;
-            case Entities.Models.ReturnStatus.Rejected:
-                badgeClass = "bg-danger";
-                titleText = "İade talebi reddedildi.";
-                subText = string.IsNullOrWhiteSpace(adminNotes)
-                    ? "Bu ürün için tekrar talep oluşturulamaz."
-                    : $"Red nedeni: {adminNotes}";
-                break;
-            case Entities.Models.ReturnStatus.Completed:
-                badgeClass = "bg-primary";
-                titleText = "İade işlemi tamamlandı.";
-                subText = "Bu ürün için süreç tamamlandı. Yeni talep oluşturulamaz.";
-                break;
-        }
-    }
-
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="form-check mb-2">
-                    <input class="form-check-input product-checkbox"
-                           type="checkbox"
-                           value="@line.CartLineId"
-                           id="line_@line.CartLineId"
-                           @(isLocked ? "disabled" : null) />
-                    <label class="form-check-label fw-semibold" for="line_@line.CartLineId">
-                        Bu ürünü iade et
-                    </label>
-                </div>
-
-                <div class="d-flex align-items-center">
-                    <img src="@imgSrc" alt="@line.Product?.ProductName" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
-                    <div>
-                        <div class="fw-semibold">@line.Product?.ProductName</div>
-                        @if (!string.IsNullOrWhiteSpace(line.Size))
-                        {
-                            <div class="text-muted small">Beden: @line.Size</div>
-                        }
-                        <div class="text-muted small">Adet: @line.Quantity</div>
-                        <div class="text-primary fw-semibold mt-1">
-                            @((line.Product?.Price ?? 0 * line.Quantity).ToString("C2"))
-                        </div>
-                    </div>
-                </div>
-
-                @* --- KİLİT MESAJ BLOĞU --- *@
-                @if (isLocked)
+                @foreach (var line in Model.Order.Lines)
                 {
-                    <div class="alert mt-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
-                        <span class="badge @badgeClass me-2">@(st?.ToString() ?? "Locked")</span>
-                        <strong>@titleText</strong>
-                        <div class="small text-muted mt-1">
-                            @subText
-                            @if (processedAt.HasValue)
-                            {
-                                <div>İşlem Zamanı: @processedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
-                            }
+                    var imgSrc = "/images/placeholders/product-thumb.png";
+                    if (!string.IsNullOrWhiteSpace(line.Product?.ImageUrl))
+                    {
+                        if (line.Product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || line.Product.ImageUrl.StartsWith("/"))
+                            imgSrc = line.Product.ImageUrl;
+                        else
+                            imgSrc = Url.Content($"~/images/{line.Product.ImageUrl}");
+                    }
+
+                    // ✅ Satır fiyatları (sipariş anındaki)
+                    var unitAtPurchase = line.UnitPrice;
+                    var qty = line.Quantity;
+                    var lineGross = unitAtPurchase * qty;
+
+                    // ✅ Kupon indirimi satıra oranlı dağıt
+                    decimal lineCouponShare = 0m;
+                    if (hasCoupon && orderSubTotal > 0m)
+                    {
+                        var ratio = lineGross / orderSubTotal;
+                        lineCouponShare = Math.Round(orderCouponDiscount * ratio, 2);
+                        if (lineCouponShare < 0m) lineCouponShare = 0m;
+                        if (lineCouponShare > lineGross) lineCouponShare = lineGross;
+                    }
+
+                    // ✅ İade edilirse bu satır için yatacak tutar
+                    var lineRefund = lineGross - lineCouponShare;
+                    if (lineRefund < 0m) lineRefund = 0m;
+
+                    var isLocked = Model.LockedLineIds.Contains(line.CartLineId);
+                    Entities.Models.ReturnStatus? st = null;
+                    DateTime? processedAt = null;
+                    string? adminNotes = null;
+
+                    if (isLocked)
+                    {
+                        st = Model.LineStatus.TryGetValue(line.CartLineId, out var s) ? s : null;
+                        processedAt = Model.LineProcessedAt.TryGetValue(line.CartLineId, out var dt) ? dt : null;
+                        adminNotes = Model.LineAdminNotes.TryGetValue(line.CartLineId, out var notes) ? notes : null;
+                    }
+
+                    string badgeClass = "bg-secondary";
+                    string titleText = "Bu ürün için iade talebi oluşturulmuş.";
+                    string subText = "Tekrardan talep oluşturulamaz.";
+                    if (st.HasValue)
+                    {
+                        switch (st.Value)
+                        {
+                            case Entities.Models.ReturnStatus.Pending:
+                                badgeClass = "bg-warning text-dark";
+                                titleText = "İade talebi beklemede.";
+                                subText = "Değerlendirme sürüyor. Yeni talep oluşturulamaz.";
+                                break;
+                            case Entities.Models.ReturnStatus.Approved:
+                                badgeClass = "bg-success";
+                                titleText = "İade talebi onaylandı.";
+                                subText = "Kargo/iadeye ilişkin talimatlara uyunuz. Yeni talep oluşturulamaz.";
+                                break;
+                            case Entities.Models.ReturnStatus.Rejected:
+                                badgeClass = "bg-danger";
+                                titleText = "İade talebi reddedildi.";
+                                subText = string.IsNullOrWhiteSpace(adminNotes)
+                                    ? "Bu ürün için tekrar talep oluşturulamaz."
+                                    : $"Red nedeni: {adminNotes}";
+                                break;
+                            case Entities.Models.ReturnStatus.Completed:
+                                badgeClass = "bg-primary";
+                                titleText = "İade işlemi tamamlandı.";
+                                subText = "Bu ürün için süreç tamamlandı. Yeni talep oluşturulamaz.";
+                                break;
+                        }
+                    }
+
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body">
+
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input product-checkbox"
+                                           type="checkbox"
+                                           value="@line.CartLineId"
+                                           id="line_@line.CartLineId"
+                                           data-gross="@lineGross"
+                                           data-coupon="@lineCouponShare"
+                                           data-refund="@lineRefund"
+                                           @(isLocked ? "disabled" : null) />
+
+                                    <label class="form-check-label fw-semibold" for="line_@line.CartLineId">
+                                        Bu ürünü iade et
+                                        @if (hasCoupon)
+                                        {
+                                            <span class="badge bg-success ms-2">Kuponlu alım</span>
+                                        }
+                                    </label>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <img src="@imgSrc" alt="@line.Product?.ProductName" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
+
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">@line.Product?.ProductName</div>
+
+                                        @if (!string.IsNullOrWhiteSpace(line.Size))
+                                        {
+                                            <div class="text-muted small">Beden: @line.Size</div>
+                                        }
+
+                                        <div class="text-muted small">Adet: @qty</div>
+
+                                        <div class="mt-2">
+                                            <div class="small text-muted">Satır Tutarı (sipariş anı)</div>
+                                            <div class="fw-semibold">@lineGross.ToString("C2")</div>
+
+                                            @if (hasCoupon && lineCouponShare > 0m)
+                                            {
+                                                <div class="small text-success mt-1">
+                                                    <i class="fa fa-tag me-1"></i> Kupon indirimi: -@lineCouponShare.ToString("C2")
+                                                </div>
+                                            }
+
+                                            <div class="small text-muted mt-2">İade Edilecek Tutar</div>
+                                            <div class="text-primary fw-bold">@lineRefund.ToString("C2")</div>
+                                        </div>
+
+                                        <div class="small text-muted mt-2">
+                                            @qty × @lineRefund.ToString("C2")
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @* --- KİLİT MESAJ BLOĞU --- *@
+                                @if (isLocked)
+                                {
+                                    <div class="alert mt-3" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                                        <span class="badge @badgeClass me-2">@(st?.ToString() ?? "Locked")</span>
+                                        <strong>@titleText</strong>
+                                        <div class="small text-muted mt-1">
+                                            @subText
+                                            @if (processedAt.HasValue)
+                                            {
+                                                <div>İşlem Zamanı: @processedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
                         </div>
                     </div>
                 }
-            </div>
-        </div>
-    </div>
-}
-
             </div>
 
             <hr />
@@ -175,9 +241,10 @@
                 <div class="mb-3">
                     <label class="form-label">Detaylı Açıklama (İsteğe Bağlı)</label>
                     <textarea class="form-control" id="detailedReason" rows="4"
-                        placeholder="İade nedeninizi detaylı olarak açıklayabilirsiniz..."></textarea>
-                    <small class="text-muted">Bu bilgi iade işleminizin daha hızlı değerlendirilmesine yardımcı
-                        olacaktır.</small>
+                              placeholder="İade nedeninizi detaylı olarak açıklayabilirsiniz..."></textarea>
+                    <small class="text-muted">
+                        Bu bilgi iade işleminizin daha hızlı değerlendirilmesine yardımcı olacaktır.
+                    </small>
                 </div>
 
                 <div class="alert alert-warning">
@@ -203,8 +270,84 @@
     </div>
 </div>
 
+<!-- ✅ Seçilenler Özeti (Sticky) -->
+<div id="refundSummaryBar" class="refund-summary-bar shadow-soft">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex flex-column">
+            <div class="fw-semibold">Seçilen Ürünler: <span id="selCount">0</span></div>
+            <div class="small text-muted">
+                Satır Toplamı: <span id="sumGross">₺0,00</span>
+                <span class="mx-2">•</span>
+                Kupon İndirimi: <span id="sumCoupon">₺0,00</span>
+            </div>
+        </div>
+
+        <div class="text-end">
+            <div class="small text-muted">Toplam İade Edilecek Tutar</div>
+            <div class="h5 m-0 text-primary fw-bold" id="sumRefund">₺0,00</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .refund-summary-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        background: #ffffff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 14px auto 0;
+    }
+
+    /* küçük ekranlarda daha rahat */
+    @@media (max-width: 576px) {
+        .refund-summary-bar {
+            border-radius: 0;
+            margin: 0;
+            border-left: 0;
+            border-right: 0;
+        }
+    }
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    function formatTry(value) {
+        // tr-TR formatı
+        try {
+            return value.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+        } catch {
+            return '₺' + (Math.round(value * 100) / 100).toFixed(2);
+        }
+    }
+
+    function recalcSummary() {
+        const checked = Array.from(document.querySelectorAll('.product-checkbox:checked:not([disabled])'));
+
+        let count = checked.length;
+        let gross = 0, coupon = 0, refund = 0;
+
+        checked.forEach(cb => {
+            gross += parseFloat(cb.dataset.gross || '0');
+            coupon += parseFloat(cb.dataset.coupon || '0');
+            refund += parseFloat(cb.dataset.refund || '0');
+        });
+
+        document.getElementById('selCount').textContent = count.toString();
+        document.getElementById('sumGross').textContent = formatTry(gross);
+        document.getElementById('sumCoupon').textContent = formatTry(coupon);
+        document.getElementById('sumRefund').textContent = formatTry(refund);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.product-checkbox').forEach(cb => {
+            cb.addEventListener('change', recalcSummary);
+        });
+        recalcSummary();
+    });
+
     document.getElementById('returnForm').addEventListener('submit', function (e) {
         e.preventDefault();
 

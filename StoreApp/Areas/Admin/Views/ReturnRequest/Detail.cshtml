@@ -19,6 +19,31 @@
         Entities.Models.ReturnStatus.Completed => "Tamamlandı",
         _ => "Bilinmiyor"
     };
+
+    // ✅ Sipariş / kupon verileri
+    var order = Model.Order;
+    decimal orderSubTotal = 0m;
+    decimal orderCouponDiscount = 0m;
+
+    if (order != null)
+    {
+        // ödeme anındaki subtotal varsa onu kullan
+        orderSubTotal = order.Subtotal > 0m
+            ? order.Subtotal
+            : (order.Lines?.Sum(l => (l.UnitPrice * l.Quantity)) ?? 0m);
+
+        orderCouponDiscount = order.DiscountAmount; // kupon indirimi (order bazlı)
+        if (orderSubTotal < 0m) orderSubTotal = 0m;
+        if (orderCouponDiscount < 0m) orderCouponDiscount = 0m;
+        if (orderCouponDiscount > orderSubTotal) orderCouponDiscount = orderSubTotal;
+    }
+
+    bool hasCoupon = orderCouponDiscount > 0m && orderSubTotal > 0m;
+
+    // ✅ Sayfa toplamları
+    decimal totalGross = 0m;
+    decimal totalCouponShare = 0m;
+    decimal totalRefund = 0m;
 }
 
 <div class="container my-4">
@@ -88,21 +113,12 @@
                         </div>
                     }
 
-                    @if (Model.ProcessedAt.HasValue)
+                    @if (hasCoupon)
                     {
-                        <div class="mb-3">
-                            <label class="text-muted small mb-1">İşlem Tarihi</label>
-                            <div>@Model.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
-                        </div>
-                    }
-
-                    @if (!string.IsNullOrWhiteSpace(Model.AdminNotes))
-                    {
-                        <div class="mb-3">
-                            <label class="text-muted small mb-1">Admin Notu</label>
-                            <div class="alert alert-info mb-0">
-                                @Model.AdminNotes
-                            </div>
+                        <div class="alert alert-success small mb-0">
+                            <i class="fa fa-tag me-1"></i>
+                            Bu siparişte kupon indirimi var: <strong>-@orderCouponDiscount.ToString("C2")</strong>.
+                            İade tutarı satırlara oranlı dağıtılarak hesaplanır.
                         </div>
                     }
                 </div>
@@ -113,57 +129,107 @@
                 <div class="card-header bg-white">
                     <h6 class="mb-0">İade Edilen Ürünler</h6>
                 </div>
+
                 <div class="list-group list-group-flush">
                     @foreach (var line in Model.Lines)
                     {
                         var product = line.CartLine?.Product;
+
                         var imgSrc = "/images/placeholders/product-thumb.png";
-                        
                         if (!string.IsNullOrWhiteSpace(product?.ImageUrl))
                         {
                             if (product.ImageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || product.ImageUrl.StartsWith("/"))
-                            {
                                 imgSrc = product.ImageUrl;
-                            }
                             else
-                            {
                                 imgSrc = Url.Content($"~/images/{product.ImageUrl}");
-                            }
                         }
 
-                        var unitPrice = product?.Price ?? line.CartLine?.UnitPrice ?? 0m;
-                        var lineTotal = unitPrice * line.Quantity;
+                        // ✅ ÖNEMLİ: ürünün bugünkü fiyatı değil, sipariş anındaki UnitPrice!
+                        var unitAtPurchase = line.CartLine?.UnitPrice ?? 0m;
+                        var qty = line.Quantity;
+
+                        var lineGross = unitAtPurchase * qty;
+
+                        // ✅ Kupon indirimi satıra oranlı
+                        decimal lineCouponShare = 0m;
+                        if (hasCoupon && orderSubTotal > 0m)
+                        {
+                            var ratio = lineGross / orderSubTotal;
+                            lineCouponShare = Math.Round(orderCouponDiscount * ratio, 2);
+                            if (lineCouponShare < 0m) lineCouponShare = 0m;
+                            if (lineCouponShare > lineGross) lineCouponShare = lineGross;
+                        }
+
+                        var lineRefund = lineGross - lineCouponShare;
+                        if (lineRefund < 0m) lineRefund = 0m;
+
+                        totalGross += lineGross;
+                        totalCouponShare += lineCouponShare;
+                        totalRefund += lineRefund;
 
                         <div class="list-group-item py-3">
                             <div class="d-flex align-items-center">
                                 <img src="@imgSrc" alt="@product?.ProductName" class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;" />
+
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold mb-1">@product?.ProductName</div>
+
                                     @if (!string.IsNullOrWhiteSpace(line.CartLine?.Size))
                                     {
                                         <div class="text-muted small mb-1">
                                             Beden: <strong>@line.CartLine.Size</strong>
                                         </div>
                                     }
+
                                     <div class="text-muted small">
-                                        Adet: <strong>@line.Quantity</strong>
+                                        Adet: <strong>@qty</strong>
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        @qty × @unitAtPurchase.ToString("C2")
                                     </div>
                                 </div>
-                                <div class="text-end">
-                                    <div class="text-muted small">Birim Fiyat</div>
-                                    <div class="fw-semibold">@unitPrice.ToString("C2")</div>
-                                    <div class="text-primary fw-bold">@lineTotal.ToString("C2")</div>
+
+                                <div class="text-end" style="min-width: 180px;">
+                                    <div class="text-muted small">Satır Tutarı</div>
+                                    <div class="fw-semibold">@lineGross.ToString("C2")</div>
+
+                                    @if (lineCouponShare > 0m)
+                                    {
+                                        <div class="small text-success mt-1">
+                                            <i class="fa fa-tag me-1"></i> Kupon Payı: -@lineCouponShare.ToString("C2")
+                                        </div>
+                                    }
+
+                                    <div class="text-muted small mt-2">İade Edilecek</div>
+                                    <div class="text-primary fw-bold">@lineRefund.ToString("C2")</div>
                                 </div>
                             </div>
                         </div>
                     }
+
                     <div class="list-group-item bg-light">
                         <div class="d-flex justify-content-between align-items-center">
-                            <strong>Toplam İade Tutarı</strong>
+                            <div>
+                                <div class="fw-semibold">Toplam İade Tutarı</div>
+                                @if (totalCouponShare > 0m)
+                                {
+                                    <div class="small text-success">
+                                        Kupon indirimi düşüldü: -@totalCouponShare.ToString("C2")
+                                    </div>
+                                }
+                            </div>
                             <strong class="text-primary fs-5">
-                                @Model.Lines.Sum(l => ((l.CartLine?.Product?.Price ?? l.CartLine?.UnitPrice ?? 0m) * l.Quantity)).ToString("C2")
+                                @totalRefund.ToString("C2")
                             </strong>
                         </div>
+
+                        @if (totalCouponShare > 0m)
+                        {
+                            <div class="small text-muted mt-1">
+                                (Satır toplamı: @totalGross.ToString("C2"))
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -186,7 +252,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         @if (Model.ProcessedAt.HasValue)
                         {
                             <div class="timeline-item">
@@ -317,20 +383,18 @@ function showRejectModal() {
 document.querySelectorAll('#approveForm, #rejectForm, #completeForm, #deleteForm').forEach(form => {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const btn = this.querySelector('button[type="submit"]');
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>İşleniyor...';
-        
+
         const formData = new FormData(this);
-        
+
         fetch(this.action, {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => response.json())
         .then(data => {
@@ -349,22 +413,14 @@ document.querySelectorAll('#approveForm, #rejectForm, #completeForm, #deleteForm
                     }
                 });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Hata',
-                    text: data.message
-                });
+                Swal.fire({ icon: 'error', title: 'Hata', text: data.message });
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Hata',
-                text: 'İşlem sırasında bir hata oluştu.'
-            });
+            Swal.fire({ icon: 'error', title: 'Hata', text: 'İşlem sırasında bir hata oluştu.' });
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         });
@@ -373,15 +429,8 @@ document.querySelectorAll('#approveForm, #rejectForm, #completeForm, #deleteForm
 </script>
 
 <style>
-.timeline {
-    position: relative;
-}
-.timeline-item {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    position: relative;
-}
+.timeline { position: relative; }
+.timeline-item { display: flex; gap: 10px; margin-bottom: 15px; position: relative; }
 .timeline-item:not(:last-child)::before {
     content: '';
     position: absolute;
@@ -391,8 +440,5 @@ document.querySelectorAll('#approveForm, #rejectForm, #completeForm, #deleteForm
     width: 2px;
     background: #dee2e6;
 }
-.timeline-item i {
-    font-size: 0.6rem;
-    margin-top: 4px;
-}
+.timeline-item i { font-size: 0.6rem; margin-top: 4px; }
 </style>

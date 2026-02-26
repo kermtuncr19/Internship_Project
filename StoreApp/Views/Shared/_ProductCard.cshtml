@@ -3,21 +3,53 @@
 
 @{
   var wrapperClass = (ViewData["WrapperClass"] as string) ?? "col-6 col-sm-6 col-md-4 col-lg-3 col-xl-2-4 my-3";
+  var hasDiscount = Model.DiscountPercent > 0;
 }
+
 <div class="@wrapperClass">
   <div class="card h-100 product-card position-relative hover-card">
+
     <a asp-controller="Product" asp-action="Get" asp-route-id="@Model.ProductId" class="card-img-link"
        aria-label="@Model.ProductName">
-      <div class="img-box"
-           style=" padding:15px; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
+      <div class="img-box position-relative"
+           style="padding:15px; background-color:#f8f9fa; display:flex; align-items:center; justify-content:center;">
+
         <img src="@Model?.ImageUrl" class="img-fluid" alt="@Model?.ProductName"
              style="max-height:100%; max-width:100%; object-fit:contain;">
+
+        @* ✅ İndirim rozeti fotoğrafın SOL ALTINDA *@
+        @if (hasDiscount)
+        {
+          <span class="badge bg-danger position-absolute bottom-0 start-0 m-2"
+                style="border-radius:999px; padding:.45rem .75rem; font-weight:700;">
+            -%@Model.DiscountPercent
+          </span>
+        }
       </div>
     </a>
+
     <div class="card-body d-flex flex-column p-3">
       <div class="text-navy text-center lead rounded-2 mb-2">
-        @Model.Price.ToString("c")
+        @if (hasDiscount)
+        {
+          <div class="d-flex flex-column align-items-center gap-1">
+            <div class="text-muted" style="text-decoration:line-through; font-size:.95rem;">
+              @Model.Price.ToString("c")
+            </div>
+
+            <div style="font-weight:700;">
+              @Model.DiscountedPrice.ToString("c")
+            </div>
+
+            @* ❌ badge buradan kaldırıldı (artık fotoğrafta görünüyor) *@
+          </div>
+        }
+        else
+        {
+          @Model.Price.ToString("c")
+        }
       </div>
+
       <h5 class="card-title" style="font-size:0.95rem; min-height:2.5rem;">@Model.ProductName</h5>
 
       @{
@@ -34,8 +66,7 @@
           {
             <i class="fa-solid fa-star" style="color:#ffc107; font-size:0.95rem;"></i>
           }
-          else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating -
-          Math.Floor(avgRating)) < 0.75)
+          else if (i == (int)Math.Floor(avgRating) + 1 && (avgRating - Math.Floor(avgRating)) >= 0.25 && (avgRating - Math.Floor(avgRating)) < 0.75)
           {
             <i class="fa-solid fa-star-half-stroke" style="color:#ffc107; font-size:0.95rem;"></i>
           }
@@ -52,20 +83,22 @@
            class="btn btn-sm me-2 tooltip1-btn" style="background-color:#ffea00; color:black; border:none;">
           <i class="fa-solid fa-arrow-right"></i>
         </a>
+
         <div class="d-flex align-items-center gap-2">
           @if (User.Identity?.IsAuthenticated == true)
           {
             var favoriteIds = ViewBag.FavoriteIds as List<int> ?? new List<int>();
             var isFavorite = favoriteIds.Contains(Model.ProductId);
 
-            <button type="button"            class="btn p-0 border-0 bg-transparent js-fav-btn" data-product-id="@Model.ProductId"
+            <button type="button"
+                    class="btn p-0 border-0 bg-transparent js-fav-btn"
+                    data-product-id="@Model.ProductId"
                     aria-pressed="@(isFavorite.ToString().ToLower())"
                     style="line-height:1; pointer-events:auto; position:relative; z-index:2;">
               <i class="fav-icon @(isFavorite ? "fa-solid" : "fa-regular") fa-heart fa-lg"
                  style="@(isFavorite ? "color:#dc3545;" : "color:#0d1b4c;") cursor:pointer; transition:color .2s;"></i>
             </button>
           }
-
 
           @if (Model.RequiresSize)
           {

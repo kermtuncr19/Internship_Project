@@ -7,19 +7,45 @@
     <a asp-controller="Product" asp-action="Get" asp-route-id="@Model.ProductId"
        class="card-img-link" aria-label="@Model.ProductName">
       <div class="img-box"
-           style="height: 250px; padding: 15px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+           style="height: 250px; padding: 15px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; position: relative;">
+
+        @* İndirim rozeti *@
+        @if (Model.HasDiscount)
+        {
+          <span class="badge rounded-pill"
+                style="position:absolute; bottom:12px; left:12px; background:#ff3b30; color:white; padding:8px 12px; font-size:.85rem;">
+            -%@Model.DiscountPercent
+          </span>
+        }
+
         <img src="@Model?.ImageUrl" class="img-fluid" alt="@Model?.ProductName"
              style="max-height: 100%; max-width: 100%; object-fit: contain;">
       </div>
     </a>
 
     <div class="card-body d-flex flex-column p-3">
-      <div class="text-navy text-center lead rounded-2 mb-2">
-        @Model.Price.ToString("c")
-      </div>
+
+      @* Fiyat alanı *@
+      @if (Model.HasDiscount)
+      {
+        <div class="text-center mb-2">
+          <div class="text-muted small text-decoration-line-through">
+            @Model.Price.ToString("C2")
+          </div>
+          <div class="text-navy lead rounded-2 fw-bold">
+            @Model.DiscountedPrice.ToString("C2")
+          </div>
+        </div>
+      }
+      else
+      {
+        <div class="text-navy text-center lead rounded-2 mb-2">
+          @Model.Price.ToString("C2")
+        </div>
+      }
 
       <h5 class="card-title" style="font-size: 0.95rem; min-height: 2.5rem;">@Model.ProductName</h5>
-      
+
       <div class="mt-auto d-flex align-items-center justify-content-between">
         <!-- Detaya git -->
         <a asp-controller="Product" asp-action="Get" asp-route-id="@Model.ProductId"
@@ -28,20 +54,18 @@
         </a>
 
         <div class="d-flex align-items-center gap-2">
-          <!-- FAVORİDEN ÇIKAR butonu -->
+          <!-- FAVORİDEN ÇIKAR -->
           <button type="button"
                   class="btn btn-outline-danger btn-sm js-fav-remove tooltip1-btn-favorite-remove"
-                  data-product-id="@Model.ProductId"
-                  >
-            <i class="fa-solid fa-trash me-1"></i> 
+                  data-product-id="@Model.ProductId">
+            <i class="fa-solid fa-trash me-1"></i>
           </button>
 
           <!-- Sepete ekle -->
           @if (Model.RequiresSize)
           {
             <a asp-controller="Product" asp-action="Get" asp-route-id="@Model.ProductId" asp-route-alert="size"
-               class="btn btn-primary btn-sm tooltip-btn" style="border:none;"
-               >
+               class="btn btn-primary btn-sm tooltip-btn" style="border:none;">
               <i class="fa fa-cart-plus"></i>
             </a>
           }
@@ -58,6 +82,7 @@
           }
         </div>
       </div>
+
     </div>
   </div>
 </div>

@@ -113,5 +113,12 @@ namespace Repositories.Extensions
             var skip = (pageNumber - 1) * pageSize;
             return products.Skip(skip).Take(pageSize);
         }
+
+        public static IQueryable<Product> FilteredByDiscountedOnly(this IQueryable<Product> products, bool discountedOnly)
+        {
+            if (!discountedOnly) return products;
+
+            return products.Where(p => p.DiscountPercent > 0);
+        }
     }
 }

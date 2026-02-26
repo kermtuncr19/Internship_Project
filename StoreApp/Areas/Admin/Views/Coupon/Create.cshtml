@@ -1,0 +1,393 @@
+@model Entities.Models.Coupon
+@{
+    ViewData["Title"] = "Yeni Kupon";
+}
+
+<style>
+    :root {
+        --fb-navy: #003580;
+        --fb-yellow: #ffea00;
+        --fb-dark: #0a1628;
+        --fb-card: #ffffff;
+        --fb-border: #e8edf5;
+        --fb-muted: #6b7a99;
+        --fb-radius: 14px;
+        --fb-shadow: 0 2px 16px rgba(0,53,128,.10);
+    }
+
+    .form-page-header {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .form-page-header .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .45rem .9rem;
+        background: #f1f5fb;
+        border: 1px solid var(--fb-border);
+        border-radius: 9px;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--fb-navy);
+        text-decoration: none;
+        transition: all .15s;
+    }
+    .form-page-header .back-btn:hover {
+        background: var(--fb-navy);
+        color: #fff;
+        border-color: var(--fb-navy);
+    }
+
+    .form-page-header h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--fb-dark);
+        letter-spacing: -0.02em;
+        margin: 0;
+    }
+
+    .coupon-form-card {
+        background: var(--fb-card);
+        border-radius: var(--fb-radius);
+        box-shadow: var(--fb-shadow);
+        border: 1px solid var(--fb-border);
+        overflow: hidden;
+    }
+
+    .form-card-header {
+        background: linear-gradient(135deg, var(--fb-dark) 0%, var(--fb-navy) 100%);
+        padding: 1.1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+
+    .form-card-header span {
+        color: rgba(255,255,255,.75);
+        font-size: .78rem;
+        font-weight: 600;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+
+    .form-card-header .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--fb-yellow);
+        flex-shrink: 0;
+    }
+
+    .form-body {
+        padding: 1.75rem;
+    }
+
+    .form-section-title {
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--fb-muted);
+        margin-bottom: .9rem;
+        margin-top: 1.5rem;
+        padding-bottom: .4rem;
+        border-bottom: 1px solid var(--fb-border);
+    }
+
+    .form-section-title:first-child { margin-top: 0; }
+
+    .field-group {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .field-group.two-col { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+    .field-wrap { display: flex; flex-direction: column; gap: .4rem; }
+
+    .field-wrap label {
+        font-size: .78rem;
+        font-weight: 700;
+        color: #374151;
+        letter-spacing: .01em;
+    }
+
+    .field-wrap label .opt-tag {
+        font-size: .68rem;
+        font-weight: 600;
+        color: var(--fb-muted);
+        background: #f1f5fb;
+        border: 1px solid var(--fb-border);
+        padding: .1em .45em;
+        border-radius: 5px;
+        margin-left: .35rem;
+    }
+
+    .field-wrap input[type="text"],
+    .field-wrap input[type="number"],
+    .field-wrap input[type="datetime-local"] {
+        padding: .6rem .9rem;
+        border: 1.5px solid var(--fb-border);
+        border-radius: 9px;
+        font-size: .9rem;
+        color: #1e293b;
+        background: #fafbfd;
+        transition: border-color .15s, box-shadow .15s;
+        outline: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .field-wrap input:focus {
+        border-color: var(--fb-navy);
+        box-shadow: 0 0 0 3px rgba(0,53,128,.1);
+        background: #fff;
+    }
+
+    .field-wrap input::placeholder { color: #b0bac9; }
+
+    .field-wrap .text-danger {
+        font-size: .75rem;
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        padding: .75rem 1rem;
+        background: #f9fafb;
+        border: 1.5px solid var(--fb-border);
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+        transition: border-color .15s;
+        margin-top: .3rem;
+    }
+
+    .toggle-wrap:hover { border-color: var(--fb-navy); }
+
+    .toggle-switch {
+        width: 40px;
+        height: 22px;
+        background: #d1d5db;
+        border-radius: 99px;
+        position: relative;
+        flex-shrink: 0;
+        transition: background .2s;
+    }
+
+    .toggle-switch::after {
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: #fff;
+        border-radius: 50%;
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        transition: transform .2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+
+    input#IsActive:checked ~ .toggle-wrap .toggle-switch,
+    .toggle-switch.on {
+        background: var(--fb-navy);
+    }
+
+    input#IsActive:checked ~ .toggle-wrap .toggle-switch::after,
+    .toggle-switch.on::after {
+        transform: translateX(18px);
+    }
+
+    .toggle-label {
+        font-size: .88rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    input#IsActive { display: none; }
+
+    .form-footer {
+        padding: 1.25rem 1.75rem;
+        background: #f8fafd;
+        border-top: 1px solid var(--fb-border);
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, var(--fb-navy) 0%, #1a4fa0 100%);
+        color: #fff;
+        border: none;
+        padding: .65rem 1.6rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: .9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .2s;
+        box-shadow: 0 4px 14px rgba(0,53,128,.25);
+    }
+
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0,53,128,.35);
+        color: var(--fb-yellow);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: var(--fb-muted);
+        border: 1.5px solid var(--fb-border);
+        padding: .65rem 1.4rem;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: .9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        transition: all .15s;
+    }
+
+    .btn-cancel:hover { border-color: #94a3b8; color: #374151; background: #f1f5fb; }
+
+    @@media (max-width: 576px) {
+        .form-body { padding: 1.2rem; }
+        .form-footer { padding: 1rem 1.2rem; }
+        .field-group { grid-template-columns: 1fr; }
+        .field-group.two-col { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="form-page-header">
+    <a class="back-btn" asp-area="Admin" asp-controller="Coupon" asp-action="Index">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Geri
+    </a>
+    <h2>Yeni Kupon</h2>
+</div>
+
+<div class="coupon-form-card">
+    <div class="form-card-header">
+        <div class="dot"></div>
+        <span>Kupon Bilgileri</span>
+    </div>
+
+    <form method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-body">
+            <!-- Temel Bilgiler -->
+            <div class="form-section-title">Temel Bilgiler</div>
+            <div class="field-group">
+                <div class="field-wrap">
+                    <label for="Code">Kod</label>
+                    <input asp-for="Code" id="Code" type="text" placeholder="örn: SEPETTE20" />
+                    <span asp-validation-for="Code" class="text-danger"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label for="Percent">İndirim %</label>
+                    <input asp-for="Percent" id="Percent" type="number" step="0.01" min="0" max="100" />
+                    <span asp-validation-for="Percent" class="text-danger"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label for="MinCartTotal">
+                        Min Sepet Tutarı
+                        <span class="opt-tag">opsiyonel</span>
+                    </label>
+                    <input asp-for="MinCartTotal" id="MinCartTotal" type="number" step="0.01" min="0" placeholder="0,00" />
+                    <span asp-validation-for="MinCartTotal" class="text-danger"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label for="UsageLimit">
+                        Kullanım Limiti
+                        <span class="opt-tag">opsiyonel</span>
+                    </label>
+                    <input asp-for="UsageLimit" id="UsageLimit" type="number" min="1" placeholder="Sınırsız" />
+                    <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Geçerlilik -->
+            <div class="form-section-title">Geçerlilik Tarihleri</div>
+            <div class="field-group two-col">
+                <div class="field-wrap">
+                    <label>Başlangıç (UTC) <span class="opt-tag">opsiyonel</span></label>
+                    <input name="StartsAtUtc" type="datetime-local" />
+                    <span asp-validation-for="StartsAtUtc" class="text-danger"></span>
+                </div>
+
+                <div class="field-wrap">
+                    <label>Bitiş (UTC) <span class="opt-tag">opsiyonel</span></label>
+                    <input name="EndsAtUtc" type="datetime-local" />
+                    <span asp-validation-for="EndsAtUtc" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Durum -->
+            <div class="form-section-title">Durum</div>
+            <input type="checkbox" asp-for="IsActive" id="IsActive" />
+            <label class="toggle-wrap" for="IsActive" id="toggleWrap">
+                <div class="toggle-switch" id="toggleSwitch"></div>
+                <span class="toggle-label" id="toggleLabel">Aktif</span>
+            </label>
+        </div>
+
+        <div class="form-footer">
+            <button type="submit" class="btn-save">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Kaydet
+            </button>
+            <a class="btn-cancel" asp-area="Admin" asp-controller="Coupon" asp-action="Index">
+                Vazgeç
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const checkbox = document.getElementById('IsActive');
+    const sw = document.getElementById('toggleSwitch');
+    const lbl = document.getElementById('toggleLabel');
+
+    function syncToggle() {
+        if (checkbox.checked) {
+            sw.classList.add('on');
+            lbl.textContent = 'Aktif';
+            lbl.style.color = '#003580';
+        } else {
+            sw.classList.remove('on');
+            lbl.textContent = 'Pasif';
+            lbl.style.color = '#94a3b8';
+        }
+    }
+
+    checkbox.addEventListener('change', syncToggle);
+    syncToggle();
+</script>
+
+@section Scripts{
+    <partial name="_ValidationScriptsPartial" />
+}

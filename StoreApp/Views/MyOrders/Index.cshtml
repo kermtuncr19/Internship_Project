@@ -12,7 +12,20 @@
         <div class="orders-list">
             @foreach (var o in Model)
             {
-                var total = o.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+                // ✅ Ürün kartlarında normal fiyat görünsün (Product.Price), toplamda indirimli tutar görünsün (GrandTotal)
+                var subtotal = o.Subtotal;
+                var discount = o.DiscountAmount;
+                var shipping = o.ShippingCost;
+                var grandTotal = o.GrandTotal;
+
+                // Fallback: eski siparişlerde alanlar boş/0 olabilir
+                if (grandTotal <= 0)
+                {
+                    subtotal = o.Lines.Sum(l => (l.Product?.Price ?? l.UnitPrice) * l.Quantity);
+                    shipping = subtotal >= 2000m ? 0m : 39.99m;
+                    grandTotal = subtotal + shipping;
+                    discount = 0m;
+                }
 
                 string statusBadge = "";
                 string statusText = "";
@@ -89,26 +102,26 @@
                                 }
 
                                 string lineBadgeClass = "";
-                                string lineBadgeText  = "";
+                                string lineBadgeText = "";
                                 if (lineSt.HasValue)
                                 {
                                     switch (lineSt.Value)
                                     {
                                         case Entities.Models.ReturnStatus.Pending:
                                             lineBadgeClass = "badge bg-warning text-dark ms-2";
-                                            lineBadgeText  = "İade: Beklemede";
+                                            lineBadgeText = "İade: Beklemede";
                                             break;
                                         case Entities.Models.ReturnStatus.Approved:
                                             lineBadgeClass = "badge bg-success ms-2";
-                                            lineBadgeText  = "İade: Onaylandı";
+                                            lineBadgeText = "İade: Onaylandı";
                                             break;
                                         case Entities.Models.ReturnStatus.Rejected:
                                             lineBadgeClass = "badge bg-danger ms-2";
-                                            lineBadgeText  = "İade: Reddedildi";
+                                            lineBadgeText = "İade: Reddedildi";
                                             break;
                                         case Entities.Models.ReturnStatus.Completed:
                                             lineBadgeClass = "badge bg-primary ms-2";
-                                            lineBadgeText  = "İade: Tamamlandı";
+                                            lineBadgeText = "İade: Tamamlandı";
                                             break;
                                     }
                                 }
@@ -117,8 +130,7 @@
                                               || lineSt == Entities.Models.ReturnStatus.Completed;
 
                                 <div class="col-md-6">
-                                    @* ✅ Tüm ürün kartını tıklanabilir yaptık *@
-                                    <a href="@Url.Action("Get", "Product", new { id = line.Product?.ProductId })" 
+                                    <a href="@Url.Action("Get", "Product", new { id = line.Product?.ProductId })"
                                        class="order-product-item-link text-decoration-none">
                                         <div class="order-product-item">
                                             <div class="d-flex align-items-center mb-2">
@@ -140,15 +152,17 @@
                                                         }
                                                         <span>Adet: <strong>@line.Quantity</strong></span>
                                                     </div>
+
+                                                    @* ✅ Ürün kartında NORMAL fiyat kalsın *@
                                                     <div class="text-primary fw-semibold mt-1">
-                                                        @((line.Product?.Price ?? 0).ToString("C2"))
+                                                        @((line.Product?.Price ?? 0m).ToString("C2"))
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </a>
 
-                                    @* ✅ Değerlendir butonu link dışında kalıyor *@
+                                    @* ✅ Değerlendir butonu link dışında kalsın *@
                                     @if (o.Delivered && line.Product != null && !hideReview)
                                     {
                                         <div class="mt-2">
@@ -169,7 +183,17 @@
                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <div>
                                 <span class="text-muted small">Toplam Tutar:</span>
-                                <span class="fs-5 fw-bold text-primary ms-2">@total.ToString("C2")</span>
+
+                                @* ✅ Burada indirimli tutar (GrandTotal) *@
+                                <span class="fs-5 fw-bold text-primary ms-2">@grandTotal.ToString("C2")</span>
+
+                                @* ✅ İndirim varsa sadece burada göster *@
+                                @if (discount > 0m)
+                                {
+                                    <div class="small text-success mt-1">
+                                        <i class="fa fa-tag me-1"></i> İndirim: -@discount.ToString("C2")
+                                    </div>
+                                }
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
                                 <a asp-action="Detail" asp-route-id="@o.OrderId" class="btn btn-outline-primary btn-sm btn-pill">
