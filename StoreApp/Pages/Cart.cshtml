@@ -71,9 +71,9 @@ decimal remaining = Math.Max(0m, shippingThreshold - discountedTotal);
         var progress = (int)Math.Min(100m, Math.Round((discountedTotal / shippingThreshold) * 100m, 0));
 
         <div id="shipping-info" class="p-3 text-center shadow-sm rounded mb-4" style="background-color:#fffbe6;">
-            <div class="fw-semibold mb-2 text-navy">
-                💛 2000 ₺ üzeri alışverişlerde kargo bedava!
-            </div>
+            <div id="shipping-title" class="fw-semibold mb-2 text-navy">
+    💛 2000 ₺ üzeri alışverişlerde kargo bedava!
+</div>
 
             <div class="progress" style="height:10px; border-radius:8px;">
                 <div class="progress-bar" id="shipping-progress" role="progressbar"
@@ -89,9 +89,9 @@ decimal remaining = Math.Max(0m, shippingThreshold - discountedTotal);
     else
     {
         <div id="shipping-info" class="p-3 text-center shadow-sm rounded mb-4" style="background-color:#d1e7dd;">
-            <div class="fw-semibold text-success">
-                🎉 Tebrikler! Siparişiniz ücretsiz kargo sınırını geçti.
-            </div>
+            <div id="shipping-title" class="fw-semibold text-success">
+    🎉 Tebrikler! Siparişiniz ücretsiz kargo sınırını geçti.
+</div>
             <small id="shipping-text" class="text-muted"></small>
         </div>
     }
@@ -416,6 +416,7 @@ if (couponRow && couponLabel && couponDiscount) {
                             var shippingInfo = document.getElementById("shipping-info");
                             var progressBar = document.getElementById("shipping-progress");
                             var shippingText = document.getElementById("shipping-text");
+                            var shippingTitle = document.getElementById("shipping-title");
 
                             if (!shippingInfo) return;
 
@@ -423,6 +424,35 @@ if (couponRow && couponLabel && couponDiscount) {
                                 shippingInfo.style.display = "none";
                                 return;
                             }
+
+                            shippingInfo.style.display = "";
+
+if (progressBar) {
+    progressBar.style.width = (data.progress || 0) + "%";
+}
+
+if (shippingTitle) {
+    if (data.freeShipping) {
+        shippingTitle.textContent = "🎉 Tebrikler! Siparişiniz ücretsiz kargo sınırını geçti.";
+        shippingTitle.classList.remove("text-navy");
+        shippingTitle.classList.add("text-success");
+    } else {
+        shippingTitle.textContent = "💛 2000 ₺ üzeri alışverişlerde kargo bedava!";
+        shippingTitle.classList.remove("text-success");
+        shippingTitle.classList.add("text-navy");
+    }
+}
+
+if (shippingText) {
+    if (data.freeShipping) {
+        shippingText.textContent = "";
+        shippingInfo.style.backgroundColor = "#d1e7dd";
+    } else {
+        shippingText.textContent =
+            "Ücretsiz kargo için " + data.remainingFormatted + " daha alışveriş yapın 🚚";
+        shippingInfo.style.backgroundColor = "#fffbe6";
+    }
+}
 
                             shippingInfo.style.display = "";
 
