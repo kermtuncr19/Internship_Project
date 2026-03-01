@@ -114,17 +114,25 @@ decimal remaining = Math.Max(0m, shippingThreshold - discountedTotal);
             {
                 @foreach (var line in Model.Cart?.Lines ?? Enumerable.Empty<CartLine>())
                 {
-                    var imgSrc = string.IsNullOrWhiteSpace(line.Product.ImageUrl)
-                        ? Url.Content("~/images/placeholder.png")
-                        : (line.Product.ImageUrl.StartsWith("~/") || line.Product.ImageUrl.StartsWith("/")
-                            ? Url.Content(line.Product.ImageUrl)
-                            : Url.Content($"~/images/{line.Product.ImageUrl}"));
+                    
+    var imageUrl = line.Product.ImageUrl?.Trim();
+
+    var imgSrc =
+        string.IsNullOrWhiteSpace(imageUrl)
+            ? Url.Content("~/images/placeholder.png")
+            : (imageUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+               imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                ? imageUrl // ✅ dış URL ise aynen kullan
+                : (imageUrl.StartsWith("~/") || imageUrl.StartsWith("/"))
+                    ? Url.Content(imageUrl) // ✅ lokal path
+                    : Url.Content($"~/images/{imageUrl}"); // ✅ sadece dosya adı ise wwwroot/images altında ara
+
 
                     <div class="card mb-3 shadow-sm border-0 cart-line" data-cart-line data-product-id="@line.Product.ProductId"
                          data-size="@line.Size">
                         <div class="row g-0 align-items-center">
                             <div class="col-3 col-md-2">
-                                <img src="@imgSrc" asp-append-version="true" alt="@line.Product.ProductName"
+                                <img src="@imgSrc"  alt="@line.Product.ProductName"
                                      class="img-fluid rounded-start" />
                             </div>
 
