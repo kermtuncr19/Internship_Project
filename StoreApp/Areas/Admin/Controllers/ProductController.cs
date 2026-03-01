@@ -44,8 +44,13 @@ namespace StoreApp.Areas.Admin.Controllers
                 .Include(p => p.Stocks)
                 .FilteredByCategoryId(p.CategoryId)
                 .FilteredBySearchTerm(p.SearchTerm)
-                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice)
-                .OrderBy(x => x.ProductId);
+                .FilteredByPrice(p.MinPrice, p.MaxPrice, p.IsValidPrice);
+            if (p.DiscountedOnly)
+            {
+                q = q.Where(x => x.DiscountPercent > 0);
+            }
+
+            q = q.OrderBy(x => x.ProductId);
 
             var total = q.Count();
 

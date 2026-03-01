@@ -12,6 +12,8 @@
   var qMax = Context.Request.Query["MaxPrice"].ToString();
   var qSearch = Context.Request.Query["SearchTerm"].ToString();
   var qPageSize = Context.Request.Query["PageSize"].ToString();
+  var qDiscount = Context.Request.Query["DiscountedOnly"].ToString();
+  var discountedOnlyActive = string.Equals(qDiscount, "true", StringComparison.OrdinalIgnoreCase);
 }
 
 @if (TempData["PriceError"] is string pe && !string.IsNullOrWhiteSpace(pe))
@@ -33,8 +35,14 @@
   <div class="col-12 col-lg order-1">
     <div class="chips d-flex flex-nowrap overflow-auto gap-2 pe-2">
       <a asp-area="Admin" asp-controller="Product" asp-action="Index"
-        class="btn btn-sm rounded-pill px-3 @(activeId == null ? "btn-navy" : "btn-outline-navy")">
+         class="btn btn-sm rounded-pill px-3 @((!discountedOnlyActive && activeId == null) ? "btn-navy" : "btn-outline-navy")">
         Tüm Ürünler
+      </a>
+      <a asp-area="Admin" asp-controller="Product" asp-action="Index" asp-route-DiscountedOnly="true"
+         asp-route-SearchTerm="@(qSearch)" asp-route-MinPrice="@(qMin)"
+         asp-route-MaxPrice="@(qMax)" asp-route-PageSize="@(qPageSize)" asp-route-PageNumber="1"
+         class="btn btn-sm rounded-pill px-3 @(discountedOnlyActive ? "btn-navy" : "btn-outline-navy")">
+        İndirimdekiler
       </a>
 
       @if (cats is not null)
@@ -42,7 +50,7 @@
         foreach (var c in cats)
         {
           <a asp-area="Admin" asp-controller="Product" asp-action="Index" asp-route-CategoryId="@c.CategoryId"
-            class="btn btn-sm rounded-pill px-3 @(activeId == c.CategoryId ? "btn-navy" : "btn-outline-navy")">
+             class="btn btn-sm rounded-pill px-3 @((!discountedOnlyActive && activeId == c.CategoryId) ? "btn-navy" : "btn-outline-navy")">
             @c.CategoryName
           </a>
         }
@@ -56,7 +64,7 @@
       <div class="input-group nav-search w-100">
         <span class="input-group-text border-end-0"><i class="fa fa-search"></i></span>
         <input type="search" class="form-control border-start-0" name="SearchTerm" value="@(qSearch)"
-          placeholder="Ürün ara..." aria-label="Ara" />
+               placeholder="Ürün ara..." aria-label="Ara" />
         <button class="btn btn-navy d-none d-md-inline-flex" type="submit">Ara</button>
 
         @* Mevcut filtreleri koru *@
@@ -76,6 +84,10 @@
         {
           <input type="hidden" name="PageSize" value="@qPageSize" />
         }
+        @if (discountedOnlyActive)
+        {
+          <input type="hidden" name="DiscountedOnly" value="true" />
+        }
         <input type="hidden" name="PageNumber" value="1" />
       </div>
     </form>
@@ -84,7 +96,7 @@
   <!-- Sağ: Fiyat filtresi aç/kapa -->
   <div class="col-12 col-md-auto order-3 text-md-end">
     <button class="btn btn-sm btn-outline-navy rounded-pill px-3 w-100 w-md-auto" type="button"
-      data-bs-toggle="collapse" data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
+            data-bs-toggle="collapse" data-bs-target="#priceFilter" aria-expanded="false" aria-controls="priceFilter">
       <i class="fa fa-filter me-1"></i> Fiyat
     </button>
   </div>
@@ -94,7 +106,7 @@
 <div class="collapse" id="priceFilter">
   <div class="card card-body shadow-sm border-0 mb-3">
     <form id="priceForm" method="get" asp-area="Admin" asp-controller="Product" asp-action="Index"
-      class="row g-2 align-items-end needs-validation" novalidate>
+          class="row g-2 align-items-end needs-validation" novalidate>
 
       @if (activeId.HasValue)
       {
@@ -108,6 +120,10 @@
       {
         <input type="hidden" name="PageSize" value="@qPageSize" />
       }
+      @if (discountedOnlyActive)
+      {
+        <input type="hidden" name="DiscountedOnly" value="true" />
+      }
       <input type="hidden" name="PageNumber" value="1" />
 
       <div class="col-6 col-sm-3">
@@ -115,7 +131,7 @@
         <div class="input-group">
           <span class="input-group-text">₺</span>
           <input type="number" min="0" step="1" class="form-control" name="MinPrice"
-            value="@(string.IsNullOrWhiteSpace(qMin) ? "" : qMin)" placeholder="0" />
+                 value="@(string.IsNullOrWhiteSpace(qMin) ? "" : qMin)" placeholder="0" />
         </div>
         <div class="invalid-feedback">Lütfen geçerli bir minimum fiyat girin.</div>
       </div>
@@ -125,7 +141,7 @@
         <div class="input-group">
           <span class="input-group-text">₺</span>
           <input type="number" min="0" step="1" class="form-control" name="MaxPrice"
-            value="@(string.IsNullOrWhiteSpace(qMax) ? "" : qMax)" placeholder="99999" />
+                 value="@(string.IsNullOrWhiteSpace(qMax) ? "" : qMax)" placeholder="99999" />
         </div>
         <div class="invalid-feedback">Maksimum fiyat, minimumdan küçük olamaz.</div>
       </div>
@@ -136,7 +152,7 @@
 
       <div class="col-12 col-sm-auto">
         <a class="btn btn-outline-secondary w-100" asp-area="Admin" asp-controller="Product" asp-action="Index"
-          asp-route-CategoryId="@(activeId)" asp-route-SearchTerm="@(qSearch)">
+           asp-route-CategoryId="@(activeId)" asp-route-SearchTerm="@(qSearch)">
           Temizle
         </a>
       </div>
@@ -176,7 +192,7 @@
 
           <td>
             <img src="@prd?.ImageUrl" alt="@prd?.ProductName" width="52" height="52" class="rounded"
-              style="object-fit:cover;">
+                 style="object-fit:cover;">
           </td>
 
           <td class="fw-semibold">@prd.ProductName</td>
@@ -207,22 +223,22 @@
           <td class="text-end">
             <div class="actions-inline">
               <a class="btn btn-warning action-icon-btn tooltip1-btn-admin-edit" asp-area="Admin" asp-action="Update"
-                asp-route-id="@prd.ProductId" title="Düzenle">
+                 asp-route-id="@prd.ProductId" title="Düzenle">
                 <i class="fa fa-edit"></i>
               </a>
 
               <a class="btn btn-primary action-icon-btn tooltip1-btn-admin-detail" target="_blank" asp-area=""
-                asp-controller="Product" asp-action="Get" asp-route-id="@prd.ProductId" title="Detay">
+                 asp-controller="Product" asp-action="Get" asp-route-id="@prd.ProductId" title="Detay">
                 <i class="fa fa-search"></i>
               </a>
 
               <a class="btn btn-info action-icon-btn tooltip1-btn-stock" asp-area="Admin" asp-controller="Stock"
-                asp-action="Manage" asp-route-id="@prd.ProductId" title="Stok">
+                 asp-action="Manage" asp-route-id="@prd.ProductId" title="Stok">
                 <i class="fa fa-warehouse"></i>
               </a>
 
               <form asp-area="Admin" asp-action="Delete" asp-route-id="@prd.ProductId" method="post"
-                class="d-inline delete-form tooltip1-btn-admin-delete" title="Sil">
+                    class="d-inline delete-form tooltip1-btn-admin-delete" title="Sil">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-danger action-icon-btn">
                   <i class="fa fa-trash"></i>
@@ -278,18 +294,17 @@
       </div>
 
       <div class="product-mobile-actions">
-        <a class="btn btn-warning w-100 rounded-pill"
-           asp-area="Admin" asp-action="Update" asp-route-id="@prd.ProductId">
+        <a class="btn btn-warning w-100 rounded-pill" asp-area="Admin" asp-action="Update" asp-route-id="@prd.ProductId">
           <i class="fa fa-edit me-2"></i> Düzenle
         </a>
 
-        <a class="btn btn-primary w-100 rounded-pill"
-           target="_blank" asp-area="" asp-controller="Product" asp-action="Get" asp-route-id="@prd.ProductId">
+        <a class="btn btn-primary w-100 rounded-pill" target="_blank" asp-area="" asp-controller="Product"
+           asp-action="Get" asp-route-id="@prd.ProductId">
           <i class="fa fa-search me-2"></i> Detay
         </a>
 
-        <a class="btn btn-info  w-100 rounded-pill"
-           asp-area="Admin" asp-controller="Stock" asp-action="Manage" asp-route-id="@prd.ProductId">
+        <a class="btn btn-info  w-100 rounded-pill" asp-area="Admin" asp-controller="Stock" asp-action="Manage"
+           asp-route-id="@prd.ProductId">
           <i class="fa fa-warehouse me-2"></i> Stok
         </a>
 
@@ -309,9 +324,9 @@
 <!-- ✅ PAGER -->
 <div class="text-center my-3">
   <div page-model="@Model.Pagination" page-action="Index" page-classes-enabled="true" page-class="btn"
-    page-class-normal="btn-outline-primary" page-class-selected="btn-warning" class="btn-group" page-url-area="Admin"
-    page-url-CategoryId="@(activeId)" page-url-SearchTerm="@(qSearch)" page-url-MinPrice="@(qMin)"
-    page-url-MaxPrice="@(qMax)" page-url-PageSize="@Model.Pagination.ItemsPerPage">
+       page-class-normal="btn-outline-primary" page-class-selected="btn-warning" class="btn-group" page-url-area="Admin"
+       page-url-CategoryId="@(activeId)" page-url-SearchTerm="@(qSearch)" page-url-MinPrice="@(qMin)"
+       page-url-MaxPrice="@(qMax)" page-url-PageSize="@Model.Pagination.ItemsPerPage" page-url-DiscountedOnly="@(discountedOnlyActive ? "true" : "")">
   </div>
 </div>
 
@@ -320,65 +335,66 @@
   <script>
     // Silme onayı
     document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll(".delete-form").forEach(function (form) {
-        form.addEventListener("submit", function (e) {
-          e.preventDefault();
-          Swal.fire({
-            title: 'Emin misiniz?',
-            text: "Bu ürünü silmek üzeresiniz!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, sil',
-            cancelButtonText: 'Vazgeç',
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6'
-          }).then((result) => { if (result.isConfirmed) form.submit(); });
-        });
-      });
+    document.querySelectorAll(".delete-form").forEach(function (form) {
+    form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    Swal.fire({
+    title: 'Emin misiniz?',
+    text: "Bu ürünü silmek üzeresiniz!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Evet, sil',
+    cancelButtonText: 'Vazgeç',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6'
+    }).then((result) => { if (result.isConfirmed) form.submit(); });
+    });
+    });
     });
   </script>
 
   <script>
     // Min ≤ Max doğrulaması
     (function () {
-      const form = document.getElementById('priceForm');
-      if (!form) return;
-      const minEl = form.querySelector('input[name="MinPrice"]');
-      const maxEl = form.querySelector('input[name="MaxPrice"]');
-      function validate() {
-        const min = parseFloat(minEl.value);
-        const max = parseFloat(maxEl.value);
-        const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
-        if (bothNumbers && min > max) {
-          maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
-          maxEl.classList.add('is-invalid');
-          return false;
-        } else {
-          maxEl.setCustomValidity('');
-          maxEl.classList.remove('is-invalid');
-          return true;
-        }
-      }
-      minEl.addEventListener('input', validate);
-      maxEl.addEventListener('input', validate);
-      form.addEventListener('submit', function (e) {
-        if (!validate()) {
-          e.preventDefault(); e.stopPropagation();
-          form.classList.add('was-validated'); maxEl.focus();
-        }
-      }, false);
+    const form = document.getElementById('priceForm');
+    if (!form) return;
+    const minEl = form.querySelector('input[name="MinPrice"]');
+    const maxEl = form.querySelector('input[name="MaxPrice"]');
+    function validate() {
+    const min = parseFloat(minEl.value);
+    const max = parseFloat(maxEl.value);
+    const bothNumbers = !Number.isNaN(min) && !Number.isNaN(max);
+    if (bothNumbers && min > max) {
+    maxEl.setCustomValidity('Maksimum fiyat, minimumdan küçük olamaz.');
+    maxEl.classList.add('is-invalid');
+    return false;
+    } else {
+    maxEl.setCustomValidity('');
+    maxEl.classList.remove('is-invalid');
+    return true;
+    }
+    }
+    minEl.addEventListener('input', validate);
+    maxEl.addEventListener('input', validate);
+    form.addEventListener('submit', function (e) {
+    if (!validate()) {
+    e.preventDefault(); e.stopPropagation();
+    form.classList.add('was-validated'); maxEl.focus();
+    }
+    }, false);
     })();
   </script>
 }
 <style>
   /* Desktop işlemler: yan yana, taşmadan */
-.actions-inline{
+  .actions-inline {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   white-space: nowrap;
-}
-.action-icon-btn{
+  }
+
+  .action-icon-btn {
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -387,101 +403,112 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
-}
-.action-icon-btn i{ font-size: 16px; }
+  }
 
-/* Mobil ürün kart görseli */
-.product-card-img{
+  .action-icon-btn i {
+  font-size: 16px;
+  }
+
+  /* Mobil ürün kart görseli */
+  .product-card-img {
   width: 64px;
   height: 64px;
   border-radius: 14px;
   object-fit: cover;
-  border: 1px solid rgba(0,0,0,.08);
-}
+  border: 1px solid rgba(0, 0, 0, .08);
+  }
 
-/* Mobil aksiyonlar: 2 sütun yerine tek sütun daha iyi (istersen 2 yaparız) */
-.product-actions{
+  /* Mobil aksiyonlar: 2 sütun yerine tek sütun daha iyi (istersen 2 yaparız) */
+  .product-actions {
   grid-template-columns: 1fr;
-}
+  }
 
-/* Mobil ürün listesi */
-.product-mobile-list{
+  /* Mobil ürün listesi */
+  .product-mobile-list {
   display: grid;
   gap: 14px;
-}
+  }
 
-/* Kart görünümü: çerçeve + gölge + modern arka plan */
-.product-mobile-card{
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(0,0,0,.08);
+  /* Kart görünümü: çerçeve + gölge + modern arka plan */
+  .product-mobile-card {
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(0, 0, 0, .08);
   border-radius: 18px;
   padding: 14px;
-  box-shadow: 0 14px 40px rgba(0,0,0,.12);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .12);
   overflow: hidden;
-}
+  }
 
-/* Üst bölüm: resim + bilgi + sağ taraf */
-.product-mobile-head{
+  /* Üst bölüm: resim + bilgi + sağ taraf */
+  .product-mobile-head {
   display: grid;
   grid-template-columns: 64px 1fr auto;
   gap: 12px;
   align-items: start;
-}
+  }
 
-.product-mobile-img{
+  .product-mobile-img {
   width: 64px;
   height: 64px;
   border-radius: 14px;
   object-fit: cover;
-  border: 1px solid rgba(0,0,0,.10);
+  border: 1px solid rgba(0, 0, 0, .10);
   background: #fff;
-}
+  }
 
-.product-mobile-title{
+  .product-mobile-title {
   font-weight: 800;
   color: #0b2a6f;
   font-size: 1rem;
   line-height: 1.15;
-}
+  }
 
-.product-mobile-sub{
-  color: rgba(0,0,0,.55);
+  .product-mobile-sub {
+  color: rgba(0, 0, 0, .55);
   font-size: .85rem;
   margin-top: 2px;
-}
+  }
 
-.product-mobile-price{
+  .product-mobile-price {
   font-weight: 800;
   margin-top: 6px;
   font-size: 1.05rem;
-}
+  }
 
-/* Sağ taraf: stok + vitrin */
-.product-mobile-right{
+  /* Sağ taraf: stok + vitrin */
+  .product-mobile-right {
   display: grid;
   gap: 10px;
   justify-items: end;
-}
+  }
 
-.product-mobile-switch{
+  .product-mobile-switch {
   display: grid;
   justify-items: end;
   gap: 2px;
-}
+  }
 
-/* Aksiyonlar: 2 sütun grid (kart hissi artar) */
-.product-mobile-actions{
+  /* Aksiyonlar: 2 sütun grid (kart hissi artar) */
+  .product-mobile-actions {
   margin-top: 12px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
+  }
 
-/* Çok dar ekranlarda tek sütuna düşsün */
-@@media (max-width: 360px){
-  .product-mobile-head{ grid-template-columns: 56px 1fr; }
-  .product-mobile-right{ grid-column: 1 / -1; justify-items: start; }
-  .product-mobile-actions{ grid-template-columns: 1fr; }
-}
+  /* Çok dar ekranlarda tek sütuna düşsün */
+  @@media (max-width: 360px) {
+  .product-mobile-head {
+  grid-template-columns: 56px 1fr;
+  }
 
+  .product-mobile-right {
+  grid-column: 1 / -1;
+  justify-items: start;
+  }
+
+  .product-mobile-actions {
+  grid-template-columns: 1fr;
+  }
+  }
 </style>
